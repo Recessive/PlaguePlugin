@@ -1,0 +1,2 @@
+# MindustryFFA
+Mindustry FFA plugin
