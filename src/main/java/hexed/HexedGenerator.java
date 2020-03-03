@@ -20,21 +20,69 @@ public class HexedGenerator extends Generator{
     // temperature
     // |
     // v
-    Block[][] floors = {
-        {Blocks.sand, Blocks.sand, Blocks.sand, Blocks.sand, Blocks.sand, Blocks.grass},
-        {Blocks.darksandWater, Blocks.darksand, Blocks.darksand, Blocks.darksand, Blocks.grass, Blocks.grass},
-        {Blocks.darksandWater, Blocks.darksand, Blocks.darksand, Blocks.darksand, Blocks.grass, Blocks.shale},
-        {Blocks.darksandTaintedWater, Blocks.darksandTaintedWater, Blocks.moss, Blocks.moss, Blocks.sporeMoss, Blocks.stone},
-        {Blocks.ice, Blocks.iceSnow, Blocks.snow, Blocks.holostone, Blocks.hotrock, Blocks.salt}
-    };
 
-    Block[][] blocks = {
-        {Blocks.rocks, Blocks.rocks, Blocks.sandRocks, Blocks.sandRocks, Blocks.pine, Blocks.pine},
-        {Blocks.rocks, Blocks.rocks, Blocks.duneRocks, Blocks.duneRocks, Blocks.pine, Blocks.pine},
-        {Blocks.rocks, Blocks.rocks, Blocks.duneRocks, Blocks.duneRocks, Blocks.pine, Blocks.pine},
-        {Blocks.sporerocks, Blocks.duneRocks, Blocks.sporerocks, Blocks.sporerocks, Blocks.sporerocks, Blocks.rocks},
-        {Blocks.icerocks, Blocks.snowrocks, Blocks.snowrocks, Blocks.snowrocks, Blocks.rocks, Blocks.saltRocks}
-    };
+    int terrain_type = (int)(Math.random() * 2);
+    int map_type = (int)(Math.random() * 100);
+
+    Block[][] floors = get_floors();
+    Block[][] blocks = get_blocks();
+
+    private Block[][] get_floors(){
+        // I don't know java, I'm just winging it. Leave me alone ok, I don't know how to do this without using t1 as a decoy lol
+        Block[][] t1 = {};
+
+        if(terrain_type == 0){
+            Block[][] t = {
+                {Blocks.sand, Blocks.sand, Blocks.sand, Blocks.sand, Blocks.sand, Blocks.sand},
+                {Blocks.darksand, Blocks.darksand, Blocks.darksand, Blocks.darksand, Blocks.sand, Blocks.sand},
+                {Blocks.darksand, Blocks.darksand, Blocks.darksand, Blocks.darksand, Blocks.sand, Blocks.sand},
+                {Blocks.darksand, Blocks.darksand, Blocks.darksand, Blocks.darksand, Blocks.sand, Blocks.sand},
+                {Blocks.darksand, Blocks.darksand, Blocks.darksand, Blocks.darksand, Blocks.sand, Blocks.sand}
+            };
+            return t;
+        }
+
+        if(terrain_type == 1){
+            Block[][] t = {
+                {Blocks.sand, Blocks.sand, Blocks.sand, Blocks.sand, Blocks.sand, Blocks.grass},
+                {Blocks.darksandWater, Blocks.darksand, Blocks.darksand, Blocks.darksand, Blocks.grass, Blocks.grass},
+                {Blocks.darksandWater, Blocks.darksand, Blocks.darksand, Blocks.darksand, Blocks.grass, Blocks.shale},
+                {Blocks.darksandTaintedWater, Blocks.darksandTaintedWater, Blocks.moss, Blocks.moss, Blocks.sporeMoss, Blocks.stone},
+                {Blocks.ice, Blocks.iceSnow, Blocks.snow, Blocks.holostone, Blocks.hotrock, Blocks.salt}
+            };
+            return t;
+        }
+        return t1;
+    }
+
+    private Block[][] get_blocks(){
+        Block[][] t1 = {};
+
+        if(terrain_type == 0){
+            Block[][] t = {
+                {Blocks.rocks, Blocks.rocks, Blocks.sandRocks, Blocks.sandRocks, Blocks.sandRocks, Blocks.sandRocks},
+                {Blocks.rocks, Blocks.rocks, Blocks.sandRocks, Blocks.sandRocks, Blocks.sandRocks, Blocks.sandRocks},
+                {Blocks.rocks, Blocks.rocks, Blocks.sandRocks, Blocks.sandRocks, Blocks.sandRocks, Blocks.sandRocks},
+                {Blocks.sandRocks, Blocks.sandRocks, Blocks.sandRocks, Blocks.sandRocks, Blocks.sandRocks, Blocks.rocks},
+                {Blocks.sandRocks, Blocks.sandRocks, Blocks.sandRocks, Blocks.sandRocks, Blocks.rocks, Blocks.sandRocks}
+            };
+            return t;
+        }
+
+        if(terrain_type == 1){
+            Block[][] t = {
+                {Blocks.rocks, Blocks.rocks, Blocks.sandRocks, Blocks.sandRocks, Blocks.pine, Blocks.pine},
+                {Blocks.rocks, Blocks.rocks, Blocks.duneRocks, Blocks.duneRocks, Blocks.pine, Blocks.pine},
+                {Blocks.rocks, Blocks.rocks, Blocks.duneRocks, Blocks.duneRocks, Blocks.pine, Blocks.pine},
+                {Blocks.sporerocks, Blocks.duneRocks, Blocks.sporerocks, Blocks.sporerocks, Blocks.sporerocks, Blocks.rocks},
+                {Blocks.icerocks, Blocks.snowrocks, Blocks.snowrocks, Blocks.snowrocks, Blocks.rocks, Blocks.saltRocks}
+            };
+            return t;
+        }
+        return t1;
+    }
+
+            
 
     public HexedGenerator() {
         super(Hex.size, Hex.size);
@@ -42,6 +90,12 @@ public class HexedGenerator extends Generator{
 
     @Override
     public void generate(Tile[][] tiles){
+        
+        Log.info("Terrain_type: " + terrain_type);
+        Log.info("map_type: " + map_type);
+
+
+
         Simplex t = new Simplex(Mathf.random(0, 10000));
         Simplex e = new Simplex(Mathf.random(0, 10000));
         Array<GenerateFilter> ores = new Array<>();
@@ -58,7 +112,6 @@ public class HexedGenerator extends Generator{
             for(int y = 0; y < height; y++){
                 int temp = Mathf.clamp((int)((t.octaveNoise2D(12, 0.6, 1.0 / 400, x, y) - 0.5) * 10 * blocks.length), 0, blocks.length-1);
                 int elev = Mathf.clamp((int)(((e.octaveNoise2D(12, 0.6, 1.0 / 700, x, y) - 0.5) * 10 + 0.15f) * blocks[0].length), 0, blocks[0].length-1);
-
                 Block floor = floors[temp][elev];
                 Block wall = blocks[temp][elev];
                 Block ore = Blocks.air;
@@ -79,16 +132,41 @@ public class HexedGenerator extends Generator{
                 tiles[x][y] = new Tile(x, y, floor.id, ore.id, wall.id);
             }
         }
-
+        if(map_type >= 45){
+            for (int i = 0; i < width; i++){
+                for (int j = 0; j < height; j++){
+                    Tile tile = tiles[i][j];
+                    tile.setBlock(Blocks.air);
+                }
+            }
+        }
         for(int i = 0; i < hex.size; i++){
             int x = Pos.x(hex.get(i));
             int y = Pos.y(hex.get(i));
+
             Geometry.circle(x, y, width, height, Hex.diameter, (cx, cy) -> {
-                if(Intersector.isInsideHexagon(x, y, Hex.diameter, cx, cy)){
-                    Tile tile = tiles[cx][cy];
-                    tile.setBlock(Blocks.air);
+                if(map_type < 45){
+                    // Check if point x, y is inside circle:
+                    if(Math.sqrt(Math.pow(cx - x, 2) + Math.pow(cy - y, 2)) < Hex.radius - 4){
+                        Tile tile = tiles[cx][cy];
+                        tile.setBlock(Blocks.air);
+
+                    }
+                }   
+                else if(map_type > 110){ // Disabling squares, so we only get empty map and circles
+
+                    if(Math.abs(cx - x) < (Hex.radius - 9) && Math.abs(cy - y) < (Hex.radius - 4)){
+                        Tile tile = tiles[cx][cy];
+                        tile.setBlock(Blocks.air);
+                    }
+
+                    /*if(Intersector.isInsideHexagon(x, y, Hex.diameter, cx, cy)){
+                        Tile tile = tiles[cx][cy];
+                        tile.setBlock(Blocks.air);
+                    }*/
                 }
             });
+            
             Angles.circle(3, 360f / 3 / 2f - 90, f -> {
                 Tmp.v1.trnsExact(f, Hex.spacing + 12);
                 if(Structs.inBounds(x + (int)Tmp.v1.x, y + (int)Tmp.v1.y, width, height)){
@@ -105,8 +183,8 @@ public class HexedGenerator extends Generator{
                 Tile tile = tiles[x][y];
                 Block wall = tile.block();
                 Block floor = tile.floor();
-
-                if(wall == Blocks.air){
+                // Removing the chance for boulders cuz they're annoying af
+                /*if(wall == Blocks.air){
                     if(Mathf.chance(0.03)){
                         if(floor == Blocks.sand) wall = Blocks.sandBoulder;
                         else if(floor == Blocks.stone) wall = Blocks.rock;
@@ -116,12 +194,12 @@ public class HexedGenerator extends Generator{
                         else if(floor == Blocks.ice) wall = Blocks.snowrock;
                         else if(floor == Blocks.snow) wall = Blocks.snowrock;
                     }
-                }
+                }*/
                 tile.setBlock(wall);
             }
         }
 
-        world.setMap(new Map(StringMap.of("name", "Hex")));
+        world.setMap(new Map(StringMap.of("name", "Hex++")));
     }
 
     public IntArray getHex(){

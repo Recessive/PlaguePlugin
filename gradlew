@@ -170,3 +170,7 @@ if [ "$(uname)" = "Darwin" ] && [ "$HOME" = "$PWD" ]; then
 fi
 
 exec "$JAVACMD" "$@"
+
+echo Done this
+cp ./build/libs/* ~/Documents/mindustry/game/server/mindustry-server/config/mods
+echo after
