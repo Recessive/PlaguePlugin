@@ -14,78 +14,30 @@ import mindustry.world.*;
 
 import static mindustry.Vars.*;
 
+
 public class HexedGenerator extends Generator{
 
     // elevation --->
     // temperature
     // |
     // v
+    int terrain_type;
+    int map_type;
 
-    int terrain_type = (int)(Math.random() * 2);
-    int map_type = (int)(Math.random() * 100);
+    Block[][] floors;
+    Block[][] blocks;
 
-    Block[][] floors = get_floors();
-    Block[][] blocks = get_blocks();
-
-    private Block[][] get_floors(){
-        // I don't know java, I'm just winging it. Leave me alone ok, I don't know how to do this without using t1 as a decoy lol
-        Block[][] t1 = {};
-
-        if(terrain_type == 0){
-            Block[][] t = {
-                {Blocks.sand, Blocks.sand, Blocks.sand, Blocks.sand, Blocks.sand, Blocks.sand},
-                {Blocks.darksand, Blocks.darksand, Blocks.darksand, Blocks.darksand, Blocks.sand, Blocks.sand},
-                {Blocks.darksand, Blocks.darksand, Blocks.darksand, Blocks.darksand, Blocks.sand, Blocks.sand},
-                {Blocks.darksand, Blocks.darksand, Blocks.darksand, Blocks.darksand, Blocks.sand, Blocks.sand},
-                {Blocks.darksand, Blocks.darksand, Blocks.darksand, Blocks.darksand, Blocks.sand, Blocks.sand}
-            };
-            return t;
-        }
-
-        if(terrain_type == 1){
-            Block[][] t = {
-                {Blocks.sand, Blocks.sand, Blocks.sand, Blocks.sand, Blocks.sand, Blocks.grass},
-                {Blocks.darksandWater, Blocks.darksand, Blocks.darksand, Blocks.darksand, Blocks.grass, Blocks.grass},
-                {Blocks.darksandWater, Blocks.darksand, Blocks.darksand, Blocks.darksand, Blocks.grass, Blocks.shale},
-                {Blocks.darksandTaintedWater, Blocks.darksandTaintedWater, Blocks.moss, Blocks.moss, Blocks.sporeMoss, Blocks.stone},
-                {Blocks.ice, Blocks.iceSnow, Blocks.snow, Blocks.holostone, Blocks.hotrock, Blocks.salt}
-            };
-            return t;
-        }
-        return t1;
-    }
-
-    private Block[][] get_blocks(){
-        Block[][] t1 = {};
-
-        if(terrain_type == 0){
-            Block[][] t = {
-                {Blocks.rocks, Blocks.rocks, Blocks.sandRocks, Blocks.sandRocks, Blocks.sandRocks, Blocks.sandRocks},
-                {Blocks.rocks, Blocks.rocks, Blocks.sandRocks, Blocks.sandRocks, Blocks.sandRocks, Blocks.sandRocks},
-                {Blocks.rocks, Blocks.rocks, Blocks.sandRocks, Blocks.sandRocks, Blocks.sandRocks, Blocks.sandRocks},
-                {Blocks.sandRocks, Blocks.sandRocks, Blocks.sandRocks, Blocks.sandRocks, Blocks.sandRocks, Blocks.rocks},
-                {Blocks.sandRocks, Blocks.sandRocks, Blocks.sandRocks, Blocks.sandRocks, Blocks.rocks, Blocks.sandRocks}
-            };
-            return t;
-        }
-
-        if(terrain_type == 1){
-            Block[][] t = {
-                {Blocks.rocks, Blocks.rocks, Blocks.sandRocks, Blocks.sandRocks, Blocks.pine, Blocks.pine},
-                {Blocks.rocks, Blocks.rocks, Blocks.duneRocks, Blocks.duneRocks, Blocks.pine, Blocks.pine},
-                {Blocks.rocks, Blocks.rocks, Blocks.duneRocks, Blocks.duneRocks, Blocks.pine, Blocks.pine},
-                {Blocks.sporerocks, Blocks.duneRocks, Blocks.sporerocks, Blocks.sporerocks, Blocks.sporerocks, Blocks.rocks},
-                {Blocks.icerocks, Blocks.snowrocks, Blocks.snowrocks, Blocks.snowrocks, Blocks.rocks, Blocks.saltRocks}
-            };
-            return t;
-        }
-        return t1;
-    }
-
-            
 
     public HexedGenerator() {
         super(Hex.size, Hex.size);
+    }
+
+    public void loadData(HexData d) {
+        terrain_type = d.terrain_type;
+        map_type = d.map_type;
+
+        floors = d.floors;
+        blocks = d.blocks;
     }
 
     @Override
@@ -132,7 +84,7 @@ public class HexedGenerator extends Generator{
                 tiles[x][y] = new Tile(x, y, floor.id, ore.id, wall.id);
             }
         }
-        if(map_type >= 45){
+        if(map_type >= 40 && map_type < 80){
             for (int i = 0; i < width; i++){
                 for (int j = 0; j < height; j++){
                     Tile tile = tiles[i][j];
@@ -145,7 +97,7 @@ public class HexedGenerator extends Generator{
             int y = Pos.y(hex.get(i));
 
             Geometry.circle(x, y, width, height, Hex.diameter, (cx, cy) -> {
-                if(map_type < 45){
+                if(map_type < 40 || map_type >= 80){
                     // Check if point x, y is inside circle:
                     if(Math.sqrt(Math.pow(cx - x, 2) + Math.pow(cy - y, 2)) < Hex.radius - 4){
                         Tile tile = tiles[cx][cy];
@@ -153,29 +105,30 @@ public class HexedGenerator extends Generator{
 
                     }
                 }   
-                else if(map_type > 110){ // Disabling squares, so we only get empty map and circles
+                /*else if(map_type > 200){ // Disabling squares, so we only get empty map and circles
 
                     if(Math.abs(cx - x) < (Hex.radius - 9) && Math.abs(cy - y) < (Hex.radius - 4)){
                         Tile tile = tiles[cx][cy];
                         tile.setBlock(Blocks.air);
                     }
 
-                    /*if(Intersector.isInsideHexagon(x, y, Hex.diameter, cx, cy)){
-                        Tile tile = tiles[cx][cy];
-                        tile.setBlock(Blocks.air);
-                    }*/
-                }
+                    //if(Intersector.isInsideHexagon(x, y, Hex.diameter, cx, cy)){
+                    //    Tile tile = tiles[cx][cy];
+                    //    tile.setBlock(Blocks.air);
+                    }
+                }*/
             });
-            
-            Angles.circle(3, 360f / 3 / 2f - 90, f -> {
-                Tmp.v1.trnsExact(f, Hex.spacing + 12);
-                if(Structs.inBounds(x + (int)Tmp.v1.x, y + (int)Tmp.v1.y, width, height)){
-                    Tmp.v1.trnsExact(f, Hex.spacing / 2 + 7);
-                    Bresenham2.line(x, y, x + (int)Tmp.v1.x, y + (int)Tmp.v1.y, (cx, cy) -> {
-                        Geometry.circle(cx, cy, width, height, 3, (c2x, c2y) -> tiles[c2x][c2y].setBlock(Blocks.air));
-                    });
-                }
-            });
+            if(map_type < 80){ // The following makes gaps in the hexes
+                Angles.circle(3, 360f / 3 / 2f - 90, f -> {
+                    Tmp.v1.trnsExact(f, Hex.spacing + 12);
+                    if(Structs.inBounds(x + (int)Tmp.v1.x, y + (int)Tmp.v1.y, width, height)){
+                        Tmp.v1.trnsExact(f, Hex.spacing / 2 + 7);
+                        Bresenham2.line(x, y, x + (int)Tmp.v1.x, y + (int)Tmp.v1.y, (cx, cy) -> {
+                            Geometry.circle(cx, cy, width, height, 3, (c2x, c2y) -> tiles[c2x][c2y].setBlock(Blocks.air));
+                        });
+                    }
+                });
+            }
         }
 
         for(int x = 0; x < width; x++){

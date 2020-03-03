@@ -27,6 +27,7 @@ import static arc.util.Log.info;
 import static mindustry.Vars.*;
 
 public class HexedMod extends Plugin{
+	// TPS = 40
     //in seconds
     public static final float spawnDelay = 60 * 4;
     //health requirement needed to capture a hex; no longer used
@@ -35,16 +36,20 @@ public class HexedMod extends Plugin{
     public static final int itemRequirement = 210;
 
     public static final int messageTime = 1;
-    //in ticks: 60 minutes
-    private final static int roundTime = 60 * 60 * 60;
-    //in ticks: 3 minutes
+    //in ticks: 60 minutes: 60 * 60 * 60
+    private int roundTime = 60 * 60 * 60;
+    //in ticks: 2 minutes
     private final static int leaderboardTime = 60 * 60 * 2;
+
+    private final static int announcementTime = 60 * 60 * 10;
+
+    private final static int upgradeTime = 60 * 60 * 15;
 
     private final static int updateTime = 60 * 2;
 
     private final static int winCondition = 10;
 
-    private final static int timerBoard = 0, timerUpdate = 1, timerWinCheck = 2;
+    private final static int timerBoard = 0, timerUpdate = 1, timerWinCheck = 2, timerAnnounce = 3, timerUpgrade = 4;
 
     private final Rules rules = new Rules();
     private Interval interval = new Interval(5);
@@ -52,15 +57,32 @@ public class HexedMod extends Plugin{
     private HexData data;
     private boolean restarting = false, registered = false;
 
+    private Schematic[] starts;
     private Schematic start;
+
+    private int upgradeLevel = 0;
+
+    private Array<Array<ItemStack>> loadouts = new Array<>(4);
+
     private double counter = 0f;
     private int lastMin;
 
+    private String terrain_str = "";
+    private String map_str = "";
+
+  	private String[] announcements = {"Join the discord at: https://discord.gg/GEnYcSv"};
+  	private int announcementIndex = 0;
+
     @Override
     public void init(){
+    	loadouts.add(ItemStack.list(Items.copper, 1000, Items.lead, 1000, Items.graphite, 200, Items.metaglass, 200, Items.silicon, 200));
+    	loadouts.add(ItemStack.list(Items.copper, 2000, Items.lead, 2000, Items.graphite, 400, Items.metaglass, 400, Items.silicon, 400, Items.titanium, 200));
+    	loadouts.add(ItemStack.list(Items.copper, 4000, Items.lead, 4000, Items.graphite, 1000, Items.metaglass, 1000, Items.silicon, 1000, Items.titanium, 400, Items.thorium, 200));
+    	loadouts.add(ItemStack.list(Items.copper, 4000, Items.lead, 4000, Items.graphite, 1000, Items.metaglass, 1000, Items.silicon, 1000, Items.titanium, 1000, Items.thorium, 1000));
+
         rules.pvp = true;
         rules.tags.put("hexed", "true");
-        rules.loadout = ItemStack.list(Items.copper, 1000, Items.lead, 1000, Items.graphite, 200, Items.metaglass, 200, Items.silicon, 200);
+        rules.loadout = loadouts.get(0);
         rules.buildCostMultiplier = 1f;
         rules.buildSpeedMultiplier = 2;
         rules.blockHealthMultiplier = 1f;
@@ -88,9 +110,12 @@ public class HexedMod extends Plugin{
         Map<String, Integer> player_deaths = new HashMap<String, Integer>();
         int lives = 2;
 
-        // start = Schematics.readBase64("bXNjaAB4nD2OSw7CMAxEx59ky4pjcKgKUokFiRTa85eYtDNe+PlZloyMLPC6fAr82XpR5G/rW+m4xfhY215fy/ZuFcAdkWPEAoSkJCM5KZ0k83Z0HTUjcztGPbdBlzM6o3M6p0t0aX4lQUoykpP+t/ID+vtccA==");
-        // start = Schematics.readBase64("bXNjaAB4nE2SgY7CIAyGC2yDsXkXH2Tvcq+AkzMmc1tQz/j210JpXDL8hu3/lxYY4FtBs4ZbBLvG1ync4wGO87bvMU2vsCzTEtIlwvCxBW7e1r/43hKYkGY4nFN4XqbfMD+29IbhvmHOtIc1LjCmuIcrfm3X9QH2PofHIyYY5y3FaX3OS3ze4fiRwX7dLa5nDHTPddkCkT3l1DcA/OALihZNq4H6NHnV+HZCVshJXA9VYZC9kfVU+VQGKSsbjVT1lOgp1qO4rGIo9yvnquxH1ORIohap6HVIDbtpaNlDi4cWD80eFJdrNhbJc8W61Jzdqi/3wrRIRii7GYdelvWMZDQs1kNbqtYe9/KuGvDX5zD6d5SML66+5dwRqXgQee5GK3Edxw1ITfb3SJ71OomzUAdjuWsWqZyJavd8Issdb5BqVbaoGCVzJqrddaUGTWSFHPs67m6H5HlaTqbqpFc91Kfn+2eQSp9pr96/Xtx6cevZjeKKDuUOklvvXy9uPGdNZFjZi7IXZS/n8Hyf/wFbjj/q");
-        start = Schematics.readBase64("bXNjaAB4nD2SUW7DIBBEd7ExBqcfOYg/epSeoEIOqiIREzl2qt6+rIGJJfNkdmd2R6GJPpj61T8C2ZiOWzr278+RpiU9n2Gbf32MdN3vu1/vx2Ne0voOf2mj6ytFv81Pv4Y4Z/oJdFnSFub1WGI4XtT5bSHzWvy+h43GY43J3zINj7DKSfRF7dfJi0EKVF5y01Or0aABZEAjRC1EHWgCXSpxrVbnI8D5W3NjuDHcGG5c3aTT1cG5KLctzjoFPQU9BT0FPYXpFVQ6nLp2CLfbHmdfNmGd6XTmIZNkwMpkOufrpK5l0ENFIzMNFV3yU/KtdWh0tEn6TKXDZGq+wzk1s9y23gG9BjuONXGhlp9BXctCUj73VEIaNIAMaKwqI1QsVCxULFQsVCxULFQsVBwScnVfIQUqf2DO1DwcPBw8HDwcPFyZsBNyoAlUJvgH0+orFw==");
+        
+        starts = new Schematic[]{Schematics.readBase64("bXNjaAB4nD2SUW7DIBBEd7ExBqcfOYg/epSeoEIOqiIREzl2qt6+rIGJJfNkdmd2R6GJPpj61T8C2ZiOWzr278+RpiU9n2Gbf32MdN3vu1/vx2Ne0voOf2mj6ytFv81Pv4Y4Z/oJdFnSFub1WGI4XtT5bSHzWvy+h43GY43J3zINj7DKSfRF7dfJi0EKVF5y01Or0aABZEAjRC1EHWgCXSpxrVbnI8D5W3NjuDHcGG5c3aTT1cG5KLctzjoFPQU9BT0FPYXpFVQ6nLp2CLfbHmdfNmGd6XTmIZNkwMpkOufrpK5l0ENFIzMNFV3yU/KtdWh0tEn6TKXDZGq+wzk1s9y23gG9BjuONXGhlp9BXctCUj73VEIaNIAMaKwqI1QsVCxULFQsVCxULFQsVBwScnVfIQUqf2DO1DwcPBw8HDwcPFyZsBNyoAlUJvgH0+orFw=="),
+    							Schematics.readBase64("bXNjaAB4nE2S8Y6DIAzGC6goul32IP5xT3KPcOEct5g4NEx32dtfgdLMRPaza7+vFKCHDwGVt3cHenFPt3x/nuAyrdvmwvhnl2VcbLg56N9CcNnn3fr5uI/T6p/utQZQNkxwugZ73MZfO+1reEH/WLF43Kx3CwzBbXbGr3X2O+jHZPfdBRimNbjRH9Pijgdc3irIuLk7f8XE9vDLaiPpn1T6AoAvfEHERcZVQXmqtEp8GybN1HJeB0Wh59hAeiJ/CoWUlJVEKnqC9QTpxbykomLtOdWK5BepSpmRaqSs1yBV5CahJg/JHpI9JHnEvNSz0kiGOpa55+RWfGkWqkZSTMlNteilSU9xRUViHdS5a2kwlqKix1+T0uK/A1ecqfuaagek7BHJ0DRqzmsor0eqkr9BMqTXcJ6GcjCapqaR8p5i74Z2pGniFVLpSmcVJficI5XptrkHGUkzteTb0nQbJEOn1fKptjyrDsrT0f1TSHnOMVbuX8duHbt15Bbzsk6s7bm23L+O3QztXKZpZRXDeoa7N3SL/wGbh0NA"),
+    							Schematics.readBase64("bXNjaAB4nFVSa26EIBAe8IGg22az5/BPL9IjNMSljY0rG1Zt9vYdYJi0JurHMN+DUejhVUC92psDtbjDLR9vJ7hs82bXeb+NP3ZZxsWGLwenf0U483Ly6+GePkBlwwSna7D71/hpp82HJ/QPj/Txble3wBDc3c648vO6gXpMdttcgIs/XLiG+XDjPfhvF5kwTD64cd2nxe0POP+RoTztza1XZHf7ungbEcA73iCgPCsoV52eEu+WkWLUcZ9mbs+1gWqC1hWipCwloqInWE+QXmQkFRnRC9UkJ5JZsWoQJT3RIkpJq9jXpJpEVDwke0j2kDmzUIhM2uwQpcwi7hbfMosGUU4fUXITGquK+wqjJoaBJqeueqzlfAO+TeqKuwMzCrfhWTWZISMyNI2G+1qecZv6hOwRGZpBy32K+jpEgs6r+BwqM0REeeI1ooFUFKuU7xxRmW6XM0iZtAvqKGlH020RGXLrsoeIu0VZQ7k0/3+a8sVa+f80u2l20+QW+zRNTdM5Ym1gveJm6GvGL170DOsZTm/oL/4FqklJyw=="),
+    							Schematics.readBase64("bXNjaAB4nFWS23LjIAyGZccF40N6yO5j+KpP06sOY1O3O8R0qO1M334lkDVtLswXgf5fEkAPfwuoFnt1oL3bnX99PsPT+h7ix3Ydbtb7wds4O+h+xuDBxmuIbhrGsOzuO0S42+3mVzhf3TINnzH8c+OK4X6KdpuHN0v/vkF/jXZdXYRL2F2c4sfufhyut8UHO+G28nYZce3jOg+zW1y0dKAb0XRYttG77Quaz3BzcVjC5KAnvTcfbsNsVwcAL/DrV9LnRJ9KSCUq8FPLGSPUCLWJ6Fwnev0RgnuhR6FLSi3wT1Y+oU7DKoWolLxWSInLO1xTfYVCUpxRsgpRzqXdVAFQRq5AIz2ybMkV1Ohcp0yijsur2NckZzrXIOW5EOW5tLjmminWy252o9zDrZJ+c8U0U5UHkagUSmM/dUgVT1FhBxSjbrNvjatG0In6RLR7Tr6UcS8qDzwXxbMnehK6iO+ffAlJN3eupXPNEydS3KWWfrX0q6VfnZXheC0UMXKDRm7Q8DxqpHwLJ5xlI7GOazdyl4bdKqTDzbBbgZm10PGGWgChMm8iVUKKp9Hm3JKoY+VWXnErr7iVV9yKb8e59PqMUCPUsnLHyv8BxWxQSQ==")};
+        start = starts[upgradeLevel];
         netServer.admins.addChatFilter((player, text) -> {
             for(String swear : CurseFilter.swears){
                 text = text.replaceAll("(?i)" + swear, "****");
@@ -143,6 +168,19 @@ public class HexedMod extends Plugin{
                     if(!players.isEmpty() && data.getControlled(players.first()).size >= winCondition && players.size > 1 && data.getControlled(players.get(1)).size <= 1){
                         endGame();
                     }
+                }
+
+                if(interval.get(timerAnnounce, announcementTime)){
+                    Call.sendMessage(announcements[announcementIndex]);
+                }
+
+                if(interval.get(timerUpgrade, upgradeTime)){
+                	if (upgradeLevel < starts.length-1){
+                		Call.sendMessage("[scarlet]WARNING: [lightgray]Spawn loadout upgraded to level [yellow]" + String.valueOf(upgradeLevel+1));
+                	}
+                    upgradeLevel = Math.min(starts.length-1, upgradeLevel + 1);
+                    start = starts[upgradeLevel];
+                    state.rules.loadout = loadouts.get(upgradeLevel);
                 }
 
                 counter += Time.delta();
@@ -216,6 +254,8 @@ public class HexedMod extends Plugin{
             }
 
             data.data(event.player).lastMessage.reset();
+
+            event.player.sendMessage("[accent]Mutators\n\n[yellow]Terrain: [white]" + terrain_str + "\n[yellow]Map: [white]" + map_str + "\n");
         });
 
         Events.on(ProgressIncreaseEvent.class, event -> updateText(event.player));
@@ -278,9 +318,29 @@ public class HexedMod extends Plugin{
 
             data = new HexData();
 
+            switch (data.terrain_type){
+            	case 0:
+            		terrain_str = "Desert";
+            		break;
+            	case 1:
+            		terrain_str = "Mixed";
+            		break;
+            }
+
+            if (data.map_type < 40){
+            	map_str = "Cirlces";
+            }
+            else if (data.map_type < 80){
+            	map_str = "No walls";
+            }
+            else {
+            	map_str = "Boxed in";
+            }
+
             logic.reset();
             Log.info("Generating map...");
             HexedGenerator generator = new HexedGenerator();
+            generator.loadData(data);
             world.loadGenerator(generator);
             data.initHexes(generator.getHex());
             info("Map generated.");
@@ -341,6 +401,14 @@ public class HexedMod extends Plugin{
             }else{
                 player.sendMessage("[scarlet]No hex found.");
             }
+        });
+
+        handler.<Player>register("mutators", "Show current map mutators.", (args, player) -> {
+        	player.sendMessage("[accent]Mutators\n\n[yellow]Terrain: [white]" + terrain_str + "\n[yellow]Map: [white]" + map_str + "\n");
+        });
+
+        handler.<Player>register("time", "Display the time left", (args, player) -> {
+            player.sendMessage(String.valueOf("[scarlet]" + lastMin + "[lightgray] mins. remaining\n"));
         });
     }
 

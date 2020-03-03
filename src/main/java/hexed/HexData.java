@@ -7,6 +7,7 @@ import arc.util.*;
 import mindustry.entities.type.*;
 import mindustry.game.*;
 import mindustry.world.*;
+import mindustry.content.*;
 
 import static mindustry.Vars.playerGroup;
 
@@ -21,6 +22,12 @@ public class HexData{
     private IntMap<Array<Hex>> control = new IntMap<>();
     /** Data of specific teams. */
     private HexTeam[] teamData = new HexTeam[256];
+
+    public int terrain_type = (int)(Math.random() * 2);
+    public int map_type = (int)(Math.random() * 100);
+
+    Block[][] floors = get_floors();
+    Block[][] blocks = get_blocks();
 
     public void updateStats(){
         teamMap.clear();
@@ -155,5 +162,60 @@ public class HexData{
             this.player = player;
             this.percent = percent;
         }
+    }
+
+    private Block[][] get_floors(){
+        // I don't know java, I'm just winging it. Leave me alone ok, I don't know how to do this without using t1 as a decoy lol
+        Block[][] t1 = {};
+
+        if(terrain_type == 0){
+            Block[][] t = {
+                {Blocks.sand, Blocks.sand, Blocks.sand, Blocks.sand, Blocks.sand, Blocks.sand},
+                {Blocks.darksand, Blocks.darksand, Blocks.darksand, Blocks.darksand, Blocks.sand, Blocks.sand},
+                {Blocks.darksand, Blocks.darksand, Blocks.darksand, Blocks.darksand, Blocks.sand, Blocks.sand},
+                {Blocks.darksand, Blocks.darksand, Blocks.darksand, Blocks.darksand, Blocks.sand, Blocks.sand},
+                {Blocks.darksand, Blocks.darksand, Blocks.darksand, Blocks.darksand, Blocks.sand, Blocks.sand}
+            };
+            return t;
+        }
+
+        if(terrain_type == 1){
+            Block[][] t = {
+                {Blocks.sand, Blocks.sand, Blocks.sand, Blocks.sand, Blocks.sand, Blocks.grass},
+                {Blocks.darksandWater, Blocks.darksand, Blocks.darksand, Blocks.darksand, Blocks.grass, Blocks.grass},
+                {Blocks.darksandWater, Blocks.darksand, Blocks.darksand, Blocks.darksand, Blocks.grass, Blocks.shale},
+                {Blocks.darksandTaintedWater, Blocks.darksandTaintedWater, Blocks.moss, Blocks.moss, Blocks.sporeMoss, Blocks.stone},
+                {Blocks.ice, Blocks.iceSnow, Blocks.snow, Blocks.holostone, Blocks.hotrock, Blocks.salt}
+            };
+            return t;
+        }
+        return t1;
+    }
+
+    private Block[][] get_blocks(){
+        Block[][] t1 = {};
+
+        if(terrain_type == 0){
+            Block[][] t = {
+                {Blocks.rocks, Blocks.rocks, Blocks.sandRocks, Blocks.sandRocks, Blocks.sandRocks, Blocks.sandRocks},
+                {Blocks.rocks, Blocks.rocks, Blocks.sandRocks, Blocks.sandRocks, Blocks.sandRocks, Blocks.sandRocks},
+                {Blocks.rocks, Blocks.rocks, Blocks.sandRocks, Blocks.sandRocks, Blocks.sandRocks, Blocks.sandRocks},
+                {Blocks.sandRocks, Blocks.sandRocks, Blocks.sandRocks, Blocks.sandRocks, Blocks.sandRocks, Blocks.rocks},
+                {Blocks.sandRocks, Blocks.sandRocks, Blocks.sandRocks, Blocks.sandRocks, Blocks.rocks, Blocks.sandRocks}
+            };
+            return t;
+        }
+
+        if(terrain_type == 1){
+            Block[][] t = {
+                {Blocks.rocks, Blocks.rocks, Blocks.sandRocks, Blocks.sandRocks, Blocks.pine, Blocks.pine},
+                {Blocks.rocks, Blocks.rocks, Blocks.duneRocks, Blocks.duneRocks, Blocks.pine, Blocks.pine},
+                {Blocks.rocks, Blocks.rocks, Blocks.duneRocks, Blocks.duneRocks, Blocks.pine, Blocks.pine},
+                {Blocks.sporerocks, Blocks.duneRocks, Blocks.sporerocks, Blocks.sporerocks, Blocks.sporerocks, Blocks.rocks},
+                {Blocks.icerocks, Blocks.snowrocks, Blocks.snowrocks, Blocks.snowrocks, Blocks.rocks, Blocks.saltRocks}
+            };
+            return t;
+        }
+        return t1;
     }
 }
