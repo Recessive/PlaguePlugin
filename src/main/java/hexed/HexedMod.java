@@ -43,7 +43,7 @@ public class HexedMod extends Plugin{
 
     private final static int announcementTime = 60 * 60 * 10;
 
-    private final static int upgradeTime = 60 * 60 * 15;
+    private final static int upgradeTime = 60 * 60 * 10;
 
     private final static int updateTime = 60 * 2;
 
@@ -118,7 +118,7 @@ public class HexedMod extends Plugin{
         start = starts[upgradeLevel];
         netServer.admins.addChatFilter((player, text) -> {
             for(String swear : CurseFilter.swears){
-                text = text.replaceAll("(?i)" + swear, "****");
+                text = text.replaceAll("(?i)" + swear, "*".repeat(swear.length()));
             }
 
             return text;
@@ -215,10 +215,10 @@ public class HexedMod extends Plugin{
         });
 
         Events.on(PlayerConnect.class, event -> {
-            for(String swear : CurseFilter.swears){
+            for(String swear : BannedNames.badNames){
                 if(event.player.name.toLowerCase().contains(swear)){
-                    event.player.con.kick("That's not a very nice name.");
-                    break;
+                	Log.info(swear.length());
+                	event.player.name = event.player.name.replaceAll("(?i)" + swear, "");
                 }
             }
         });
@@ -327,10 +327,10 @@ public class HexedMod extends Plugin{
             		break;
             }
 
-            if (data.map_type < 40){
+            if (data.map_type < 33){
             	map_str = "Cirlces";
             }
-            else if (data.map_type < 80){
+            else if (data.map_type < 66){
             	map_str = "No walls";
             }
             else {

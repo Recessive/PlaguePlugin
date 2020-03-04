@@ -84,7 +84,7 @@ public class HexedGenerator extends Generator{
                 tiles[x][y] = new Tile(x, y, floor.id, ore.id, wall.id);
             }
         }
-        if(map_type >= 40 && map_type < 80){
+        if(map_type >= 33 && map_type < 66){
             for (int i = 0; i < width; i++){
                 for (int j = 0; j < height; j++){
                     Tile tile = tiles[i][j];
@@ -97,7 +97,7 @@ public class HexedGenerator extends Generator{
             int y = Pos.y(hex.get(i));
 
             Geometry.circle(x, y, width, height, Hex.diameter, (cx, cy) -> {
-                if(map_type < 40 || map_type >= 80){
+                if(map_type < 33 || map_type >= 66){
                     // Check if point x, y is inside circle:
                     if(Math.sqrt(Math.pow(cx - x, 2) + Math.pow(cy - y, 2)) < Hex.radius - 4){
                         Tile tile = tiles[cx][cy];
@@ -118,7 +118,7 @@ public class HexedGenerator extends Generator{
                     }
                 }*/
             });
-            if(map_type < 80){ // The following makes gaps in the hexes
+            if(map_type < 66){ // The following makes gaps in the hexes
                 Angles.circle(3, 360f / 3 / 2f - 90, f -> {
                     Tmp.v1.trnsExact(f, Hex.spacing + 12);
                     if(Structs.inBounds(x + (int)Tmp.v1.x, y + (int)Tmp.v1.y, width, height)){
