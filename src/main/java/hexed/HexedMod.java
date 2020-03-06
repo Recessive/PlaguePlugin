@@ -1,12 +1,15 @@
 package hexed;
 
 import java.util.*;
+import java.lang.reflect.Field;
 
 import arc.*;
 import arc.math.*;
 import arc.struct.*;
 import arc.util.*;
 import hexed.HexData.*;
+import arc.math.geom.*;
+import mindustry.entities.bullet.*;
 import mindustry.content.*;
 import mindustry.core.GameState.*;
 import mindustry.core.NetServer.*;
@@ -33,7 +36,7 @@ public class HexedMod extends Plugin{
     //health requirement needed to capture a hex; no longer used
     public static final float healthRequirement = 3500;
     //item requirement to captured a hex
-    public static final int itemRequirement = 210;
+    public static final int itemRequirement = 1000;
 
     public static final int messageTime = 1;
     //in ticks: 60 minutes: 60 * 60 * 60
@@ -59,6 +62,7 @@ public class HexedMod extends Plugin{
 
     private Schematic[] starts;
     private Schematic start;
+    private Schematic captureSchematic;
 
     private int upgradeLevel = 0;
 
@@ -76,9 +80,9 @@ public class HexedMod extends Plugin{
     @Override
     public void init(){
     	loadouts.add(ItemStack.list(Items.copper, 1000, Items.lead, 1000, Items.graphite, 200, Items.metaglass, 200, Items.silicon, 200));
-    	loadouts.add(ItemStack.list(Items.copper, 2000, Items.lead, 2000, Items.graphite, 400, Items.metaglass, 400, Items.silicon, 400, Items.titanium, 200));
-    	loadouts.add(ItemStack.list(Items.copper, 4000, Items.lead, 4000, Items.graphite, 1000, Items.metaglass, 1000, Items.silicon, 1000, Items.titanium, 400, Items.thorium, 200));
-    	loadouts.add(ItemStack.list(Items.copper, 4000, Items.lead, 4000, Items.graphite, 1000, Items.metaglass, 1000, Items.silicon, 1000, Items.titanium, 1000, Items.thorium, 1000));
+    	loadouts.add(ItemStack.list(Items.copper, 2000, Items.lead, 2000, Items.graphite, 400, Items.metaglass, 400, Items.silicon, 200, Items.titanium, 200));
+    	loadouts.add(ItemStack.list(Items.copper, 4000, Items.lead, 4000, Items.graphite, 1000, Items.metaglass, 1000, Items.silicon, 500, Items.titanium, 400, Items.thorium, 200));
+    	loadouts.add(ItemStack.list(Items.copper, 4000, Items.lead, 4000, Items.graphite, 1000, Items.metaglass, 1000, Items.silicon, 500, Items.titanium, 1000, Items.thorium, 1000));
 
         rules.pvp = true;
         rules.tags.put("hexed", "true");
@@ -95,7 +99,15 @@ public class HexedMod extends Plugin{
         rules.bannedBlocks.add(Blocks.hail);
         rules.bannedBlocks.add(Blocks.ripple);
 
-        // Disable explosive stuff
+        // Increase cost of lancer (No need with core placing on capture)
+        Blocks.lancer.requirements = ItemStack.with(Items.copper, 25, Items.lead, 50, Items.silicon, 150);
+
+        /*Array<Block> block_list = content.blocks();
+        for(int i = 0; i < block_list.size; i++){
+            Block temp = block_list.get(i);
+            temp.insulated = true;
+        }
+        Log.info(Blocks.lancer.insulated);*/
 
         /*Array<Item> item_list = content.items();
 
@@ -115,10 +127,11 @@ public class HexedMod extends Plugin{
     							Schematics.readBase64("bXNjaAB4nE2S8Y6DIAzGC6goul32IP5xT3KPcOEct5g4NEx32dtfgdLMRPaza7+vFKCHDwGVt3cHenFPt3x/nuAyrdvmwvhnl2VcbLg56N9CcNnn3fr5uI/T6p/utQZQNkxwugZ73MZfO+1reEH/WLF43Kx3CwzBbXbGr3X2O+jHZPfdBRimNbjRH9Pijgdc3irIuLk7f8XE9vDLaiPpn1T6AoAvfEHERcZVQXmqtEp8GybN1HJeB0Wh59hAeiJ/CoWUlJVEKnqC9QTpxbykomLtOdWK5BepSpmRaqSs1yBV5CahJg/JHpI9JHnEvNSz0kiGOpa55+RWfGkWqkZSTMlNteilSU9xRUViHdS5a2kwlqKix1+T0uK/A1ecqfuaagek7BHJ0DRqzmsor0eqkr9BMqTXcJ6GcjCapqaR8p5i74Z2pGniFVLpSmcVJficI5XptrkHGUkzteTb0nQbJEOn1fKptjyrDsrT0f1TSHnOMVbuX8duHbt15Bbzsk6s7bm23L+O3QztXKZpZRXDeoa7N3SL/wGbh0NA"),
     							Schematics.readBase64("bXNjaAB4nFVSa26EIBAe8IGg22az5/BPL9IjNMSljY0rG1Zt9vYdYJi0JurHMN+DUejhVUC92psDtbjDLR9vJ7hs82bXeb+NP3ZZxsWGLwenf0U483Ly6+GePkBlwwSna7D71/hpp82HJ/QPj/Txble3wBDc3c648vO6gXpMdttcgIs/XLiG+XDjPfhvF5kwTD64cd2nxe0POP+RoTztza1XZHf7ungbEcA73iCgPCsoV52eEu+WkWLUcZ9mbs+1gWqC1hWipCwloqInWE+QXmQkFRnRC9UkJ5JZsWoQJT3RIkpJq9jXpJpEVDwke0j2kDmzUIhM2uwQpcwi7hbfMosGUU4fUXITGquK+wqjJoaBJqeueqzlfAO+TeqKuwMzCrfhWTWZISMyNI2G+1qecZv6hOwRGZpBy32K+jpEgs6r+BwqM0REeeI1ooFUFKuU7xxRmW6XM0iZtAvqKGlH020RGXLrsoeIu0VZQ7k0/3+a8sVa+f80u2l20+QW+zRNTdM5Ym1gveJm6GvGL170DOsZTm/oL/4FqklJyw=="),
     							Schematics.readBase64("bXNjaAB4nFWS23LjIAyGZccF40N6yO5j+KpP06sOY1O3O8R0qO1M334lkDVtLswXgf5fEkAPfwuoFnt1oL3bnX99PsPT+h7ix3Ydbtb7wds4O+h+xuDBxmuIbhrGsOzuO0S42+3mVzhf3TINnzH8c+OK4X6KdpuHN0v/vkF/jXZdXYRL2F2c4sfufhyut8UHO+G28nYZce3jOg+zW1y0dKAb0XRYttG77Quaz3BzcVjC5KAnvTcfbsNsVwcAL/DrV9LnRJ9KSCUq8FPLGSPUCLWJ6Fwnev0RgnuhR6FLSi3wT1Y+oU7DKoWolLxWSInLO1xTfYVCUpxRsgpRzqXdVAFQRq5AIz2ybMkV1Ohcp0yijsur2NckZzrXIOW5EOW5tLjmminWy252o9zDrZJ+c8U0U5UHkagUSmM/dUgVT1FhBxSjbrNvjatG0In6RLR7Tr6UcS8qDzwXxbMnehK6iO+ffAlJN3eupXPNEydS3KWWfrX0q6VfnZXheC0UMXKDRm7Q8DxqpHwLJ5xlI7GOazdyl4bdKqTDzbBbgZm10PGGWgChMm8iVUKKp9Hm3JKoY+VWXnErr7iVV9yKb8e59PqMUCPUsnLHyv8BxWxQSQ==")};
+        captureSchematic = Schematics.readBase64("bXNjaAB4nD3OSw6AIAxF0VdacOIGXISLMoaZnwR1/UpFHxMOt0kDOnQC26Y1w+a95IB07OXMBb0/x+2al3wdAAb4uetRh1CBUsqoSKVP0rbUW/EOfFubhrrtm7r+pmzKZmzGFtkiW2JL7c/iCpRSRkXq3SIPb1NrXw==");
         start = starts[upgradeLevel];
         netServer.admins.addChatFilter((player, text) -> {
             for(String swear : CurseFilter.swears){
-                text = text.replaceAll("(?i)" + swear, "*".repeat(swear.length()));
+                text = text.replaceAll("(?i)" + swear, "");
             }
 
             return text;
@@ -150,7 +163,7 @@ public class HexedMod extends Plugin{
                     }
                 }
 
-                int minsToGo = (int)(roundTime - counter) / 60 / 60;
+                int minsToGo = (int)Math.ceil((roundTime - counter) / 60 / 60); // Changed /time so the time left is clearer
                 if(minsToGo != lastMin){
                     lastMin = minsToGo;
                 }
@@ -205,6 +218,12 @@ public class HexedMod extends Plugin{
                     hex.spawnTime.reset();
                     hex.updateController();
                 }
+                Geometry.circle(hex.x, hex.y, 5, 5, Hex.diameter, (cx, cy) -> {
+                	if(Math.abs(cx - hex.x) < (3) && Math.abs(cy - hex.y) < (3)){
+	                    Tile tile = world.tile(cx, cy);
+	                    tile.setBlock(Blocks.rocks);
+                	} 
+                });
             }
         });
 
@@ -243,7 +262,7 @@ public class HexedMod extends Plugin{
             }
             else{
                 if(hex != null){
-                    loadout(event.player, hex.x, hex.y);
+                    loadout(event.player, hex.x, hex.y, start, true);
                     Core.app.post(() -> data.data(event.player).chosen = false);
                     hex.findController();
                 }else{
@@ -260,7 +279,10 @@ public class HexedMod extends Plugin{
 
         Events.on(ProgressIncreaseEvent.class, event -> updateText(event.player));
 
-        Events.on(HexCaptureEvent.class, event -> updateText(event.player));
+        Events.on(HexCaptureEvent.class, event -> {
+        	updateText(event.player);
+        	loadout(event.player, event.hex.x, event.hex.y, captureSchematic, false);
+        });
 
         Events.on(HexMoveEvent.class, event -> updateText(event.player));
 
@@ -466,14 +488,15 @@ public class HexedMod extends Plugin{
                 }
             }
         }
+
     }
 
-    void loadout(Player player, int x, int y){
+    void loadout(Player player, int x, int y, Schematic schem, boolean addItem){
         // Set coretile to be an instance of HexTile
-        Stile coreTile = start.tiles.find(s -> s.block instanceof CoreBlock);
+        Stile coreTile = schem.tiles.find(s -> s.block instanceof CoreBlock);
         if(coreTile == null) throw new IllegalArgumentException("Schematic has no core tile. Exiting.");
         int ox = x - coreTile.x, oy = y - coreTile.y;
-        start.tiles.each(st -> {
+        schem.tiles.each(st -> {
             Tile tile = world.tile(st.x + ox,st.y + oy);
             if(tile == null) return;
 
@@ -488,7 +511,7 @@ public class HexedMod extends Plugin{
             }else{
                 tile.configureAny(st.config);
             }
-            if(tile.block() instanceof CoreBlock){
+            if(tile.block() instanceof CoreBlock && addItem){
                 for(ItemStack stack : state.rules.loadout){
                     Call.transferItemTo(stack.item, stack.amount, tile.drawx(), tile.drawy(), tile);
                 }

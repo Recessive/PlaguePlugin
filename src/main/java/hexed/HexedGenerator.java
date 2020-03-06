@@ -96,15 +96,18 @@ public class HexedGenerator extends Generator{
             int x = Pos.x(hex.get(i));
             int y = Pos.y(hex.get(i));
 
+
+
             Geometry.circle(x, y, width, height, Hex.diameter, (cx, cy) -> {
                 if(map_type < 33 || map_type >= 66){
+
                     // Check if point x, y is inside circle:
                     if(Math.sqrt(Math.pow(cx - x, 2) + Math.pow(cy - y, 2)) < Hex.radius - 4){
                         Tile tile = tiles[cx][cy];
                         tile.setBlock(Blocks.air);
 
                     }
-                }   
+                }
                 /*else if(map_type > 200){ // Disabling squares, so we only get empty map and circles
 
                     if(Math.abs(cx - x) < (Hex.radius - 9) && Math.abs(cy - y) < (Hex.radius - 4)){
@@ -117,6 +120,10 @@ public class HexedGenerator extends Generator{
                     //    tile.setBlock(Blocks.air);
                     }
                 }*/
+                if(Math.abs(cx - x) < (3) && Math.abs(cy - y) < (3)){
+                    Tile tile = tiles[cx][cy];
+                    tile.setBlock(Blocks.rocks);
+                } 
             });
             if(map_type < 66){ // The following makes gaps in the hexes
                 Angles.circle(3, 360f / 3 / 2f - 90, f -> {
@@ -124,7 +131,11 @@ public class HexedGenerator extends Generator{
                     if(Structs.inBounds(x + (int)Tmp.v1.x, y + (int)Tmp.v1.y, width, height)){
                         Tmp.v1.trnsExact(f, Hex.spacing / 2 + 7);
                         Bresenham2.line(x, y, x + (int)Tmp.v1.x, y + (int)Tmp.v1.y, (cx, cy) -> {
-                            Geometry.circle(cx, cy, width, height, 3, (c2x, c2y) -> tiles[c2x][c2y].setBlock(Blocks.air));
+                            Geometry.circle(cx, cy, width, height, 3, (c2x, c2y) -> {
+                                if(!(Math.abs(c2x - x) < (3) && Math.abs(c2y - y) < (3))){
+                                    tiles[c2x][c2y].setBlock(Blocks.air);
+                                }
+                            });
                         });
                     }
                 });
@@ -135,7 +146,7 @@ public class HexedGenerator extends Generator{
             for(int y = 0; y < height; y++){
                 Tile tile = tiles[x][y];
                 Block wall = tile.block();
-                Block floor = tile.floor();
+                // Block floor = tile.floor();
                 // Removing the chance for boulders cuz they're annoying af
                 /*if(wall == Blocks.air){
                     if(Mathf.chance(0.03)){
