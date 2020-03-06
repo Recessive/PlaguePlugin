@@ -50,7 +50,7 @@ public class HexedMod extends Plugin{
 
     private final static int updateTime = 60 * 2;
 
-    private final static int winCondition = 10;
+    private final static int winCondition = 5;
 
     private final static int timerBoard = 0, timerUpdate = 1, timerWinCheck = 2, timerAnnounce = 3, timerUpgrade = 4;
 
