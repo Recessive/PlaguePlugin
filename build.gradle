@@ -13,6 +13,7 @@ dependencies{
     def version = "v104"
     compileOnly "com.github.Anuken.Arc:arc-core:$version"
     compileOnly "com.github.Anuken.Mindustry:core:$version"
+    compile group:'org.xerial', name:'sqlite-jdbc', version:'3.8.11.2'
 }
 
 jar{
