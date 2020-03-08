@@ -42,7 +42,7 @@ public class HexedMod extends Plugin{
 
     public static final int messageTime = 1;
     //in ticks: 60 minutes: 60 * 60 * 60
-    private int roundTime = 60 * 60 * 60;
+    private int roundTime = 60 * 60 * 90;
     //in ticks: 2 minutes
     private final static int leaderboardTime = 60 * 60 * 2;
 
