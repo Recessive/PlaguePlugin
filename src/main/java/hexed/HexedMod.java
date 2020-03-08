@@ -50,6 +50,8 @@ public class HexedMod extends Plugin{
 
     private final static int upgradeTime = 60 * 60 * 10;
 
+    private final static int respawnCutoff = 60 * 60 * 10 + 60 * 30; // Offset by 30 seconds from upgrade time so the messages don't overlap
+
     private final static int updateTime = 60 * 2;
 
     private final static int winCondition = 5;
@@ -68,6 +70,8 @@ public class HexedMod extends Plugin{
 
     private int upgradeLevel = 0;
 
+    private boolean sendRespawnMessage = true;
+
     private Array<Array<ItemStack>> loadouts = new Array<>(4);
 
     private double counter = 0f;
@@ -80,6 +84,9 @@ public class HexedMod extends Plugin{
   	private int announcementIndex = 0;
 
   	private PlayerData ply_db = new PlayerData();
+
+  	private int lives = 1;
+    private Map<String, Integer> player_deaths = new HashMap<String, Integer>();
 
 
     @Override
@@ -127,8 +134,8 @@ public class HexedMod extends Plugin{
         
         // Log.info(Items.coal.explosiveness);
 
-        Map<String, Integer> player_deaths = new HashMap<String, Integer>();
-        int lives = 2;
+
+
 
         
         starts = new Schematic[]{Schematics.readBase64("bXNjaAB4nD2SUW7DIBBEd7ExBqcfOYg/epSeoEIOqiIREzl2qt6+rIGJJfNkdmd2R6GJPpj61T8C2ZiOWzr278+RpiU9n2Gbf32MdN3vu1/vx2Ne0voOf2mj6ytFv81Pv4Y4Z/oJdFnSFub1WGI4XtT5bSHzWvy+h43GY43J3zINj7DKSfRF7dfJi0EKVF5y01Or0aABZEAjRC1EHWgCXSpxrVbnI8D5W3NjuDHcGG5c3aTT1cG5KLctzjoFPQU9BT0FPYXpFVQ6nLp2CLfbHmdfNmGd6XTmIZNkwMpkOufrpK5l0ENFIzMNFV3yU/KtdWh0tEn6TKXDZGq+wzk1s9y23gG9BjuONXGhlp9BXctCUj73VEIaNIAMaKwqI1QsVCxULFQsVCxULFQsVBwScnVfIQUqf2DO1DwcPBw8HDwcPFyZsBNyoAlUJvgH0+orFw=="),
@@ -158,9 +165,6 @@ public class HexedMod extends Plugin{
                         Call.sendMessage("[yellow](!)[] [accent]" + player.name + "[lightgray] has been eliminated![accent] " +  lives_left + "/" + lives + " lives left [yellow] (!)");
                         Call.onInfoMessage(player.con, "Your cores have been destroyed. You are defeated.");
                         player.setTeam(Team.derelict);
-                        
-                        
-                        player_deaths.put(player.uuid, curr_deaths+1);
                     }
 
                     if(player.getTeam() == Team.derelict){
@@ -170,10 +174,14 @@ public class HexedMod extends Plugin{
                         break;
                     }
                 }
-
                 int minsToGo = (int)Math.ceil((roundTime - counter) / 60 / 60); // Changed /time so the time left is clearer
                 if(minsToGo != lastMin){
                     lastMin = minsToGo;
+                }
+
+                if(counter > respawnCutoff && sendRespawnMessage){
+                    Call.sendMessage("[accent]You will now lose a life if you disconnect");
+                    sendRespawnMessage = false;
                 }
 
                 if(interval.get(timerBoard, leaderboardTime)){
@@ -236,6 +244,10 @@ public class HexedMod extends Plugin{
         });
 
         Events.on(PlayerLeave.class, event -> {
+            if(counter > respawnCutoff){
+                Integer curr_deaths = player_deaths.get(event.player.uuid);
+                player_deaths.put(event.player.uuid, curr_deaths+1);
+            }
             if(active() && event.player.getTeam() != Team.derelict){
                 killTiles(event.player.getTeam());
             }
@@ -285,7 +297,15 @@ public class HexedMod extends Plugin{
 
             event.player.sendMessage(getRankBoard());
 
-            event.player.sendMessage("[accent]Mutators\n\n[yellow]Terrain: [white]" + terrain_str + "\n[yellow]Map: [white]" + map_str + "\n");
+            // event.player.sendMessage("[accent]Mutators\n\n[yellow]Terrain: [white]" + terrain_str + "\n[yellow]Map: [white]" + map_str + "\n");
+
+            if (curr_deaths <= lives) {
+                if (lives - curr_deaths == 1) {
+                    event.player.sendMessage("[accent]You have [scarlet]" + (lives - curr_deaths) + " [accent]life left");
+                }else{
+                    event.player.sendMessage("[accent]You have [scarlet]" + (lives - curr_deaths) + " [accent]lives left");
+                }
+            }
         });
 
         Events.on(ProgressIncreaseEvent.class, event -> updateText(event.player));
