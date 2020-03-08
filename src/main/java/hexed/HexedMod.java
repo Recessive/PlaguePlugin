@@ -10,6 +10,8 @@ import arc.util.*;
 import hexed.HexData.*;
 import arc.math.geom.*;
 import mindustry.entities.bullet.*;
+import hexed.PlayerData.*;
+import java.sql.Connection;
 import mindustry.content.*;
 import mindustry.core.GameState.*;
 import mindustry.core.NetServer.*;
@@ -74,11 +76,17 @@ public class HexedMod extends Plugin{
     private String terrain_str = "";
     private String map_str = "";
 
-  	private String[] announcements = {"Join the discord at: https://discord.gg/GEnYcSv"};
+  	private String[] announcements = {"Join the discord at: [purple]https://discord.gg/GEnYcSv"};
   	private int announcementIndex = 0;
+
+  	private PlayerData ply_db = new PlayerData();
+
 
     @Override
     public void init(){
+
+        ply_db.connect("data/server_data.db");
+
     	loadouts.add(ItemStack.list(Items.copper, 1000, Items.lead, 1000, Items.graphite, 200, Items.metaglass, 200, Items.silicon, 200));
     	loadouts.add(ItemStack.list(Items.copper, 2000, Items.lead, 2000, Items.graphite, 400, Items.metaglass, 400, Items.silicon, 200, Items.titanium, 200));
     	loadouts.add(ItemStack.list(Items.copper, 4000, Items.lead, 4000, Items.graphite, 1000, Items.metaglass, 1000, Items.silicon, 500, Items.titanium, 400, Items.thorium, 200));
@@ -100,7 +108,7 @@ public class HexedMod extends Plugin{
         rules.bannedBlocks.add(Blocks.ripple);
 
         // Increase cost of lancer (No need with core placing on capture)
-        Blocks.lancer.requirements = ItemStack.with(Items.copper, 25, Items.lead, 50, Items.silicon, 150);
+        Blocks.lancer.requirements = ItemStack.with(Items.copper, 25, Items.lead, 50, Items.silicon, 250);
 
         /*Array<Block> block_list = content.blocks();
         for(int i = 0; i < block_list.size; i++){
@@ -243,6 +251,7 @@ public class HexedMod extends Plugin{
         });
 
         Events.on(PlayerJoin.class, event -> {
+            ply_db.setName(event.player.uuid, event.player.name);
             if(!active() || event.player.getTeam() == Team.derelict) return;
 
             Array<Hex> copy = data.hexes().copy();
@@ -273,6 +282,8 @@ public class HexedMod extends Plugin{
             }
 
             data.data(event.player).lastMessage.reset();
+
+            event.player.sendMessage(getRankBoard());
 
             event.player.sendMessage("[accent]Mutators\n\n[yellow]Terrain: [white]" + terrain_str + "\n[yellow]Map: [white]" + map_str + "\n");
         });
@@ -395,6 +406,16 @@ public class HexedMod extends Plugin{
              }
         });
 
+        handler.<Player>register("spec", "Alias for spectate", (args, player) -> {
+            if(player.getTeam() == Team.derelict){
+                player.sendMessage("[scarlet]You're already spectating.");
+            }else{
+                killTiles(player.getTeam());
+                player.kill();
+                player.setTeam(Team.derelict);
+            }
+        });
+
         handler.<Player>register("captured", "Dispay the number of hexes you have captured.", (args, player) -> {
             if(player.getTeam() == Team.derelict){
                 player.sendMessage("[scarlet]You're spectating.");
@@ -405,6 +426,10 @@ public class HexedMod extends Plugin{
 
         handler.<Player>register("leaderboard", "Display the leaderboard", (args, player) -> {
             player.sendMessage(getLeaderboard());
+        });
+
+        handler.<Player>register("scoreboard", "Display the global scoreboard", (args, player) -> {
+            player.sendMessage(getRankBoard());
         });
 
         handler.<Player>register("hexstatus", "Get hex status at your position.", (args, player) -> {
@@ -438,6 +463,11 @@ public class HexedMod extends Plugin{
         if(restarting) return;
 
         restarting = true;
+
+        for(Player player : playerGroup.all()){
+            ply_db.addGame(player.uuid);
+        }
+
         Array<Player> players = data.getLeaderboard();
         StringBuilder builder = new StringBuilder();
         for(int i = 0; i < players.size && i < 3; i++){
@@ -449,6 +479,8 @@ public class HexedMod extends Plugin{
 
         if(!players.isEmpty()){
             boolean dominated = data.getControlled(players.first()).size == data.hexes().size;
+
+            ply_db.addWin(players.first().uuid);
 
             for(Player player : playerGroup.all()){
                 Call.onInfoMessage(player.con, "[accent]--ROUND OVER--\n\n[lightgray]"
@@ -476,6 +508,21 @@ public class HexedMod extends Plugin{
         }
         return builder.toString();
     }
+
+    String getRankBoard(){
+        StringBuilder builder = new StringBuilder();
+        builder.append("[accent]Global scoreboard\n\n");
+        ArrayList<ArrayList<String>> top5 = ply_db.getTop("monthWins", 5);
+        for(int i = 0; i <= 5; i ++){
+            if (i == top5.get(0).size()){
+                break;
+            }
+            builder.append("[yellow]").append(i+1).append(".[white] ")
+                    .append(top5.get(0).get(i)).append("[orange] ").append(top5.get(1).get(i)).append(" wins\n[white]");
+        }
+        return builder.toString();
+    }
+
 
     void killTiles(Team team){
         data.data(team).dying = true;
