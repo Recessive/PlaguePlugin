@@ -4,6 +4,7 @@ import java.util.*;
 import java.lang.reflect.Field;
 
 import arc.*;
+import arc.graphics.Color;
 import arc.math.*;
 import arc.struct.*;
 import arc.util.*;
@@ -32,6 +33,8 @@ import static arc.util.Log.info;
 import static mindustry.Vars.*;
 
 public class HexedMod extends Plugin{
+
+
 	// TPS = 40
     //in seconds
     public static final float spawnDelay = 60 * 4;
@@ -42,7 +45,7 @@ public class HexedMod extends Plugin{
 
     public static final int messageTime = 1;
     //in ticks: 60 minutes: 60 * 60 * 60
-    private int roundTime = 60 * 60 * 90;
+    private int roundTime = 60 * 60 * 60;
     //in ticks: 2 minutes
     private final static int leaderboardTime = 60 * 60 * 2;
 
@@ -87,6 +90,8 @@ public class HexedMod extends Plugin{
 
   	private int lives = 1;
     private Map<String, Integer> player_deaths = new HashMap<String, Integer>();
+
+    private Map<String, String> mod_name = new HashMap<String, String>();
 
 
     @Override
@@ -145,11 +150,7 @@ public class HexedMod extends Plugin{
         captureSchematic = Schematics.readBase64("bXNjaAB4nD3OSw6AIAxF0VdacOIGXISLMoaZnwR1/UpFHxMOt0kDOnQC26Y1w+a95IB07OXMBb0/x+2al3wdAAb4uetRh1CBUsqoSKVP0rbUW/EOfFubhrrtm7r+pmzKZmzGFtkiW2JL7c/iCpRSRkXq3SIPb1NrXw==");
         start = starts[upgradeLevel];
         netServer.admins.addChatFilter((player, text) -> {
-            for(String swear : CurseFilter.swears){
-                text = text.replaceAll("(?i)" + swear, "");
-            }
-
-            return text;
+            return null;
         });
 
         Events.on(Trigger.update, () -> {
@@ -256,14 +257,43 @@ public class HexedMod extends Plugin{
         Events.on(PlayerConnect.class, event -> {
             for(String swear : BannedNames.badNames){
                 if(event.player.name.toLowerCase().contains(swear)){
-                	Log.info(swear.length());
                 	event.player.name = event.player.name.replaceAll("(?i)" + swear, "");
                 }
             }
         });
 
         Events.on(PlayerJoin.class, event -> {
-            ply_db.setName(event.player.uuid, event.player.name);
+            // Determine player name color
+            String no_color = filterColor(event.player.name, ply_db.getCol(event.player.uuid));
+
+            if (ply_db.getHexesCaptured(event.player.uuid) < 10){
+                mod_name.put(event.player.uuid,"[accent]<[darkgray]Rookie[accent]>[white] " + no_color);
+            }
+
+            if (ply_db.getHexesCaptured(event.player.uuid) >= 10 && ply_db.getHexesCaptured(event.player.uuid) < 25){
+                mod_name.put(event.player.uuid, "[accent]<[#cd7f32]Bronze[accent]>[white] " + no_color);
+            }
+            if (ply_db.getHexesCaptured(event.player.uuid) >= 25 && ply_db.getHexesCaptured(event.player.uuid) < 50){
+                mod_name.put(event.player.uuid, "[accent]<[#C0C0C0]Silver[accent]>[white] " + no_color);
+            }
+            if (ply_db.getHexesCaptured(event.player.uuid) >= 50 && ply_db.getHexesCaptured(event.player.uuid) < 100){
+                mod_name.put(event.player.uuid, "[accent]<[gold]Gold[accent]>[white] " + no_color);
+            }
+            if (ply_db.getHexesCaptured(event.player.uuid) >= 100 && ply_db.getHexesCaptured(event.player.uuid) < 250){
+                mod_name.put(event.player.uuid, "[accent]<[#697998]Platinum[accent]>[white] " + no_color);
+            }
+            if (ply_db.getHexesCaptured(event.player.uuid) >= 250 && ply_db.getHexesCaptured(event.player.uuid) < 500){
+                mod_name.put(event.player.uuid, "[accent]<[#00ccff]Diamond[accent]>[white] " + no_color);
+            }
+            if (ply_db.getHexesCaptured(event.player.uuid) >= 500 && ply_db.getHexesCaptured(event.player.uuid) < 1000){
+                mod_name.put(event.player.uuid, "[accent]<[#ff5050]Master[accent]>[white] " + no_color);
+            }
+            if (ply_db.getHexesCaptured(event.player.uuid) >= 1000){
+                mod_name.put(event.player.uuid, "[accent]<[#660066]Grand Master[accent]>[white] " + no_color);
+            }
+
+
+            ply_db.setName(event.player.uuid, mod_name.get(event.player.uuid));
             if(!active() || event.player.getTeam() == Team.derelict) return;
 
             Array<Hex> copy = data.hexes().copy();
@@ -316,6 +346,19 @@ public class HexedMod extends Plugin{
         });
 
         Events.on(HexMoveEvent.class, event -> updateText(event.player));
+
+        Events.on(EventType.PlayerChatEvent.class, event ->{
+            String text = event.message;
+            if(text.charAt(0) == '/'){
+                return;
+            }
+            for(String swear : CurseFilter.swears){
+                text = text.replaceAll("(?i)" + swear, "");
+            }
+            text = "[coral][[0[coral]]: [white]1".replace("0", mod_name.get(event.player.uuid)).replace("1", text);
+            Log.info("&ly" + event.player.uuid + " | " + filterColor(event.player.name, "") + ": " + event.message);
+            Call.sendMessage(text);
+        });
 
         TeamAssigner prev = netServer.assigner;
         netServer.assigner = (player, players) -> {
@@ -409,6 +452,10 @@ public class HexedMod extends Plugin{
         handler.register("end", "End the game.", args -> endGame());
 
         handler.register("r", "Restart the server.", args -> System.exit(2));
+
+        handler.register("setcolor", "<uuid> <color>", "Set the color of a players name based on uuid", args -> {
+            ply_db.setCol(args[0], args[1]);
+        });
     }
 
     @Override
@@ -477,6 +524,11 @@ public class HexedMod extends Plugin{
         handler.<Player>register("time", "Display the time left", (args, player) -> {
             player.sendMessage(String.valueOf("[scarlet]" + lastMin + "[lightgray] mins. remaining\n"));
         });
+
+
+        handler.<Player>register("hextotal", "Display the time left", (args, player) -> {
+            player.sendMessage("[accent]You've captured [scarlet]" + ply_db.getHexesCaptured(player.uuid) + "[accent] hexes across all games");
+        });
     }
 
     void endGame(){
@@ -486,6 +538,7 @@ public class HexedMod extends Plugin{
 
         for(Player player : playerGroup.all()){
             ply_db.addGame(player.uuid);
+            if(data.getControlled(player).size > 1){ply_db.addHexCaptures(player.uuid, data.getControlled(player).size - 1);}
         }
 
         Array<Player> players = data.getLeaderboard();
@@ -584,6 +637,10 @@ public class HexedMod extends Plugin{
                 }
             }
         });
+    }
+
+    public String filterColor(String s, String prefix){
+        return prefix + s.replaceAll("\\[(.*?)]","");
     }
 
     public boolean active(){

@@ -105,6 +105,33 @@ public class PlayerData {
 
     }
 
+    public int getHexesCaptured(String uuid){
+        String sql;
+        sql = "SELECT hexesCaptured FROM players WHERE uuid = '" + uuid + "'";
+
+        try {
+            Statement stmt  = conn.createStatement();
+            ResultSet rs    = stmt.executeQuery(sql);
+
+            return rs.getInt("hexesCaptured");
+        } catch (SQLException ignored) {
+        }
+        return 0;
+    }
+
+    public void addHexCaptures(String uuid, int hexes){
+        String sql;
+        sql = "UPDATE players SET hexesCaptured =" + (getHexesCaptured(uuid) + hexes) +  " WHERE uuid = '" + uuid + "'";
+
+        try {
+            Statement stmt = conn.createStatement();
+            stmt.executeUpdate(sql);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+    }
+
     public ArrayList<ArrayList<String>> getTop(String filter, int count){
         String sql;
         sql = "select * from players order by " + filter + " desc";
@@ -175,6 +202,32 @@ public class PlayerData {
         }
         String sql;
         sql = "UPDATE players SET latestName= '" + name + "' WHERE uuid = '" + uuid + "'";
+
+        try {
+            Statement stmt = conn.createStatement();
+            stmt.executeUpdate(sql);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    public String getCol(String uuid){
+        String sql;
+        sql = "SELECT color FROM players WHERE uuid = '" + uuid + "'";
+
+        try {
+            Statement stmt  = conn.createStatement();
+            ResultSet rs    = stmt.executeQuery(sql);
+
+            return rs.getString("color");
+        } catch (SQLException ignored) {
+        }
+        return null;
+    }
+
+    public void setCol(String uuid, String color){
+        String sql;
+        sql = "UPDATE players SET color= '" + color + "' WHERE uuid = '" + uuid + "'";
 
         try {
             Statement stmt = conn.createStatement();
