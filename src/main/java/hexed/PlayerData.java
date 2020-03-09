@@ -26,6 +26,20 @@ public class PlayerData {
         System.out.println("Connected successfully");
     }
 
+    public boolean hasRow(String uuid){
+        String sql;
+        sql = "SELECT uuid FROM players WHERE uuid = '" + uuid + "'";
+        try {
+            Statement stmt  = conn.createStatement();
+            ResultSet rs    = stmt.executeQuery(sql);
+
+            // loop through the result set
+            return rs.getString("uuid").length() != 0;
+        } catch (SQLException ignored) {
+        }
+        return false;
+    }
+
     public int[] getWins(String uuid){
         String sql;
         sql = "SELECT monthWins,allWins FROM players WHERE uuid = '" + uuid + "'";
@@ -43,20 +57,6 @@ public class PlayerData {
         } catch (SQLException ignored) {
         }
         return null;
-    }
-
-    public boolean hasRow(String uuid){
-        String sql;
-        sql = "SELECT uuid FROM players WHERE uuid = '" + uuid + "'";
-        try {
-            Statement stmt  = conn.createStatement();
-            ResultSet rs    = stmt.executeQuery(sql);
-
-            // loop through the result set
-            return rs.getString("uuid").length() != 0;
-        } catch (SQLException ignored) {
-        }
-        return false;
     }
 
     public void addWin(String uuid){
@@ -132,7 +132,7 @@ public class PlayerData {
 
     }
 
-    public ArrayList<ArrayList<String>> getTop(String filter, int count){
+    public ArrayList<ArrayList<String>> getTopWins(String filter, int count){
         String sql;
         sql = "select * from players order by " + filter + " desc";
 
@@ -142,14 +142,15 @@ public class PlayerData {
 
             ArrayList<ArrayList<String>> top = new ArrayList<ArrayList<String>>();//create a List
 
-            for (int i = 0; i < 3; i ++) {
+            for (int i = 0; i < 4; i ++) {
                 top.add(new ArrayList<String>());
             }
             int c = 0;
             while (rs.next()){//loop throw the result set
-                top.get(0).add(rs.getString("latestName"));
-                top.get(1).add(rs.getString("monthWins"));
-                top.get(2).add(rs.getString("allWins"));
+                top.get(0).add(rs.getString("uuid"));
+                top.get(1).add(rs.getString("latestName"));
+                top.get(2).add(rs.getString("monthWins"));
+                top.get(3).add(rs.getString("allWins"));
                 c ++;
                 if(c >= count){
                     break;
@@ -230,6 +231,75 @@ public class PlayerData {
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    public int[] getPoints(String uuid){
+        String sql;
+        sql = "SELECT monthPoints,allPoints FROM players WHERE uuid = '" + uuid + "'";
+
+        try {
+            Statement stmt  = conn.createStatement();
+            ResultSet rs    = stmt.executeQuery(sql);
+
+            int points[] = new int[2];
+
+            points[0] = rs.getInt("monthPoints");
+            points[1] = rs.getInt("allPoints");
+
+            return points;
+        } catch (SQLException ignored) {
+        }
+        return null;
+    }
+
+    public void addPoints(String uuid, int pointVal){
+        boolean check = hasRow(uuid);
+        String sql;
+        if (!check){
+            sql = "INSERT INTO players(uuid,monthWins,allWins) VALUES('" + uuid + "'," + pointVal + "," + pointVal + ")";
+        }else{
+            int points[] = getPoints(uuid);
+            sql = "UPDATE players SET monthPoints = " + (points[0] + pointVal) + ", allPoints = "
+                    + (points[1] + pointVal) + " WHERE uuid = '" + uuid + "'";
+        }
+        try {
+            Statement stmt = conn.createStatement();
+            stmt.executeUpdate(sql);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public ArrayList<ArrayList<String>> getTopPoints(String filter, int count){
+        String sql;
+        sql = "select * from players order by " + filter + " desc";
+
+        try {
+            PreparedStatement stmt  = conn.prepareStatement(sql);
+            ResultSet rs    = stmt.executeQuery();
+
+            ArrayList<ArrayList<String>> top = new ArrayList<ArrayList<String>>();//create a List
+
+            for (int i = 0; i < 4; i ++) {
+                top.add(new ArrayList<String>());
+            }
+            int c = 0;
+            while (rs.next()){//loop throw the result set
+                top.get(0).add(rs.getString("uuid"));
+                top.get(1).add(rs.getString("latestName"));
+                top.get(2).add(rs.getString("monthPoints"));
+                top.get(3).add(rs.getString("allPoints"));
+                c ++;
+                if(c >= count){
+                    break;
+                }
+            }
+            return top;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
     }
 
 }

@@ -294,6 +294,12 @@ public class HexedMod extends Plugin{
 
 
             ply_db.setName(event.player.uuid, mod_name.get(event.player.uuid));
+
+
+            if (ply_db.getPoints(event.player.uuid)[0] == 0){
+                ply_db.addPoints(event.player.uuid, ply_db.getWins(event.player.uuid)[0]*5);
+            }
+
             if(!active() || event.player.getTeam() == Team.derelict) return;
 
             Array<Hex> copy = data.hexes().copy();
@@ -558,6 +564,13 @@ public class HexedMod extends Plugin{
 
             ply_db.addWin(players.first().uuid);
 
+            // Add 5 points for first, 4 for second, 3 for third
+            int count = 0;
+            for(Player player : data.getLeaderboard()){
+                ply_db.addPoints(player.uuid, 5-count);
+                if(count > 2) break;
+            }
+
             for(Player player : playerGroup.all()){
                 Call.onInfoMessage(player.con, "[accent]--ROUND OVER--\n\n[lightgray]"
                 + (player == players.first() ? "[accent]You[] were" : "[yellow]" + players.first().name + "[lightgray] was") +
@@ -588,13 +601,13 @@ public class HexedMod extends Plugin{
     String getRankBoard(){
         StringBuilder builder = new StringBuilder();
         builder.append("[accent]Global scoreboard\n\n");
-        ArrayList<ArrayList<String>> top5 = ply_db.getTop("monthWins", 5);
+        ArrayList<ArrayList<String>> top5 = ply_db.getTopPoints("monthPoints", 5);
         for(int i = 0; i <= 5; i ++){
             if (i == top5.get(0).size()){
                 break;
             }
             builder.append("[yellow]").append(i+1).append(".[white] ")
-                    .append(top5.get(0).get(i)).append("[orange] ").append(top5.get(1).get(i)).append(" wins\n[white]");
+                    .append(top5.get(1).get(i)).append("[orange] ").append(top5.get(2).get(i)).append(" [accent]points\n[white]");
         }
         return builder.toString();
     }
