@@ -525,8 +525,11 @@ public class HexedMod extends Plugin{
             player.sendMessage(String.valueOf("[scarlet]" + lastMin + "[lightgray] mins. remaining\n"));
         });
 
+        handler.<Player>register("wins", "Get total wins", (args, player) -> {
+            player.sendMessage("[accent]You've won [scarlet]" + ply_db.getWins(player.uuid)[1] + "[accent] games");
+        });
 
-        handler.<Player>register("hextotal", "Display the time left", (args, player) -> {
+        handler.<Player>register("hextotal", "Get the total hexes captured across all games", (args, player) -> {
             player.sendMessage("[accent]You've captured [scarlet]" + ply_db.getHexesCaptured(player.uuid) + "[accent] hexes across all games");
         });
     }
