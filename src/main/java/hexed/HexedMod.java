@@ -535,6 +535,10 @@ public class HexedMod extends Plugin{
             player.sendMessage("[accent]You've won [scarlet]" + ply_db.getWins(player.uuid)[1] + "[accent] games");
         });
 
+        handler.<Player>register("points", "Get total points", (args, player) -> {
+            player.sendMessage("[accent]You have [scarlet]" + ply_db.getPoints(player.uuid)[1] + "[accent] games");
+        });
+
         handler.<Player>register("hextotal", "Get the total hexes captured across all games", (args, player) -> {
             player.sendMessage("[accent]You've captured [scarlet]" + ply_db.getHexesCaptured(player.uuid) + "[accent] hexes across all games");
         });
