@@ -185,11 +185,6 @@ public class PlayerData {
 
     }
 
-    public void setWins(String uuid, int monthWins){
-        _setWins(uuid,monthWins,-1);
-
-    }
-
     public void setWins(String uuid, int monthWins, int allWins){
         _setWins(uuid,monthWins,allWins);
 
@@ -222,7 +217,7 @@ public class PlayerData {
             return rs.getString("color");
         } catch (SQLException ignored) {
         }
-        return null;
+        return "";
     }
 
     public void setCol(String uuid, String color){
