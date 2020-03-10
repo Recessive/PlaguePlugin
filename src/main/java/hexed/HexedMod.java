@@ -29,8 +29,10 @@ import mindustry.world.*;
 import mindustry.world.blocks.storage.*;
 import mindustry.core.*;
 
+import static arc.math.Mathf.floor;
 import static arc.util.Log.info;
 import static mindustry.Vars.*;
+import static mindustry.Vars.player;
 
 public class HexedMod extends Plugin{
 
@@ -43,7 +45,8 @@ public class HexedMod extends Plugin{
     //item requirement to captured a hex
     public static final int itemRequirement = 1000;
 
-    public static final int messageTime = 1000;
+    public static final int messageTime = 1;
+
     //in ticks: 60 minutes: 60 * 60 * 60
     private int roundTime = 60 * 60 * 60;
     //in ticks: 2 minutes
