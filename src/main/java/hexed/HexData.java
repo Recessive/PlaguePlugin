@@ -182,9 +182,9 @@ public class HexData{
         if(terrain_type == 1){
             Block[][] t = {
                 {Blocks.sand, Blocks.sand, Blocks.sand, Blocks.sand, Blocks.sand, Blocks.grass},
-                {Blocks.darksandWater, Blocks.darksand, Blocks.darksand, Blocks.darksand, Blocks.grass, Blocks.grass},
-                {Blocks.darksandWater, Blocks.darksand, Blocks.darksand, Blocks.darksand, Blocks.grass, Blocks.shale},
-                {Blocks.darksandTaintedWater, Blocks.darksandTaintedWater, Blocks.moss, Blocks.moss, Blocks.sporeMoss, Blocks.stone},
+                {Blocks.darksand, Blocks.darksand, Blocks.darksand, Blocks.darksand, Blocks.grass, Blocks.grass},
+                {Blocks.darksand, Blocks.darksand, Blocks.darksand, Blocks.darksand, Blocks.grass, Blocks.shale},
+                {Blocks.darksand, Blocks.darksand, Blocks.moss, Blocks.moss, Blocks.sporeMoss, Blocks.stone},
                 {Blocks.ice, Blocks.iceSnow, Blocks.snow, Blocks.holostone, Blocks.hotrock, Blocks.salt}
             };
             return t;
