@@ -23,7 +23,7 @@ public class PlayerData {
         } catch (SQLException | ClassNotFoundException e) {
             e.printStackTrace();
         }
-        System.out.println("Connected successfully");
+        System.out.println("Connected to database successfully");
     }
 
     public boolean hasRow(String uuid){
@@ -300,6 +300,36 @@ public class PlayerData {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public int getDonatorLevel(String uuid){
+        String sql;
+        sql = "SELECT donatorLevel FROM players WHERE uuid = '" + uuid + "'";
+
+        try {
+            Statement stmt  = conn.createStatement();
+            ResultSet rs    = stmt.executeQuery(sql);
+
+            int level;
+
+            level = rs.getInt("donatorLevel");
+
+            return level;
+        } catch (SQLException ignored) {
+        }
+        return 0;
+    }
+
+    public void setDonatorLevel(String uuid, int level){
+        String sql;
+        sql = "UPDATE players SET donatorLevel = " + level + " WHERE uuid = '" + uuid + "'";
+        try {
+            Statement stmt = conn.createStatement();
+            stmt.executeUpdate(sql);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
     }
 
 }

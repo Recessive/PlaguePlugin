@@ -11,7 +11,7 @@ import arc.util.*;
 import hexed.HexData.*;
 import arc.math.geom.*;
 import mindustry.entities.bullet.*;
-import hexed.PlayerData.*;
+import hexed.DonatorData.*;
 import java.sql.Connection;
 import mindustry.content.*;
 import mindustry.core.GameState.*;
@@ -31,6 +31,7 @@ import mindustry.core.*;
 
 import static arc.math.Mathf.floor;
 import static arc.util.Log.info;
+import static java.lang.Math.abs;
 import static mindustry.Vars.*;
 import static mindustry.Vars.player;
 
@@ -96,6 +97,8 @@ public class HexedMod extends Plugin{
     private Map<String, Integer> player_deaths = new HashMap<String, Integer>();
     
     private Map<String, Boolean> core_count = new HashMap<String, Boolean>();
+
+    private Map<String, DonatorData> donators = new HashMap<String, DonatorData>();
 
 
     @Override
@@ -182,6 +185,18 @@ public class HexedMod extends Plugin{
                         endGame();
                         break;
                     }
+
+                    // Default trail:
+                    if((abs(player.velocity().x) + abs(player.velocity().y)) > 1.2)
+                        Call.onEffectReliable(Fx.hitLiquid, player.x+(player.velocity().x * 3), player.y+(player.velocity().y * 3), (180 + player.rotation)%360, Color.lightGray);
+
+                    // Handle all donator shenanigans
+
+                    for(String uuid : donators.keySet()){
+                        donators.get(uuid).makeTrail();
+                        donators.get(uuid).makeBuildEffect();;
+                    }
+
                 }
                 int minsToGo = (int)Math.ceil((roundTime - counter) / 60 / 60); // Changed /time so the time left is clearer
                 if(minsToGo != lastMin){
@@ -273,12 +288,13 @@ public class HexedMod extends Plugin{
                 	event.player.name = event.player.name.replaceAll("(?i)" + swear, "");
                 }
             }
-            if(event.player.version() < 104.5 && false){
-                event.player.con.kick("Your game is outdated! Update to version 104.5 or later", 0);
-            }
         });
 
         Events.on(PlayerJoin.class, event -> {
+            int level = ply_db.getDonatorLevel(event.player.uuid);
+            if(level > 0){
+                donators.put(event.player.uuid, new DonatorData(level, event.player));
+            }
             // Determine player name color
             String no_color = filterColor(event.player.name, ply_db.getCol(event.player.uuid));
 
@@ -465,6 +481,20 @@ public class HexedMod extends Plugin{
 
         handler.register("setcolor", "<uuid> <color>", "Set the color of a players name based on uuid", args -> {
             ply_db.setCol(args[0], args[1]);
+            Log.info("Set uuid " + args[0] + " prefix to " + args[1]);
+        });
+
+        handler.register("getdonator", "<uuid>", "Set the color of a players name based on uuid", args -> {
+            Log.info("uuid " + args[0] + " donator level is " + ply_db.getDonatorLevel(args[0]));
+        });
+
+        handler.register("setdonator", "<uuid> <level>", "Set the color of a players name based on uuid", args -> {
+            int level = Integer.parseInt(args[1]);
+            if (level < 0 || level > 3){
+                Log.info("Donator level must be between 0 and 5");
+            }
+            setDonator(args[0], level);
+            Log.info("Set uuid " + args[0] + " donator level to " + args[1]);
         });
     }
 
@@ -546,6 +576,33 @@ public class HexedMod extends Plugin{
         handler.<Player>register("hextotal", "Get the total hexes captured across all games", (args, player) -> {
             player.sendMessage("[accent]You've captured [scarlet]" + ply_db.getHexesCaptured(player.uuid) + "[accent] hexes across all games");
         });
+
+        handler.<Player>register("trail", "Toggle trail on/off", (args, player) -> {
+
+            if(donators.containsKey(player.uuid)){
+                player.sendMessage("Trail is now " + donators.get(player.uuid).toggleTrail());
+            }
+        });
+    }
+
+    void setDonator(String uuid, int level){
+        switch(level){
+            case 0:
+                ply_db.setCol(uuid, "[white]");
+                break;
+            case 1:
+                ply_db.setCol(uuid, "[sky]");
+                break;
+            case 2:
+                ply_db.setCol(uuid, "[forest]");
+                break;
+            case 3:
+                ply_db.setCol(uuid, "[red]");
+                break;
+
+        }
+
+        ply_db.setDonatorLevel(uuid, level);
     }
 
     void endGame(){
@@ -641,7 +698,7 @@ public class HexedMod extends Plugin{
 
     void killTiles(Team team, Player player){
         if(data.getControlled(player).size > 1 && !restarting && counter > respawnCutoff) {
-            player.sendMessage("You gained " + (data.getControlled(player).size - 1) + " experience towards your rank!");
+            player.sendMessage("[accent]You gained [scarlet]" + (data.getControlled(player).size - 1) + " [accent]experience towards your rank!");
             ply_db.addHexCaptures(player.uuid, data.getControlled(player).size - 1);}
         data.data(team).dying = true;
         Time.runTask(8f, () -> data.data(team).dying = false);
