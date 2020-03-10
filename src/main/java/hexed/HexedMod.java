@@ -92,7 +92,7 @@ public class HexedMod extends Plugin{
 
   	private PlayerData ply_db = new PlayerData();
 
-  	private int lives = 1;
+  	private int lives = 0;
     private Map<String, Integer> player_deaths = new HashMap<String, Integer>();
     
     private Map<String, Boolean> core_count = new HashMap<String, Boolean>();
@@ -168,7 +168,7 @@ public class HexedMod extends Plugin{
                 for(Player player : playerGroup.all()){
                     if(player.getTeam() != Team.derelict && player.getTeam().cores().isEmpty()){
                         player.kill();
-                        killTiles(player.getTeam());
+                        killTiles(player.getTeam(), player);
                         Integer curr_deaths = player_deaths.get(player.uuid);
                         int lives_left = lives-curr_deaths;
                         Call.sendMessage("[yellow](!)[] [accent]" + player.name + "[lightgray] has been eliminated![accent] " +  lives_left + "/" + lives + " lives left [yellow] (!)");
@@ -258,12 +258,12 @@ public class HexedMod extends Plugin{
         });
 
         Events.on(PlayerLeave.class, event -> {
-            if(counter > respawnCutoff){
-                Integer curr_deaths = player_deaths.get(event.player.uuid);
-                player_deaths.put(event.player.uuid, curr_deaths+1);
-            }
             if(active() && event.player.getTeam() != Team.derelict){
-                killTiles(event.player.getTeam());
+                if(counter > respawnCutoff){
+                    Integer curr_deaths = player_deaths.get(event.player.uuid);
+                    player_deaths.put(event.player.uuid, curr_deaths+1);
+                }
+                killTiles(event.player.getTeam(), event.player);
             }
         });
 
@@ -273,35 +273,39 @@ public class HexedMod extends Plugin{
                 	event.player.name = event.player.name.replaceAll("(?i)" + swear, "");
                 }
             }
+            if(event.player.version() < 104.5 && false){
+                event.player.con.kick("Your game is outdated! Update to version 104.5 or later", 0);
+            }
         });
 
         Events.on(PlayerJoin.class, event -> {
             // Determine player name color
             String no_color = filterColor(event.player.name, ply_db.getCol(event.player.uuid));
 
-            if (ply_db.getHexesCaptured(event.player.uuid) < 10){
-                event.player.name = "[accent]<[darkgray]Rookie[accent]>[white] " + no_color;
+            int rank_num = ply_db.getHexesCaptured(event.player.uuid)/25 % 4 + 1;
+
+            int capped = ply_db.getHexesCaptured(event.player.uuid);
+
+            if (capped < 100){
+                event.player.name = "[accent]<[#cd7f32]Bronze " + rank_num + "[accent]>[white] " + no_color;
             }
 
-            if (ply_db.getHexesCaptured(event.player.uuid) >= 10 && ply_db.getHexesCaptured(event.player.uuid) < 25){
-                event.player.name = "[accent]<[#cd7f32]Bronze[accent]>[white] " + no_color;
+            if (capped >= 100 && capped < 200){
+                event.player.name = "[accent]<[#C0C0C0]Silver " + rank_num + "[accent]>[white] " + no_color;
             }
-            if (ply_db.getHexesCaptured(event.player.uuid) >= 25 && ply_db.getHexesCaptured(event.player.uuid) < 50){
-                event.player.name = "[accent]<[#C0C0C0]Silver[accent]>[white] " + no_color;
+            if (capped >= 200 && capped < 300){
+                event.player.name = "[accent]<[gold]Gold " + rank_num + "[accent]>[white] " + no_color;
             }
-            if (ply_db.getHexesCaptured(event.player.uuid) >= 50 && ply_db.getHexesCaptured(event.player.uuid) < 100){
-                event.player.name = "[accent]<[gold]Gold[accent]>[white] " + no_color;
+            if (capped >= 300 && capped < 400){
+                event.player.name = "[accent]<[#697998]Platinum " + rank_num + "[accent]>[white] " + no_color;
             }
-            if (ply_db.getHexesCaptured(event.player.uuid) >= 100 && ply_db.getHexesCaptured(event.player.uuid) < 250){
-                event.player.name = "[accent]<[#697998]Platinum[accent]>[white] " + no_color;
+            if (capped >= 400 && capped < 500){
+                event.player.name = "[accent]<[#00ccff]Diamond " + rank_num + "[accent]>[white] " + no_color;
             }
-            if (ply_db.getHexesCaptured(event.player.uuid) >= 250 && ply_db.getHexesCaptured(event.player.uuid) < 500){
-                event.player.name = "[accent]<[#00ccff]Diamond[accent]>[white] " + no_color;
+            if (capped >= 500 && capped < 600){
+                event.player.name = "[accent]<[#ff5050]Master " + rank_num + "[accent]>[white] " + no_color;
             }
-            if (ply_db.getHexesCaptured(event.player.uuid) >= 500 && ply_db.getHexesCaptured(event.player.uuid) < 1000){
-                event.player.name = "[accent]<[#ff5050]Master[accent]>[white] " + no_color;
-            }
-            if (ply_db.getHexesCaptured(event.player.uuid) >= 1000){
+            if (capped >= 600){
                 event.player.name = "[accent]<[#660066]Grand Master[accent]>[white] " + no_color;
             }
 
@@ -473,7 +477,7 @@ public class HexedMod extends Plugin{
              if(player.getTeam() == Team.derelict){
                  player.sendMessage("[scarlet]You're already spectating.");
              }else{
-                 killTiles(player.getTeam());
+                 killTiles(player.getTeam(), player);
                  player.kill();
                  player.setTeam(Team.derelict);
              }
@@ -483,7 +487,7 @@ public class HexedMod extends Plugin{
             if(player.getTeam() == Team.derelict){
                 player.sendMessage("[scarlet]You're already spectating.");
             }else{
-                killTiles(player.getTeam());
+                killTiles(player.getTeam(), player);
                 player.kill();
                 player.setTeam(Team.derelict);
             }
@@ -551,7 +555,6 @@ public class HexedMod extends Plugin{
 
         for(Player player : playerGroup.all()){
             ply_db.addGame(player.uuid);
-            if(data.getControlled(player).size > 1){ply_db.addHexCaptures(player.uuid, data.getControlled(player).size - 1);}
         }
 
         Array<Player> players = data.getLeaderboard();
@@ -575,10 +578,14 @@ public class HexedMod extends Plugin{
                 player.sendMessage("[accent]Your points increased from [scarlet]" + ply_db.getPoints(player.uuid)[0] + "[accent] to [scarlet]" + (ply_db.getPoints(player.uuid)[0] + 5 - count)  + "[accent] for placing " + ordinal(count+1));
                 ply_db.addPoints(player.uuid, 5 - count);
                 count ++;
-                if(count > 2) break;
+                if(count > 4) break;
             }
 
             for(Player player : playerGroup.all()){
+                if(data.getControlled(player).size > 1){
+                    player.sendMessage("You gained " + (data.getControlled(player).size - 1) + " experience towards your rank!");
+                    ply_db.addHexCaptures(player.uuid, data.getControlled(player).size - 1);
+                }
                 Call.onInfoMessage(player.con, "[accent]--ROUND OVER--\n\n[lightgray]"
                 + (player == players.first() ? "[accent]You[] were" : "[yellow]" + players.first().name + "[lightgray] was") +
                 " victorious, with [accent]" + data.getControlled(players.first()).size + "[lightgray] hexes conquered." + (dominated ? "" : "\n\nFinal scores:\n" + builder));
@@ -632,7 +639,10 @@ public class HexedMod extends Plugin{
     }
 
 
-    void killTiles(Team team){
+    void killTiles(Team team, Player player){
+        if(data.getControlled(player).size > 1 && !restarting){
+            player.sendMessage("You gained " + (data.getControlled(player).size - 1) + " experience towards your rank!");
+            ply_db.addHexCaptures(player.uuid, data.getControlled(player).size - 1);}
         data.data(team).dying = true;
         Time.runTask(8f, () -> data.data(team).dying = false);
         for(int x = 0; x < world.width(); x++){
