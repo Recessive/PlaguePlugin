@@ -1,0 +1,2 @@
+Overhaul Gameplay:
+    Capturing 15 hexes instantly wins the game

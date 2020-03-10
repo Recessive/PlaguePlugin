@@ -61,6 +61,7 @@ public class HexedMod extends Plugin{
     private final static int updateTime = 60 * 2;
 
     private final static int winCondition = 5;
+    private final static int maxHex = 15;
 
     private final static int timerBoard = 0, timerUpdate = 1, timerWinCheck = 2, timerAnnounce = 3, timerUpgrade = 4;
 
@@ -218,6 +219,11 @@ public class HexedMod extends Plugin{
                     upgradeLevel = Math.min(starts.length-1, upgradeLevel + 1);
                     start = starts[upgradeLevel];
                     state.rules.loadout = loadouts.get(upgradeLevel);
+                }
+
+                Array<Player> players = data.getLeaderboard();
+                if(!players.isEmpty() && data.getControlled(players.first()).size >= maxHex && playerGroup.all().size < maxHex){
+                    endGame();
                 }
 
                 counter += Time.delta();
