@@ -361,7 +361,7 @@ public class HexedMod extends Plugin{
             for(String swear : CurseFilter.swears){
                 text = text.replaceAll("(?i)" + swear, "");
             }
-            text = "[coral][[0[coral]]: [white]1".replace("0", mod_name.get(event.player.uuid)).replace("1", text);
+            text = "[coral][[>>[coral]]: [white]<<".replace(">>", mod_name.get(event.player.uuid)).replace("<<", text);
             Log.info("&ly" + event.player.uuid + " | " + filterColor(event.player.name, "") + ": " + event.message);
             Call.sendMessage(text);
         });
@@ -557,7 +557,7 @@ public class HexedMod extends Plugin{
         Array<Player> players = data.getLeaderboard();
         StringBuilder builder = new StringBuilder();
         for(int i = 0; i < players.size && i < 3; i++){
-            if(data.getControlled(players.get(i)).size > 1){
+            if(data.getControlled(players.get(i)).size > 1){ // Num hexes > 1
                 builder.append("[yellow]").append(i + 1).append(".[accent] ").append(players.get(i).name)
                 .append("[lightgray] (x").append(data.getControlled(players.get(i)).size).append(")[]\n");
             }
@@ -571,7 +571,8 @@ public class HexedMod extends Plugin{
             // Add 5 points for first, 4 for second, 3 for third
             int count = 0;
             for(Player player : data.getLeaderboard()){
-                ply_db.addPoints(player.uuid, 5-count);
+                ply_db.addPoints(player.uuid, 5 - count);
+                count ++;
                 if(count > 2) break;
             }
 
