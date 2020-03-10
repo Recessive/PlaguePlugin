@@ -640,7 +640,7 @@ public class HexedMod extends Plugin{
 
 
     void killTiles(Team team, Player player){
-        if(data.getControlled(player).size > 1 && !restarting){
+        if(data.getControlled(player).size > 1 && !restarting && counter > respawnCutoff) {
             player.sendMessage("You gained " + (data.getControlled(player).size - 1) + " experience towards your rank!");
             ply_db.addHexCaptures(player.uuid, data.getControlled(player).size - 1);}
         data.data(team).dying = true;
