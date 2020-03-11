@@ -44,7 +44,7 @@ public class HexedMod extends Plugin{
     //health requirement needed to capture a hex; no longer used
     public static final float healthRequirement = 3500;
     //item requirement to captured a hex
-    public static final int itemRequirement = 1000;
+    public static final int itemRequirement = 1500;
 
     public static final int messageTime = 1;
 
@@ -61,7 +61,7 @@ public class HexedMod extends Plugin{
 
     private final static int updateTime = 60 * 2;
 
-    private final static int winCondition = 5;
+    private final static int winCondition = 10;
     private final static int maxHex = 15;
 
     private final static int timerBoard = 0, timerUpdate = 1, timerWinCheck = 2, timerAnnounce = 3, timerUpgrade = 4;
@@ -235,9 +235,9 @@ public class HexedMod extends Plugin{
                     start = starts[upgradeLevel];
                     state.rules.loadout = loadouts.get(upgradeLevel);
                 }
-
                 Array<Player> players = data.getLeaderboard();
-                if(!players.isEmpty() && data.getControlled(players.first()).size >= maxHex && playerGroup.all().size < maxHex){
+
+                if(!players.isEmpty() && data.getControlled(players.first()).size >= maxHex && playerGroup.all().size < maxHex && data.getControlled(players.get(1)).size < 8){
                     endGame();
                 }
 
