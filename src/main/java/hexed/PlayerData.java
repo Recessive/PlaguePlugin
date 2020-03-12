@@ -12,7 +12,7 @@ import java.util.List;
 
 public class PlayerData {
 
-    private Connection conn = null;
+    public Connection conn = null;
 
     public void connect(String db){
         // SQLite connection string
@@ -24,6 +24,10 @@ public class PlayerData {
             e.printStackTrace();
         }
         System.out.println("Connected to database successfully");
+    }
+
+    public void connect(Connection c){
+        conn = c;
     }
 
     public boolean hasRow(String uuid){
@@ -38,6 +42,18 @@ public class PlayerData {
         } catch (SQLException ignored) {
         }
         return false;
+    }
+
+    public void setXp(String uuid, int xp){
+        String sql;
+        sql = "UPDATE players SET hexesCaptured= " + xp + " WHERE uuid = '" + uuid + "'";
+
+        try {
+            Statement stmt = conn.createStatement();
+            stmt.executeUpdate(sql);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
     }
 
     public int[] getWins(String uuid){
@@ -207,31 +223,7 @@ public class PlayerData {
         }
     }
 
-    public String getCol(String uuid){
-        String sql;
-        sql = "SELECT color FROM players WHERE uuid = '" + uuid + "'";
 
-        try {
-            Statement stmt  = conn.createStatement();
-            ResultSet rs    = stmt.executeQuery(sql);
-
-            return rs.getString("color");
-        } catch (SQLException ignored) {
-        }
-        return "";
-    }
-
-    public void setCol(String uuid, String color){
-        String sql;
-        sql = "UPDATE players SET color= '" + color + "' WHERE uuid = '" + uuid + "'";
-
-        try {
-            Statement stmt = conn.createStatement();
-            stmt.executeUpdate(sql);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
 
     public int[] getPoints(String uuid){
         String sql;
