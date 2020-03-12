@@ -10,8 +10,8 @@ import arc.struct.*;
 import arc.util.*;
 import hexed.HexData.*;
 import arc.math.geom.*;
+import jdk.nashorn.internal.ir.debug.JSONWriter;
 import mindustry.entities.bullet.*;
-import hexed.DonatorData.*;
 import java.sql.Connection;
 import mindustry.content.*;
 import mindustry.core.GameState.*;
@@ -28,6 +28,7 @@ import mindustry.type.*;
 import mindustry.world.*;
 import mindustry.world.blocks.storage.*;
 import mindustry.core.*;
+import org.json.simple.JSONObject;
 
 import static arc.math.Mathf.floor;
 import static arc.util.Log.info;
@@ -88,23 +89,24 @@ public class HexedMod extends Plugin{
     private String terrain_str = "";
     private String map_str = "";
 
-  	private String[] announcements = {"Join the discord at: [purple]https://discord.gg/GEnYcSv"};
+  	private String[] announcements = {"Join the discord at: [purple]https://discord.gg/GEnYcSv", "Rank up to earn [gray]common[white] trails or donate to get [purple]epic[white] ones!"};
   	private int announcementIndex = 0;
 
   	private PlayerData ply_db = new PlayerData();
+  	private CosmeticData cos_db = new CosmeticData();
 
   	private int lives = 0;
     private Map<String, Integer> player_deaths = new HashMap<String, Integer>();
     
     private Map<String, Boolean> core_count = new HashMap<String, Boolean>();
 
-    private Map<String, DonatorData> donators = new HashMap<String, DonatorData>();
-
 
     @Override
     public void init(){
 
         ply_db.connect("data/server_data.db");
+        cos_db.connect(ply_db.conn);
+
 
     	loadouts.add(ItemStack.list(Items.copper, 1000, Items.lead, 1000, Items.graphite, 200, Items.metaglass, 200, Items.silicon, 200));
     	loadouts.add(ItemStack.list(Items.copper, 2000, Items.lead, 2000, Items.graphite, 400, Items.metaglass, 400, Items.silicon, 200, Items.titanium, 200));
@@ -147,13 +149,11 @@ public class HexedMod extends Plugin{
         // Log.info(Items.coal.explosiveness);
 
 
-
-
         
         starts = new Schematic[]{Schematics.readBase64("bXNjaAB4nD2SUW7DIBBEd7ExBqcfOYg/epSeoEIOqiIREzl2qt6+rIGJJfNkdmd2R6GJPpj61T8C2ZiOWzr278+RpiU9n2Gbf32MdN3vu1/vx2Ne0voOf2mj6ytFv81Pv4Y4Z/oJdFnSFub1WGI4XtT5bSHzWvy+h43GY43J3zINj7DKSfRF7dfJi0EKVF5y01Or0aABZEAjRC1EHWgCXSpxrVbnI8D5W3NjuDHcGG5c3aTT1cG5KLctzjoFPQU9BT0FPYXpFVQ6nLp2CLfbHmdfNmGd6XTmIZNkwMpkOufrpK5l0ENFIzMNFV3yU/KtdWh0tEn6TKXDZGq+wzk1s9y23gG9BjuONXGhlp9BXctCUj73VEIaNIAMaKwqI1QsVCxULFQsVCxULFQsVBwScnVfIQUqf2DO1DwcPBw8HDwcPFyZsBNyoAlUJvgH0+orFw=="),
     							Schematics.readBase64("bXNjaAB4nFWSbW6DMAyGTfgINFBoew5+7BA7x5RBVnUKoUqhU0+/OcFYGojoIc7rvHYCDVwSyJyeDEhrnsZ+vNXQLLdFu9s69T/aWrj8++2t9lcDnfbT7M3YD7N7mtfsIX/q1S4gH4NeFuPhOBk39nc/f5thwfjpMaO0v2tn9iSF1W7ApeXq7KxHpGb0er32XzpIXlAPuEfv1sGa9QHyM2Z+AcA77I9IcAgfpGFMmfJIAge5LcSvZKo4wQF2mWJtzXRk6njdmZQJOUgxY8ycZDh3oFBC65K4H0RHgrjARDlTE0lirI2CoDiRJiV/JZL6xQejGcUqJEE1FFRRmNuzZJSlwDdnakhd7Bsgbf1TSIIpZWqZOlacmM7UIUndqGIlwUGglnog2UvFXirykuynISTSVlGJJEO9sabY3TT0YutujnMta7fMGcYk9V7xCSm+G4rvhqK7EahmOjLtVSo+6RqASVK0JlcCKfoXgQ5M0YMI67Ysf8bqSfk="),
     							Schematics.readBase64("bXNjaAB4nFWS33KsIAzGo2tBRbd/9pzH8KZv06sOo9T2DCsdqu707U8CMdN6AT8D+UI+gB7+FlAt9upAe7c7//p8hqf1PcSP7TrcrPeDt3F20P2MwYON1xDdNIxh2d13iHC3282vcL66ZRo+Y/jnxhXD/RTtNg9vlv6+QX+Ndl1dhEvYXZzix+5+bK63xQc74bLydhlx7uM6D7NbXLS0oRux6LBso3fbF7Sf4ebisITJQU96bz7chtmuDgBe4NdX0nCioRJSiQocatnTCLVCJhHt60SvP0JwL/QodEmpBf5k5RPqtKxSiErJc4WUuLzDOZ2vUEiKM0pWIcq5tJpOAJSRT6CRHlm25BPUWJlyixNRl4gdSL1WXLdFyr4QZV8MzvnMFOtlNVej3KNaJf3mE5OnKhuRqBRKtp86pIpdVNgBxajbXLfGWSPoRH0iWj2nupRxLyoP7Iti74mehC5S90++hKSbO9fSuWbHiRR3qaVfLf1q6VdnZTheC0UaucFGbrBhP2qkdAtofsueUizfB+077rLhahXSUa3hagVm1kLHGzIAQmVeRKqEFLthcm5J1LGykVds5BUbecVG6nacS6+vEWqFDCt3rPwf0vpQUg=="),
-    							Schematics.readBase64("bXNjaAB4nFVS7Y7cIAw05IOQ72ufI7/6QFWURdtr2XDiNjn17WuDY22zWpgEz3iMDW/wpqDc14cD493p/M8fPXx7/grx/XgsX6v3i1/j3cG8xkeI7rZsYT/d3xBhfLj9tnzE8NttT3yv/bpvLkL/yobv4XTxFt9P9xI6xOd9ubvdxZVeq3M9/BOqz9WfAdqP8OXisoebg+bYfVhvpLph9mU/Nu+OTwD4A/89mpaCllJQnZDCpUkxhKygVridMAZBE8cp4SrhKuFq2XXGqsA9OcBVswNChr1o0dOip1/0spcK0cBGNXup0VjWM6htOX3JzCLlg1RryV8JJT2MLlmPzkbmlFJlxcotInJqgBAxDLqvhFHzbhHleuvkK9dWYyS56jBzrtLgr09xdDpK3CRo5hsy7L5FVCWmwv/FMMIwzLj6QspN6mdG2ZVJFV9xo6BJ0KViRcWKimWVFlGXvNSIenZq5TZs1tMyD4qQEqQFXV1oM1fxzKUedFJ5l27SFA2iku+vz5OTTi3fS5fzKYrruPtd7i+QcnZVIldz3j73CLvV54oLkHjqs2ZXQ86LUzywMs3hIKdXvWOehISMoIbzjpyDUMvZJrieSbJNnE0huvQm0ZtYj+KsMDpBg6DL1Swqs6jMrPIPZChGJA==")};
+    							Schematics.readBase64("bXNjaAB4nE1W7ZLaMAx0nC8CScgn3D1E/rQP1MmAj14nJDc54OYet29Sy5a2wEyy2NKuJMs26lW9Biqax6tR2WQeZvr189ePUjW338v6fr8OX+M0DdO4XozKn8dUMo3zyayqGtfrsprzcFrmh/leVlWc1/F+Gd7G021Zv1X9uVj/4WOcjTCVVzOfh491+WPIRhXr7TJczGzWkX62y8Os5/X9YZ5sth/Ll1mHeTkbtbnP0zKerXp+strDfD9N5v6p0s/TeLvZ4YIY3qbla7iMN6OU+qvkEwT2ofEzxCMGSoEyoNL50qMCaoA6MB/AfPRy9quBZJb1Nc1p1tBeKCDkYgloLmVz7WMJQot2HLlWOVAB5hK+FXwbaLhIQ9L9H4tEGnJcof3ugHKgAnbiGyGPCFlGPg836+YDeieOJLaZSR4RNCJoRKxBdnv41hx9pFpo9EAHzjLiPMhb8oihEUMjRq1iZlE+OstCcUZcoYRjJuQ7IrRI+BLwJahL4iPVhBrwtRx9wvFFlk0zc8oapOA0AnpnrJZCLYVaympk51Y63Fjke5L4RDf1udlu2nBuVPmYa78B8wbMG9Q+8zE7Xx8zdZ9m3YyrkanMR6q39r2lORtzBuYMzBkzk13p7MjTra8mPhd9SBo9r+WWY946H/LYWbacWbbONw0J+/hyq+prSigCSoBcFcKtRXtXAupwX7XCoprrsuM9TWMtxjqM9VznHXddwDHRWub+KAgpzj1QDdQC9fA4Ar1wl0hvBha5jHRhUcgdUXBuNBZjLMFYijHJt3D1CxyzrGXJa0l7zHcE9VLKHiVXnJCvM836NSIPXxdikdXac8y0ptIRe3TE3neEJpQDFbCTjthzRxCf7JSKV3VjkeyPCvujAnMF5oqZyc7vj8Qiv9LEJ7ui5pjpdJEdX3MlQ4uEuQZzzcxkJ7usxk6pcfo0vG6BRXKCNFzd2NrL+ddAo4FGwxpk588/8q3B13CFGtS+VfJpfR6aTknJo4VGC42WNciu5uhb8LS4DTrk0fn+s74d+DrwdahLh1O5ww0hJ2xgkeaYe9x0PW66Hjddjwr1UOuh1rMa2ZXwrTAmN12Pm65/ikVyO3Bf0U0mGgdoHJDRAb6yuoFFGmOSx5HzIJQCZbArMVYBNUDy7+H4pCaRvuBefeHZf3lEZ70=")};
         captureSchematic = Schematics.readBase64("bXNjaAB4nD3OSw6AIAxF0VdacOIGXISLMoaZnwR1/UpFHxMOt0kDOnQC26Y1w+a95IB07OXMBb0/x+2al3wdAAb4uetRh1CBUsqoSKVP0rbUW/EOfFubhrrtm7r+pmzKZmzGFtkiW2JL7c/iCpRSRkXq3SIPb1NrXw==");
         start = starts[upgradeLevel];
         netServer.admins.addChatFilter((player, text) -> {
@@ -186,17 +186,10 @@ public class HexedMod extends Plugin{
                         break;
                     }
 
-                    // Default trail:
-                    if((abs(player.velocity().x) + abs(player.velocity().y)) > 1.2)
-                        Call.onEffectReliable(Fx.hitLiquid, player.x+(player.velocity().x * 3), player.y+(player.velocity().y * 3), (180 + player.rotation)%360, Color.lightGray);
-
-                    // Handle all donator shenanigans
-
-                    for(String uuid : donators.keySet()){
-                        donators.get(uuid).makeTrail();
-                        donators.get(uuid).makeBuildEffect();;
+                    // Do trail:
+                    if ((abs(player.velocity().x) + abs(player.velocity().y)) > 1.2 && cos_db.getTrailToggle(player.uuid)){
+                        Call.onEffectReliable(cos_db.trailList.get(cos_db.getTrail(player.uuid)), player.x + (player.velocity().x), player.y + (player.velocity().y), (180 + player.rotation) % 360, Color.white);
                     }
-
                 }
                 int minsToGo = (int)Math.ceil((roundTime - counter) / 60 / 60); // Changed /time so the time left is clearer
                 if(minsToGo != lastMin){
@@ -291,21 +284,21 @@ public class HexedMod extends Plugin{
         });
 
         Events.on(PlayerJoin.class, event -> {
-            int level = ply_db.getDonatorLevel(event.player.uuid);
-            if(level > 0){
-                donators.put(event.player.uuid, new DonatorData(level, event.player));
-            }
+
+
+            if(!cos_db.hasRow(event.player.uuid)){cos_db.addPlayer(event.player.uuid);}
+
             // Determine player name color
-            String no_color = filterColor(event.player.name, ply_db.getCol(event.player.uuid));
+            String no_color = filterColor(event.player.name, cos_db.getCol(event.player.uuid));
 
             int rank_num = ply_db.getHexesCaptured(event.player.uuid)/25 % 4 + 1;
 
             int capped = ply_db.getHexesCaptured(event.player.uuid);
 
+            List<String> curr_trails = cos_db.getTrails(event.player.uuid);
             if (capped < 100){
                 event.player.name = "[accent]<[#cd7f32]Bronze " + rank_num + "[accent]>[white] " + no_color;
             }
-
             if (capped >= 100 && capped < 200){
                 event.player.name = "[accent]<[#C0C0C0]Silver " + rank_num + "[accent]>[white] " + no_color;
             }
@@ -324,9 +317,48 @@ public class HexedMod extends Plugin{
             if (capped >= 600){
                 event.player.name = "[accent]<[#660066]Grand Master[accent]>[white] " + no_color;
             }
-
-            Log.info(event.player.name);
             ply_db.setName(event.player.uuid, event.player.name);
+
+            if(capped < 100){
+                cos_db.setTrail(event.player.uuid, 0);
+            }
+
+            if (capped >= 100){
+                if(!curr_trails.contains("16")){
+                    Log.info("asdAsd");
+                    cos_db.addTrail(event.player.uuid, "16");
+                }
+            }
+            if (capped >= 200){
+                if(!curr_trails.contains("11")){
+                    cos_db.addTrail(event.player.uuid, "11");
+                }
+            }
+
+            if (capped >= 300){
+                if(!curr_trails.contains("7")){
+                    cos_db.addTrail(event.player.uuid, "7");
+                }
+            }
+
+            if (capped >= 400){
+                if(!curr_trails.contains("13")){
+                    cos_db.addTrail(event.player.uuid, "13");
+                }
+            }
+
+            if (capped >= 500){
+                if(!curr_trails.contains("27")){
+                    cos_db.addTrail(event.player.uuid, "27");
+                }
+            }
+
+            if (capped >= 500){
+                if(!curr_trails.contains("107")){
+                    cos_db.addTrail(event.player.uuid, "107");
+                }
+            }
+
 
 
             if (ply_db.getPoints(event.player.uuid)[0] == 0){
@@ -404,6 +436,7 @@ public class HexedMod extends Plugin{
                 return prev.assign(player, players);
             }
         };
+
     }
 
     void updateText(Player player){
@@ -469,6 +502,9 @@ public class HexedMod extends Plugin{
             state.rules = rules.copy();
             logic.play();
             netServer.openServer();
+
+            // Can only add Fx after the map has been made so they are properly initialised
+            cos_db.initMappings();
         });
 
         handler.register("countdown", "Get the hexed restart countdown.", args -> {
@@ -480,7 +516,7 @@ public class HexedMod extends Plugin{
         handler.register("r", "Restart the server.", args -> System.exit(2));
 
         handler.register("setcolor", "<uuid> <color>", "Set the color of a players name based on uuid", args -> {
-            ply_db.setCol(args[0], args[1]);
+            cos_db.setCol(args[0], args[1]);
             Log.info("Set uuid " + args[0] + " prefix to " + args[1]);
         });
 
@@ -495,6 +531,12 @@ public class HexedMod extends Plugin{
             }
             setDonator(args[0], level);
             Log.info("Set uuid " + args[0] + " donator level to " + args[1]);
+        });
+
+        handler.register("setxp", "<uuid> <xp>", "Set a players xp/hexes captured", args -> {
+            int xp = Integer.parseInt(args[1]);
+            ply_db.setXp(args[0], xp);
+            Log.info("Set uuid " + args[0] + " xp to " + xp);
         });
     }
 
@@ -577,27 +619,64 @@ public class HexedMod extends Plugin{
             player.sendMessage("[accent]You've captured [scarlet]" + ply_db.getHexesCaptured(player.uuid) + "[accent] hexes across all games");
         });
 
+        handler.<Player>register("xp", "Get your experience", (args, player) -> {
+            player.sendMessage("[accent]You have [scarlet]" + ply_db.getHexesCaptured(player.uuid) + "[accent] xp points");
+        });
+
         handler.<Player>register("trail", "Toggle trail on/off", (args, player) -> {
 
-            if(donators.containsKey(player.uuid)){
-                player.sendMessage("Trail is now " + donators.get(player.uuid).toggleTrail());
+            if(cos_db.getTrails(player.uuid).get(0).equals("")){
+                player.sendMessage("[accent]You have no trails! Get [gray]common[accent] trails by ranking up or donate to get [purple]epic[accent] ones!");
+                return;
             }
+
+            cos_db.toggleTrail(player.uuid);
+            player.sendMessage("[accent]Trail is now [scarlet]" + (cos_db.getTrailToggle(player.uuid) ? "on" : "off"));
+
+        });
+
+        handler.<Player>register("trailset", "<number>", "Change your trail", (args, player) -> {
+            int trail = Integer.parseInt(args[0]);
+            if(player.isAdmin){
+                if (trail < 0 || trail > cos_db.trailList.size() - 1) {
+                    player.sendMessage("[accent]Invalid trail. Choose a number between [scarlet]0 and [scarlet]" + (cos_db.trailList.size() - 1));
+                    return;
+                }
+                cos_db.setTrail(player.uuid, trail);
+                player.sendMessage("[accent]Set trail to [scarlet]" + trail);
+            }else{
+
+
+                List<String> trails = cos_db.getTrails(player.uuid);
+                Log.info(trails);
+                if(trails.get(0).equals("")){
+                    player.sendMessage("[accent]You have no trails! Get [gray]common[accent] trails by ranking up or donate to get [purple]epic[accent] ones!");
+                    return;
+                }
+                if (trail < 1 || trail > trails.size()) {
+                    player.sendMessage("[accent]Invalid trail. Choose a number between [scarlet]1 and [scarlet]" + (trails.size()));
+                    return;
+                }
+                cos_db.setTrail(player.uuid, Integer.parseInt(trails.get(trail-1)));
+                player.sendMessage("[accent]Set trail to [scarlet]" + trail);
+            }
+
         });
     }
 
     void setDonator(String uuid, int level){
         switch(level){
             case 0:
-                ply_db.setCol(uuid, "[white]");
+                cos_db.setCol(uuid, "[white]");
                 break;
             case 1:
-                ply_db.setCol(uuid, "[sky]");
+                cos_db.setCol(uuid, "[sky]");
                 break;
             case 2:
-                ply_db.setCol(uuid, "[forest]");
+                cos_db.setCol(uuid, "[forest]");
                 break;
             case 3:
-                ply_db.setCol(uuid, "[red]");
+                cos_db.setCol(uuid, "[red]");
                 break;
 
         }
@@ -640,7 +719,7 @@ public class HexedMod extends Plugin{
 
             for(Player player : playerGroup.all()){
                 if(data.getControlled(player).size > 1){
-                    player.sendMessage("You gained " + (data.getControlled(player).size - 1) + " experience towards your rank!");
+                    player.sendMessage("You gained " + (data.getControlled(player).size - 1) + " experience towards your rank! Check your xp with /xp");
                     ply_db.addHexCaptures(player.uuid, data.getControlled(player).size - 1);
                 }
                 Call.onInfoMessage(player.con, "[accent]--ROUND OVER--\n\n[lightgray]"
@@ -650,6 +729,7 @@ public class HexedMod extends Plugin{
         }
 
         Log.info("&ly--SERVER RESTARTING--");
+
         Time.runTask(60f * 10f, () -> {
             netServer.kickAll(KickReason.serverRestarting);
             Time.runTask(5f, () -> System.exit(2));
