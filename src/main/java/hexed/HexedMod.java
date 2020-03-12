@@ -167,21 +167,20 @@ public class HexedMod extends Plugin{
         Events.on(Trigger.update, () -> {
             if(active()){
                 data.updateStats();
-
-                for(Player player : playerGroup.all()){
-                    if(player.getTeam() != Team.derelict && player.getTeam().cores().isEmpty()){
+                for(Player player : playerGroup.all()) {
+                    if (player.getTeam() != Team.derelict && player.getTeam().cores().isEmpty()) {
                         player.kill();
                         killTiles(player.getTeam(), player);
                         Integer curr_deaths = player_deaths.get(player.uuid);
-                        int lives_left = lives-curr_deaths;
-                        Call.sendMessage("[yellow](!)[] [accent]" + player.name + "[lightgray] has been eliminated![accent] " +  lives_left + "/" + lives + " lives left [yellow] (!)");
+                        int lives_left = lives - curr_deaths;
+                        Call.sendMessage("[yellow](!)[] [accent]" + player.name + "[lightgray] has been eliminated![accent] " + lives_left + "/" + lives + " lives left [yellow] (!)");
                         Call.onInfoMessage(player.con, "Your cores have been destroyed. You are defeated.");
                         player.setTeam(Team.derelict);
                     }
 
-                    if(player.getTeam() == Team.derelict){
+                    if (player.getTeam() == Team.derelict) {
                         player.dead = true;
-                    }else if(data.getControlled(player).size == data.hexes().size){
+                    } else if (data.getControlled(player).size == data.hexes().size) {
                         endGame();
                         break;
                     }
@@ -527,7 +526,7 @@ public class HexedMod extends Plugin{
         handler.register("setdonator", "<uuid> <level>", "Set the color of a players name based on uuid", args -> {
             int level = Integer.parseInt(args[1]);
             if (level < 0 || level > 3){
-                Log.info("Donator level must be between 0 and 5");
+                Log.info("Donator level must be between 0 and 3");
             }
             setDonator(args[0], level);
             Log.info("Set uuid " + args[0] + " donator level to " + args[1]);
@@ -625,7 +624,7 @@ public class HexedMod extends Plugin{
 
         handler.<Player>register("trail", "Toggle trail on/off", (args, player) -> {
 
-            if(cos_db.getTrails(player.uuid).get(0).equals("")){
+            if(cos_db.getTrails(player.uuid).size() < 1){
                 player.sendMessage("[accent]You have no trails! Get [gray]common[accent] trails by ranking up or donate to get [purple]epic[accent] ones!");
                 return;
             }
@@ -648,8 +647,7 @@ public class HexedMod extends Plugin{
 
 
                 List<String> trails = cos_db.getTrails(player.uuid);
-                Log.info(trails);
-                if(trails.get(0).equals("")){
+                if(trails.size() < 1){
                     player.sendMessage("[accent]You have no trails! Get [gray]common[accent] trails by ranking up or donate to get [purple]epic[accent] ones!");
                     return;
                 }
