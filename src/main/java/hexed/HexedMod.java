@@ -164,85 +164,10 @@ public class HexedMod extends Plugin{
             return text;
         });
 
-        Events.on(Trigger.update, () -> {
-            if(active()){
-                data.updateStats();
-                for(Player player : playerGroup.all()) {
-                    if (player.getTeam() != Team.derelict && player.getTeam().cores().isEmpty()) {
-                        player.kill();
-                        killTiles(player.getTeam(), player);
-                        Integer curr_deaths = player_deaths.get(player.uuid);
-                        int lives_left = lives - curr_deaths;
-                        Call.sendMessage("[yellow](!)[] [accent]" + player.name + "[lightgray] has been eliminated![accent] " + lives_left + "/" + lives + " lives left [yellow] (!)");
-                        Call.onInfoMessage(player.con, "Your cores have been destroyed. You are defeated.");
-                        player.setTeam(Team.derelict);
-                    }
-
-                    if (player.getTeam() == Team.derelict) {
-                        player.dead = true;
-                    } else if (data.getControlled(player).size == data.hexes().size) {
-                        endGame();
-                        break;
-                    }
-
-                    // Do trail:
-                    if ((abs(player.velocity().x) + abs(player.velocity().y)) > 1.2 && cos_db.getTrailToggle(player.uuid)){
-                        Call.onEffectReliable(cos_db.trailList.get(cos_db.getTrail(player.uuid)), player.x + (player.velocity().x), player.y + (player.velocity().y), (180 + player.rotation) % 360, Color.white);
-                    }
-                }
-                int minsToGo = (int)Math.ceil((roundTime - counter) / 60 / 60); // Changed /time so the time left is clearer
-                if(minsToGo != lastMin){
-                    lastMin = minsToGo;
-                }
-
-                if(counter > respawnCutoff && sendRespawnMessage){
-                    Call.sendMessage("[accent]You will now lose a life if you disconnect");
-                    sendRespawnMessage = false;
-                }
-
-                if(interval.get(timerBoard, leaderboardTime)){
-                    Call.onInfoToast(getLeaderboard(), 15f);
-                }
-
-                if(interval.get(timerUpdate, updateTime)){
-                    data.updateControl();
-                }
-
-                if(interval.get(timerWinCheck, 60 * 2)){
-                    Array<Player> players = data.getLeaderboard();
-                    if(!players.isEmpty() && data.getControlled(players.first()).size >= winCondition && players.size > 1 && data.getControlled(players.get(1)).size <= 1){
-                        endGame();
-                    }
-                }
-
-                if(interval.get(timerAnnounce, announcementTime)){
-                    Call.sendMessage(announcements[announcementIndex]);
-                }
-
-                if(interval.get(timerUpgrade, upgradeTime)){
-                	if (upgradeLevel < starts.length-1){
-                		Call.sendMessage("[scarlet]WARNING: [lightgray]Spawn loadout upgraded to level [yellow]" + String.valueOf(upgradeLevel+1));
-                	}
-                    upgradeLevel = Math.min(starts.length-1, upgradeLevel + 1);
-                    start = starts[upgradeLevel];
-                    state.rules.loadout = loadouts.get(upgradeLevel);
-                }
-                Array<Player> players = data.getLeaderboard();
-
-                if(!players.isEmpty() && data.getControlled(players.first()).size >= maxHex && playerGroup.all().size < maxHex && data.getControlled(players.get(1)).size < 8){
-                    endGame();
-                }
-
-                counter += Time.delta();
-
+        Events.on(Trigger.update, // Do trail:
+                // Changed /time so the time left is clearer
                 //kick everyone and restart w/ the script
-                if(counter > roundTime && !restarting){
-                    endGame();
-                }
-            }else{
-                counter = 0;
-            }
-        });
+                this::run);
 
         Events.on(BlockDestroyEvent.class, event -> {
             //reset last spawn times so this hex becomes vacant for a while.
@@ -285,10 +210,12 @@ public class HexedMod extends Plugin{
         Events.on(PlayerJoin.class, event -> {
 
 
-            if(!cos_db.hasRow(event.player.uuid)){cos_db.addPlayer(event.player.uuid);}
+            cos_db.loadPlayer(event.player.uuid);
+
 
             // Determine player name color
-            String no_color = filterColor(event.player.name, cos_db.getCol(event.player.uuid));
+            String prefix = (String) cos_db.entries.get(event.player.uuid).get("color");
+            String no_color = filterColor(event.player.name, prefix);
 
             int rank_num = ply_db.getHexesCaptured(event.player.uuid)/25 % 4 + 1;
 
@@ -318,13 +245,8 @@ public class HexedMod extends Plugin{
             }
             ply_db.setName(event.player.uuid, event.player.name);
 
-            if(capped < 100){
-                cos_db.setTrail(event.player.uuid, 0);
-            }
-
             if (capped >= 100){
                 if(!curr_trails.contains("16")){
-                    Log.info("asdAsd");
                     cos_db.addTrail(event.player.uuid, "16");
                 }
             }
@@ -623,21 +545,20 @@ public class HexedMod extends Plugin{
         });
 
         handler.<Player>register("trail", "Toggle trail on/off", (args, player) -> {
-
-            if(cos_db.getTrails(player.uuid).size() < 1){
+            List<String> trails = cos_db.getTrails(player.uuid);
+            if(trails.size() < 1 || (trails.get(0).length() < 1 && trails.size() == 1)){
                 player.sendMessage("[accent]You have no trails! Get [gray]common[accent] trails by ranking up or donate to get [purple]epic[accent] ones!");
                 return;
             }
 
             cos_db.toggleTrail(player.uuid);
             player.sendMessage("[accent]Trail is now [scarlet]" + (cos_db.getTrailToggle(player.uuid) ? "on" : "off"));
-
         });
 
         handler.<Player>register("trailset", "<number>", "Change your trail", (args, player) -> {
-            int trail = Integer.parseInt(args[0]);
+            int trail = Integer.parseInt(args[0]) + 1;
             if(player.isAdmin){
-                if (trail < 0 || trail > cos_db.trailList.size() - 1) {
+                if (trail < 0 || trail > cos_db.trailList.size() - 2) {
                     player.sendMessage("[accent]Invalid trail. Choose a number between [scarlet]0 and [scarlet]" + (cos_db.trailList.size() - 1));
                     return;
                 }
@@ -647,16 +568,16 @@ public class HexedMod extends Plugin{
 
 
                 List<String> trails = cos_db.getTrails(player.uuid);
-                if(trails.size() < 1){
+                if(trails.size() < 1 || (trails.get(0).length() < 1 && trails.size() == 1)){
                     player.sendMessage("[accent]You have no trails! Get [gray]common[accent] trails by ranking up or donate to get [purple]epic[accent] ones!");
                     return;
                 }
-                if (trail < 1 || trail > trails.size()) {
-                    player.sendMessage("[accent]Invalid trail. Choose a number between [scarlet]1 and [scarlet]" + (trails.size()));
+                if (trail < 2 || trail > trails.size()) {
+                    player.sendMessage("[accent]Invalid trail. Choose a number between [scarlet]1 and [scarlet]" + (trails.size()-1));
                     return;
                 }
-                cos_db.setTrail(player.uuid, Integer.parseInt(trails.get(trail-1)));
-                player.sendMessage("[accent]Set trail to [scarlet]" + trail);
+                cos_db.setTrail(player.uuid, Integer.parseInt(trails.get(trail- 1)));
+                player.sendMessage("[accent]Set trail to [scarlet]" + (trail - 1));
             }
 
         });
@@ -788,7 +709,7 @@ public class HexedMod extends Plugin{
                 }
             }
         }
-
+        cos_db.savePlayer(player.uuid);
     }
 
     void loadout(Player player, int x, int y, Schematic schem, boolean addItem){
@@ -828,4 +749,88 @@ public class HexedMod extends Plugin{
     }
 
 
+    private void run() {
+        if (active()) {
+
+            data.updateStats();
+
+            for (Player player : playerGroup.all()) {
+                if (player.getTeam() != Team.derelict && player.getTeam().cores().isEmpty()) {
+                    player.kill();
+                    killTiles(player.getTeam(), player);
+                    Integer curr_deaths = player_deaths.get(player.uuid);
+                    int lives_left = lives - curr_deaths;
+                    Call.sendMessage("[yellow](!)[] [accent]" + player.name + "[lightgray] has been eliminated![accent] " + lives_left + "/" + lives + " lives left [yellow] (!)");
+                    Call.onInfoMessage(player.con, "Your cores have been destroyed. You are defeated.");
+                    player.setTeam(Team.derelict);
+                }
+
+                if (player.getTeam() == Team.derelict) {
+                    player.dead = true;
+                } else if (data.getControlled(player).size == data.hexes().size) {
+                    endGame();
+                    break;
+                }
+
+                // Do trail:
+                try {
+                    if ((abs(player.velocity().x) + abs(player.velocity().y)) > 1.2 && cos_db.getTrailToggle(player.uuid)) {
+                        Call.onEffectReliable(cos_db.trailList.get(cos_db.getTrail(player.uuid)), player.x + (player.velocity().x), player.y + (player.velocity().y), (180 + player.rotation) % 360, Color.white);
+                    }
+                }catch (NullPointerException ignore){
+                }
+            }
+            int minsToGo = (int) Math.ceil((roundTime - counter) / 60 / 60); // Changed /time so the time left is clearer
+            if (minsToGo != lastMin) {
+                lastMin = minsToGo;
+            }
+
+            if (counter > respawnCutoff && sendRespawnMessage) {
+                Call.sendMessage("[accent]You will now lose a life if you disconnect");
+                sendRespawnMessage = false;
+            }
+
+            if (interval.get(timerBoard, leaderboardTime)) {
+                Call.onInfoToast(getLeaderboard(), 15f);
+            }
+
+            if (interval.get(timerUpdate, updateTime)) {
+                data.updateControl();
+            }
+
+            if (interval.get(timerWinCheck, 60 * 2)) {
+                Array<Player> players = data.getLeaderboard();
+                if (!players.isEmpty() && data.getControlled(players.first()).size >= winCondition && players.size > 1 && data.getControlled(players.get(1)).size <= 1) {
+                    endGame();
+                }
+            }
+
+            if (interval.get(timerAnnounce, announcementTime)) {
+                Call.sendMessage(announcements[announcementIndex]);
+            }
+
+            if (interval.get(timerUpgrade, upgradeTime)) {
+                if (upgradeLevel < starts.length - 1) {
+                    Call.sendMessage("[scarlet]WARNING: [lightgray]Spawn loadout upgraded to level [yellow]" + String.valueOf(upgradeLevel + 1));
+                }
+                upgradeLevel = Math.min(starts.length - 1, upgradeLevel + 1);
+                start = starts[upgradeLevel];
+                state.rules.loadout = loadouts.get(upgradeLevel);
+            }
+            Array<Player> players = data.getLeaderboard();
+
+            if (!players.isEmpty() && data.getControlled(players.first()).size >= maxHex && playerGroup.all().size < maxHex && data.getControlled(players.get(1)).size < 4) {
+                endGame();
+            }
+
+            counter += Time.delta();
+
+            //kick everyone and restart w/ the script
+            if (counter > roundTime && !restarting) {
+                endGame();
+            }
+        } else {
+            counter = 0;
+        }
+    }
 }

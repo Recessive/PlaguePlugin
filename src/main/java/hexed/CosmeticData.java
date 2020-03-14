@@ -1,27 +1,18 @@
 package hexed;
 
 import arc.util.Log;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import mindustry.content.*;
 import mindustry.entities.Effects;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
-import java.io.IOException;
 import java.lang.reflect.Field;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.sql.ResultSet;
-import java.sql.PreparedStatement;
+import java.sql.*;
 import java.util.*;
-
+// \uF87F
 public class CosmeticData {
 
     public Connection conn = null;
     public List<Effects.Effect> trailList = new ArrayList<Effects.Effect>();
+    public HashMap<String, HashMap<String, Object>> entries = new HashMap<String, HashMap<String, Object>>();
 
     public void initMappings(){
         Fx a = new Fx();
@@ -78,136 +69,113 @@ public class CosmeticData {
         }
     }
 
-    public String getCol(String uuid){
-        String sql;
-        sql = "SELECT color FROM cosmetics WHERE uuid = '" + uuid + "'";
+    public void loadPlayer(String uuid){
+        HashMap<String, Object> vals = new HashMap<String, Object>();
 
+        if(!hasRow(uuid)){addPlayer(uuid);}
+
+        String sql = "SELECT * FROM cosmetics where uuid = '" + uuid + "'";
+
+        Statement stmt  = null;
         try {
-            Statement stmt  = conn.createStatement();
-            ResultSet rs    = stmt.executeQuery(sql);
-
-            return rs.getString("color");
-        } catch (SQLException ignored) {
-        }
-        return "";
-    }
-
-    public void setCol(String uuid, String color){
-        String sql;
-        sql = "UPDATE cosmetics SET color= '" + color + "' WHERE uuid = '" + uuid + "'";
-
-        try {
-            Statement stmt = conn.createStatement();
-            stmt.executeUpdate(sql);
+            stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(sql);
+            ResultSetMetaData rsmd = rs.getMetaData();
+            for(int i = 1; i <= rsmd.getColumnCount(); i++){ // ONE INDEXED? REALLY?
+                vals.put(rsmd.getColumnName(i),rs.getObject(rsmd.getColumnName(i)));
+            }
+            rs.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
-    }
 
-    public int getTrail(String uuid){
-        String sql;
-        sql = "SELECT trail FROM cosmetics WHERE uuid = '" + uuid + "'";
-
-        try {
-            Statement stmt  = conn.createStatement();
-            ResultSet rs    = stmt.executeQuery(sql);
-
-            return rs.getInt("trail");
-        } catch (SQLException ignored) {
+        String tstr = (String) vals.get("trails");
+        if(tstr == null) {
+            vals.put("trails", new ArrayList<>());
+        }else{
+            vals.put("trails", new ArrayList<>(Arrays.asList(tstr.split(","))));
         }
-        return 0;
+        entries.put(uuid, vals);
+
     }
 
-    public void setTrail(String uuid, int trail){
-        String sql;
-        sql = "UPDATE cosmetics SET trail= " + trail + " WHERE uuid = '" + uuid + "'";
+    public void savePlayer(String uuid){
+        HashMap<String, Object> vals = entries.get(uuid);
+
+        String trailStr = String.join(",", (List<String>) vals.get("trails"));
+        vals.put("trails", trailStr);
 
         try {
+            String sql = "UPDATE cosmetics SET ";
+            int c = 0;
+            Log.info(vals);
+            for(Object key: vals.keySet()){
+                if(vals.get(key) == null){
+                    continue;
+                }
+                if(c > 0){
+                   sql += ",";
+                }
+                c ++;
+                if(vals.get(key) instanceof String) {
+                    sql += key + " = '" + vals.get(key) + "'";
+                }else if(vals.get(key) instanceof Boolean){
+                    sql += key + " = " + ((boolean) vals.get(key) ? 1: 0);
+                }else{
+                    sql += key + " = " + vals.get(key);
+                }
+
+            }
+            sql += " WHERE uuid = '" + uuid + "'";
+            Log.info(sql);
+
             Statement stmt = conn.createStatement();
             stmt.executeUpdate(sql);
+            stmt.close();
         } catch (SQLException e) {
             e.printStackTrace();
         }
-    }
 
-    public boolean getTrailToggle(String uuid){
-        String sql;
-        sql = "SELECT doTrail FROM cosmetics WHERE uuid = '" + uuid + "'";
+        entries.remove(uuid);
 
-        try {
-            Statement stmt  = conn.createStatement();
-            ResultSet rs    = stmt.executeQuery(sql);
-
-            return rs.getBoolean("doTrail");
-        } catch (SQLException ignored) {
-        }
-        return false;
-    }
-
-    public void toggleTrail(String uuid){
-        int trail = !getTrailToggle(uuid) ? 1 : 0; // convert bool to int
-        String sql;
-        sql = "UPDATE cosmetics SET doTrail= " + trail + " WHERE uuid = '" + uuid + "'";
-
-        try {
-            Statement stmt = conn.createStatement();
-            stmt.executeUpdate(sql);
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
     }
 
     public List<String> getTrails(String uuid){
-        String sql;
-        sql = "SELECT trails FROM cosmetics WHERE uuid = '" + uuid + "'";
-
-        try {
-            Statement stmt  = conn.createStatement();
-            ResultSet rs    = stmt.executeQuery(sql);
-
-            return new ArrayList<String>(Arrays.asList(rs.getString("trails").split(",")));
-        } catch (SQLException | NullPointerException ignored) {
-        }
-        return new ArrayList<>();
+        return (List<String>) entries.get(uuid).get("trails");
     }
 
-    public boolean addTrail(String uuid, String trail){
-        boolean returnVal = false;
-        List<String> trails = getTrails(uuid);
-        if(!trails.contains(trail)){
-            trails.add(trail);
-            returnVal = true;
-        }
-        String trailStr = String.join(",", trails);
-        String sql;
-        sql = "UPDATE cosmetics SET trails= '" + trailStr + "' WHERE uuid = '" + uuid + "'";
-        try {
-            Statement stmt = conn.createStatement();
-            stmt.executeUpdate(sql);
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return returnVal;
+    public void addTrail(String uuid, String trail){
+        List<String> trails = (List<String>) entries.get(uuid).get("trails");
+        trails.add(trail);
     }
 
-    public boolean removeTrail(String uuid, String trail){
-        boolean returnVal = false;
-        List<String> trails = getTrails(uuid);
-        if(trails.contains(trail)){
-            trails.remove(trail);
-            returnVal = true;
-        }
-        String trailStr = String.join(",", trails);
-        String sql;
-        sql = "UPDATE cosmetics SET trails= " + trailStr + " WHERE uuid = '" + uuid + "'";
+    public void setTrail(String uuid, Integer trail){
+        entries.get(uuid).put("equippedTrail", trail);
+    }
 
-        try {
-            Statement stmt = conn.createStatement();
-            stmt.executeUpdate(sql);
-        } catch (SQLException e) {
-            e.printStackTrace();
+    public int getTrail(String uuid){
+        return (int) entries.get(uuid).get("equippedTrail");
+    }
+
+    public void setCol(String uuid, String color){
+        entries.get(uuid).put("color", color);
+    }
+
+    public void toggleTrail(String uuid){
+        boolean toggle = getTrailToggle(uuid);
+        entries.get(uuid).put("doTrail",!toggle);
+    }
+
+    public boolean getTrailToggle(String uuid){
+        Object t = entries.get(uuid).get("doTrail");
+        boolean toggle;
+        if(t == null){
+            toggle = false;
+        }else if(!(t instanceof Boolean)) {
+            toggle = (int) t == 1;
+        }else{
+            toggle = (boolean) t;
         }
-        return returnVal;
+        return toggle;
     }
 }
