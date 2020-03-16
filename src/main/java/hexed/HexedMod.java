@@ -89,7 +89,7 @@ public class HexedMod extends Plugin{
     private String terrain_str = "";
     private String map_str = "";
 
-  	private String[] announcements = {"Join the discord at: [purple]https://discord.gg/GEnYcSv", "Rank up to earn [gray]common[white] trails or donate to get [purple]epic[white] ones!"};
+  	private String[] announcements = {"Join the discord at: [purple]https://discord.gg/GEnYcSv", "Rank up to earn [darkgray]common[white] trails or donate to get [purple]epic[white] ones!"};
   	private int announcementIndex = 0;
 
   	private PlayerData ply_db = new PlayerData();
@@ -806,7 +806,8 @@ public class HexedMod extends Plugin{
             }
 
             if (interval.get(timerAnnounce, announcementTime)) {
-                Call.sendMessage(announcements[announcementIndex]);
+                Call.sendMessage(announcements[announcementIndex % announcements.length]);
+                announcementIndex ++;
             }
 
             if (interval.get(timerUpgrade, upgradeTime)) {
