@@ -108,7 +108,6 @@ public class CosmeticData {
         try {
             String sql = "UPDATE cosmetics SET ";
             int c = 0;
-            Log.info(vals);
             for(Object key: vals.keySet()){
                 if(vals.get(key) == null){
                     continue;
@@ -127,7 +126,6 @@ public class CosmeticData {
 
             }
             sql += " WHERE uuid = '" + uuid + "'";
-            Log.info(sql);
 
             Statement stmt = conn.createStatement();
             stmt.executeUpdate(sql);
