@@ -141,7 +141,7 @@ public class HexedMod extends Plugin{
             }
         });
 
-        BulletType powerShot = new BasicBulletType(8f, 65*6, "bullet"){{
+        BulletType powerShot = new BasicBulletType(8f, 65*4, "bullet"){{
             bulletWidth = 16f;
             bulletHeight = 23f;
             shootEffect = Fx.shootBig;
