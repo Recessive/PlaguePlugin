@@ -356,6 +356,8 @@ public class HexedMod extends Plugin{
         Events.on(HexCaptureEvent.class, event -> {
         	updateText(event.player);
         	loadout(event.player, event.hex.x, event.hex.y, captureSchematic, false);
+            event.player.sendMessage("[accent]You gained [scarlet]1 [accent]experience for capturing a hex!");
+            ply_db.addHexCaptures(event.player.uuid, 1);
         });
 
         Events.on(HexMoveEvent.class, event -> updateText(event.player));
@@ -659,7 +661,7 @@ public class HexedMod extends Plugin{
 
             for(Player player : playerGroup.all()){
                 if(data.getControlled(player).size > 1){
-                    player.sendMessage("You gained " + (data.getControlled(player).size - 1) + " experience towards your rank! Check your xp with /xp");
+                    player.sendMessage("You gained " + (data.getControlled(player).size - 1) + " experience towards your rank for capturing hexes and staying alive! Check your xp with /xp");
                     ply_db.addHexCaptures(player.uuid, data.getControlled(player).size - 1);
                 }
                 Call.onInfoMessage(player.con, "[accent]--ROUND OVER--\n\n[lightgray]"
@@ -717,9 +719,6 @@ public class HexedMod extends Plugin{
 
 
     void killTiles(Team team, Player player){
-        if(data.getControlled(player).size > 1 && !restarting && counter > respawnCutoff) {
-            player.sendMessage("[accent]You gained [scarlet]" + (data.getControlled(player).size - 1) + " [accent]experience towards your rank!");
-            ply_db.addHexCaptures(player.uuid, data.getControlled(player).size - 1);}
         data.data(team).dying = true;
         Time.runTask(8f, () -> data.data(team).dying = false);
         for(int x = 0; x < world.width(); x++){
