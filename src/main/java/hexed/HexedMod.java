@@ -98,7 +98,7 @@ public class HexedMod extends Plugin{
   	private PlayerData ply_db = new PlayerData();
   	private CosmeticData cos_db = new CosmeticData();
 
-  	private int lives = 0;
+  	private int lives = 1;
     private Map<String, Integer> player_deaths = new HashMap<String, Integer>();
     
     private Map<String, Boolean> core_count = new HashMap<String, Boolean>();
@@ -141,7 +141,7 @@ public class HexedMod extends Plugin{
             }
         });
 
-        BulletType powerShot = new BasicBulletType(8f, 65*4, "bullet"){{
+        BulletType powerShot = new BasicBulletType(8f, 65*3, "bullet"){{
             bulletWidth = 16f;
             bulletHeight = 23f;
             shootEffect = Fx.shootBig;
