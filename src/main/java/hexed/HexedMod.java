@@ -92,7 +92,7 @@ public class HexedMod extends Plugin{
     private String terrain_str = "";
     private String map_str = "";
 
-  	private String[] announcements = {"Join the discord at: [purple]https://discord.gg/GEnYcSv", "Rank up to earn [darkgray]common[white] trails or donate to get [purple]epic[white] ones!"};
+  	private String[] announcements = {"Join the discord at: [purple]https://discord.gg/GEnYcSv", "Rank up to earn [darkgray]common[white] trails or donate to get [purple]epic[white] ones!", "The top 5 point scoring players at the end of the month will get a [pink]unique [white]trail!"};
   	private int announcementIndex = 0;
 
   	private PlayerData ply_db = new PlayerData();
