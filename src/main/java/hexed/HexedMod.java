@@ -141,7 +141,7 @@ public class HexedMod extends Plugin{
             }
         });
 
-        BulletType powerShot = new BasicBulletType(8f, 65*3, "bullet"){{
+        BulletType powerShot = new BasicBulletType(8f, 65*4, "bullet"){{
             bulletWidth = 16f;
             bulletHeight = 23f;
             shootEffect = Fx.shootBig;
@@ -150,7 +150,7 @@ public class HexedMod extends Plugin{
         ((DoubleTurret)(spectre)).ammo.remove(Items.thorium);
         ((DoubleTurret)(spectre)).ammo.put(Items.thorium, powerShot);
 
-        ((DoubleTurret)(spectre)).health *= 2;
+        ((DoubleTurret)(spectre)).health *= 3;
 
         /*Array<Block> block_list = content.blocks();
         for(int i = 0; i < block_list.size; i++){
