@@ -784,6 +784,10 @@ public class HexedMod extends Plugin{
                     Call.sendMessage("[yellow](!)[] [accent]" + player.name + "[lightgray] has been eliminated![accent] " + lives_left + "/" + lives + " lives left [yellow] (!)");
                     Call.onInfoMessage(player.con, "Your cores have been destroyed. You are defeated.");
                     player.setTeam(Team.derelict);
+
+                    if(counter > respawnCutoff){
+                        player_deaths.put(player.uuid, curr_deaths+1);
+                    }
                 }
 
                 if (player.getTeam() == Team.derelict) {
