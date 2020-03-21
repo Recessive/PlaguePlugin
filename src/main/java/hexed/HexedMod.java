@@ -4,6 +4,7 @@ import java.util.*;
 import java.lang.reflect.Field;
 
 import arc.*;
+import arc.func.Boolf;
 import arc.graphics.Color;
 import arc.math.*;
 import arc.struct.*;
@@ -11,6 +12,7 @@ import arc.util.*;
 import hexed.HexData.*;
 import arc.math.geom.*;
 import jdk.nashorn.internal.ir.debug.JSONWriter;
+import mindustry.Vars;
 import mindustry.entities.bullet.*;
 import java.sql.Connection;
 import mindustry.content.*;
@@ -26,6 +28,7 @@ import mindustry.net.Packets.*;
 import mindustry.plugin.*;
 import mindustry.type.*;
 import mindustry.world.*;
+import mindustry.world.blocks.defense.turrets.DoubleTurret;
 import mindustry.world.blocks.storage.*;
 import mindustry.core.*;
 import org.json.simple.JSONObject;
@@ -130,6 +133,24 @@ public class HexedMod extends Plugin{
 
         // Increase cost of lancer (No need with core placing on capture)
         Blocks.lancer.requirements = ItemStack.with(Items.copper, 25, Items.lead, 50, Items.silicon, 250);
+
+        Block spectre = Vars.content.blocks().find(new Boolf<Block>() {
+            @Override
+            public boolean get(Block block) {
+                return block.name.equals("spectre");
+            }
+        });
+
+        BulletType powerShot = new BasicBulletType(8f, 65*6, "bullet"){{
+            bulletWidth = 16f;
+            bulletHeight = 23f;
+            shootEffect = Fx.shootBig;
+        }};
+
+        ((DoubleTurret)(spectre)).ammo.remove(Items.thorium);
+        ((DoubleTurret)(spectre)).ammo.put(Items.thorium, powerShot);
+
+        ((DoubleTurret)(spectre)).health *= 2;
 
         /*Array<Block> block_list = content.blocks();
         for(int i = 0; i < block_list.size; i++){
