@@ -174,7 +174,7 @@ public class HexData{
 
     public static BulletType getLLaser(){
         return new BasicBulletType(10f, 140*2, "bullet"){{
-            bulletWidth = 5f;
+            bulletWidth = 12f;
             bulletHeight = 12f;
             lifetime = 20f;
         }};
