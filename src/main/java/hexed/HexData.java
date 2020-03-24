@@ -176,11 +176,7 @@ public class HexData{
         return new BasicBulletType(10f, 140*2, "bullet"){{
             bulletWidth = 5f;
             bulletHeight = 12f;
-            bulletShrink = 1f;
             lifetime = 20f;
-            backColor = Pal.gray;
-            frontColor = Color.white;
-            despawnEffect = Fx.none;
         }};
 
         /*return new BulletType(0.001f, 140){
