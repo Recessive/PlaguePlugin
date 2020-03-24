@@ -28,7 +28,9 @@ import mindustry.net.Packets.*;
 import mindustry.plugin.*;
 import mindustry.type.*;
 import mindustry.world.*;
+import mindustry.world.blocks.defense.turrets.ChargeTurret;
 import mindustry.world.blocks.defense.turrets.DoubleTurret;
+import mindustry.world.blocks.defense.turrets.LaserTurret;
 import mindustry.world.blocks.storage.*;
 import mindustry.core.*;
 import org.json.simple.JSONObject;
@@ -132,15 +134,15 @@ public class HexedMod extends Plugin{
         rules.bannedBlocks.add(Blocks.ripple);
 
         // Increase cost of lancer (No need with core placing on capture)
-        Blocks.lancer.requirements = ItemStack.with(Items.copper, 25, Items.lead, 50, Items.silicon, 250);
+        // Blocks.lancer.requirements = ItemStack.with(Items.copper, 25, Items.lead, 50, Items.silicon, 250);
 
+        // Change spectre to have increased damage and health
         Block spectre = Vars.content.blocks().find(new Boolf<Block>() {
             @Override
             public boolean get(Block block) {
                 return block.name.equals("spectre");
             }
         });
-
         BulletType powerShot = new BasicBulletType(8f, 65*4, "bullet"){{
             bulletWidth = 16f;
             bulletHeight = 23f;
@@ -149,15 +151,20 @@ public class HexedMod extends Plugin{
 
         ((DoubleTurret)(spectre)).ammo.remove(Items.thorium);
         ((DoubleTurret)(spectre)).ammo.put(Items.thorium, powerShot);
-
         ((DoubleTurret)(spectre)).health *= 3;
 
-        /*Array<Block> block_list = content.blocks();
-        for(int i = 0; i < block_list.size; i++){
-            Block temp = block_list.get(i);
-            temp.insulated = true;
-        }
-        Log.info(Blocks.lancer.insulated);*/
+        Block lancer = Vars.content.blocks().find(new Boolf<Block>() {
+            @Override
+            public boolean get(Block block) {
+                return block.name.equals("lancer");
+            }
+        });
+
+        BulletType newLancerLaser = HexData.getLLaser();
+
+        ((ChargeTurret)(lancer)).shootType = newLancerLaser;
+
+
 
         /*Array<Item> item_list = content.items();
 
@@ -491,6 +498,10 @@ public class HexedMod extends Plugin{
         registered = true;
 
         handler.<Player>register("respawn", "Destroy all your tiles and respawn elsewhere", (args, player) -> {
+            player.sendMessage("[accent]Temporarily disabled.");
+            if (true){
+                return;
+            }
             Integer curr_deaths = player_deaths.get(player.uuid);
             if(curr_deaths > lives-1){
                 player.sendMessage("[accent]You have lost all your lives this round. You can't respawn");
@@ -795,7 +806,6 @@ public class HexedMod extends Plugin{
     public boolean active(){
         return state.rules.tags.getBool("hexed") && !state.is(State.menu);
     }
-
 
     private void run() {
         if (active()) {

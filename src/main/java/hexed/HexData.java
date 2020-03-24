@@ -1,11 +1,19 @@
 package hexed;
 
 import arc.*;
+import arc.graphics.Color;
+import arc.graphics.g2d.Draw;
+import arc.graphics.g2d.Lines;
+import arc.math.Mathf;
 import arc.struct.*;
 import arc.util.ArcAnnotate.*;
 import arc.util.*;
+import mindustry.entities.Damage;
+import mindustry.entities.bullet.BasicBulletType;
+import mindustry.entities.bullet.BulletType;
 import mindustry.entities.type.*;
 import mindustry.game.*;
+import mindustry.graphics.Pal;
 import mindustry.world.*;
 import mindustry.content.*;
 
@@ -164,6 +172,43 @@ public class HexData{
         }
     }
 
+    public static BulletType getLLaser(){
+        return new BasicBulletType(10f, 140*2, "bullet"){{
+            bulletWidth = 5f;
+            bulletHeight = 12f;
+            bulletShrink = 1f;
+            lifetime = 20f;
+            backColor = Pal.gray;
+            frontColor = Color.white;
+            despawnEffect = Fx.none;
+        }};
+
+        /*return new BulletType(0.001f, 140){
+            Color[] colors = {Pal.lancerLaser.cpy().mul(1f, 1f, 1f, 0.4f), Pal.lancerLaser, Color.white};
+            float[] tscales = {1f, 0.7f, 0.5f, 0.2f};
+            float[] lenscales = {1f, 1.1f, 1.13f, 1.14f};
+            float length = 160f;
+
+            {
+                hitEffect = Fx.hitLancer;
+                despawnEffect = Fx.none;
+                hitSize = 4;
+                lifetime = 16f;
+                pierce = true;
+            }
+
+            @Override
+            public float range(){
+                return length;
+            }
+
+            @Override
+            public void init(Bullet b){
+                Damage.collideLine(b, b.getTeam(), hitEffect, b.x, b.y, b.rot(), length);
+            }
+        };*/
+    }
+
     private Block[][] get_floors(){
         // I don't know java, I'm just winging it. Leave me alone ok, I don't know how to do this without using t1 as a decoy lol
         Block[][] t1 = {};
@@ -218,4 +263,6 @@ public class HexData{
         }
         return t1;
     }
+
+
 }
