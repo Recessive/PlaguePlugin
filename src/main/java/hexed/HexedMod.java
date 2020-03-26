@@ -728,7 +728,8 @@ public class HexedMod extends Plugin{
             for(Player player : playerGroup.all()) {
                 Call.onConnect(player.con, "aamindustry.play.ai", 6567);
             }
-            netServer.kickAll(KickReason.serverRestarting);
+            // I shouldn't need this, all players should be gone since I connected them to hub
+            // netServer.kickAll(KickReason.serverRestarting);
             Time.runTask(5f, () -> System.exit(2));
         });
     }
