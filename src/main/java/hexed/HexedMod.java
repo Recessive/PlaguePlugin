@@ -493,6 +493,10 @@ public class HexedMod extends Plugin{
             ply_db.setXp(args[0], xp);
             Log.info("Set uuid " + args[0] + " xp to " + xp);
         });
+
+        handler.register("endgame", "End the game nicely and return players to hub", args -> {
+            endGame();
+        });
     }
 
     @Override
@@ -500,37 +504,8 @@ public class HexedMod extends Plugin{
         if(registered) return;
         registered = true;
 
-        handler.<Player>register("respawn", "Destroy all your tiles and respawn elsewhere", (args, player) -> {
-            player.sendMessage("[accent]Temporarily disabled.");
-            if (true){
-                return;
-            }
-            Integer curr_deaths = player_deaths.get(player.uuid);
-            if(curr_deaths > lives-1){
-                player.sendMessage("[accent]You have lost all your lives this round. You can't respawn");
-                return;
-            }
-
-
-            Array<Hex> copy = data.hexes().copy();
-            copy.shuffle();
-            Hex hex = copy.find(h -> h.controller == null && h.spawnTime.get());
-            if(hex != null){
-                if(player.getTeam() != Team.derelict){
-                    if(counter > respawnCutoff){
-                        player_deaths.put(player.uuid, curr_deaths+1);
-                    }
-                    killTiles(player.getTeam(), player);
-                    player.kill();
-                }
-                loadout(player, hex.x, hex.y, start, true);
-                Core.app.post(() -> data.data(player).chosen = false);
-                hex.findController();
-            }
-            else{
-                player.sendMessage("[accent]There are no free spaces. You can't respawn");
-                return;
-            }
+        handler.<Player>register("hub", "Connect to the AA hub server", (args, player) -> {
+            Call.onConnect(player.con, "aamindustry.play.ai", 6567);
         });
 
         handler.<Player>register("spectate", "Enter spectator mode. This destroys your base.", (args, player) -> {
