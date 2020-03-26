@@ -59,11 +59,14 @@ public class Hex{
         }
 
         Arrays.fill(progress, 0);
-        unitGroup.intersect(wx - rad, wy - rad, rad*2, rad*2).each(e -> {
+
+        // Disable units counting towards hex capture
+
+        /*unitGroup.intersect(wx - rad, wy - rad, rad*2, rad*2).each(e -> {
             if(contains(e.x, e.y)){
                 progress[e.getTeam().id] += e.health / 10f;
             }
-        });
+        });*/
 
         for(int cx = x - radius; cx < x + radius; cx++){
             for(int cy = y - radius; cy < y + radius; cy++){
