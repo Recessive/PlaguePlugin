@@ -164,6 +164,9 @@ public class HexedMod extends Plugin{
 
         ((ChargeTurret)(lancer)).shootType = newLancerLaser;
 
+        UnitTypes.draug.maxVelocity *= 2;
+        UnitTypes.draug.retreatPercent = (float) 0.001;
+
 
 
         /*Array<Item> item_list = content.items();
