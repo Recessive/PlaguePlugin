@@ -750,6 +750,9 @@ public class HexedMod extends Plugin{
         Log.info("&ly--SERVER RESTARTING--");
 
         Time.runTask(60f * 10f, () -> {
+            for(Player player : playerGroup.all()) {
+                Call.onConnect(player.con, "aamindustry.play.ai", 6567);
+            }
             netServer.kickAll(KickReason.serverRestarting);
             Time.runTask(5f, () -> System.exit(2));
         });
