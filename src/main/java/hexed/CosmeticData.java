@@ -100,41 +100,45 @@ public class CosmeticData {
     }
 
     public void savePlayer(String uuid){
-        HashMap<String, Object> vals = entries.get(uuid);
-
-        String trailStr = String.join(",", (List<String>) vals.get("trails"));
-        vals.put("trails", trailStr);
-
         try {
-            String sql = "UPDATE cosmetics SET ";
-            int c = 0;
-            for(Object key: vals.keySet()){
-                if(vals.get(key) == null){
-                    continue;
-                }
-                if(c > 0){
-                   sql += ",";
-                }
-                c ++;
-                if(vals.get(key) instanceof String) {
-                    sql += key + " = '" + vals.get(key) + "'";
-                }else if(vals.get(key) instanceof Boolean){
-                    sql += key + " = " + ((boolean) vals.get(key) ? 1: 0);
-                }else{
-                    sql += key + " = " + vals.get(key);
-                }
+            HashMap<String, Object> vals = entries.get(uuid);
 
+            String trailStr = String.join(",", (List<String>) vals.get("trails"));
+            vals.put("trails", trailStr);
+
+            try {
+                String sql = "UPDATE cosmetics SET ";
+                int c = 0;
+                for (Object key : vals.keySet()) {
+                    if (vals.get(key) == null) {
+                        continue;
+                    }
+                    if (c > 0) {
+                        sql += ",";
+                    }
+                    c++;
+                    if (vals.get(key) instanceof String) {
+                        sql += key + " = '" + vals.get(key) + "'";
+                    } else if (vals.get(key) instanceof Boolean) {
+                        sql += key + " = " + ((boolean) vals.get(key) ? 1 : 0);
+                    } else {
+                        sql += key + " = " + vals.get(key);
+                    }
+
+                }
+                sql += " WHERE uuid = '" + uuid + "'";
+
+                Statement stmt = conn.createStatement();
+                stmt.executeUpdate(sql);
+                stmt.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
             }
-            sql += " WHERE uuid = '" + uuid + "'";
 
-            Statement stmt = conn.createStatement();
-            stmt.executeUpdate(sql);
-            stmt.close();
-        } catch (SQLException e) {
+            entries.remove(uuid);
+        }catch(NullPointerException e){
             e.printStackTrace();
         }
-
-        entries.remove(uuid);
 
     }
 
