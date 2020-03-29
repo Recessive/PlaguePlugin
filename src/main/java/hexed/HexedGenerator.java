@@ -42,7 +42,7 @@ public class HexedGenerator extends Generator{
 
     @Override
     public void generate(Tile[][] tiles){
-        
+
         Log.info("Terrain_type: " + terrain_type);
         Log.info("map_type: " + map_type);
 
@@ -123,7 +123,7 @@ public class HexedGenerator extends Generator{
                 if(Math.abs(cx - x) < (3) && Math.abs(cy - y) < (3)){
                     Tile tile = tiles[cx][cy];
                     tile.setBlock(Blocks.rocks);
-                } 
+                }
             });
             if(map_type < 66){ // The following makes gaps in the hexes
                 Angles.circle(3, 360f / 3 / 2f - 90, f -> {

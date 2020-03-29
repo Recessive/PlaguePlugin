@@ -368,7 +368,7 @@ public class HexedMod extends Plugin{
         	updateText(event.player);
         	Tile tile = world.tile(event.hex.x, event.hex.y);
         	tile.removeNet();
-            tile.setNet(Blocks.coreFoundation, event.player.getTeam(), 0);
+            tile.setNet(Blocks.coreNucleus, event.player.getTeam(), 0);
             event.player.sendMessage("[accent]You gained [scarlet]1 [accent]experience for capturing a hex!");
             ply_db.addHexCaptures(event.player.uuid, 1);
         });
