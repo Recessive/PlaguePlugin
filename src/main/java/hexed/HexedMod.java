@@ -182,7 +182,7 @@ public class HexedMod extends Plugin{
 
         
         starts = new Schematic[]{Schematics.readBase64("bXNjaAB4nD2SUW7DIBBEd7ExBqcfOYg/epSeoEIOqiIREzl2qt6+rIGJJfNkdmd2R6GJPpj61T8C2ZiOWzr278+RpiU9n2Gbf32MdN3vu1/vx2Ne0voOf2mj6ytFv81Pv4Y4Z/oJdFnSFub1WGI4XtT5bSHzWvy+h43GY43J3zINj7DKSfRF7dfJi0EKVF5y01Or0aABZEAjRC1EHWgCXSpxrVbnI8D5W3NjuDHcGG5c3aTT1cG5KLctzjoFPQU9BT0FPYXpFVQ6nLp2CLfbHmdfNmGd6XTmIZNkwMpkOufrpK5l0ENFIzMNFV3yU/KtdWh0tEn6TKXDZGq+wzk1s9y23gG9BjuONXGhlp9BXctCUj73VEIaNIAMaKwqI1QsVCxULFQsVCxULFQsVBwScnVfIQUqf2DO1DwcPBw8HDwcPFyZsBNyoAlUJvgH0+orFw=="),
-    							Schematics.readBase64("bXNjaAB4nFWSbW6DMAyGTfgINFBoew5+7BA7x5RBVnUKoUqhU0+/OcFYGojoIc7rvHYCDVwSyJyeDEhrnsZ+vNXQLLdFu9s69T/aWrj8++2t9lcDnfbT7M3YD7N7mtfsIX/q1S4gH4NeFuPhOBk39nc/f5thwfjpMaO0v2tn9iSF1W7ApeXq7KxHpGb0er32XzpIXlAPuEfv1sGa9QHyM2Z+AcA77I9IcAgfpGFMmfJIAge5LcSvZKo4wQF2mWJtzXRk6njdmZQJOUgxY8ycZDh3oFBC65K4H0RHgrjARDlTE0lirI2CoDiRJiV/JZL6xQejGcUqJEE1FFRRmNuzZJSlwDdnakhd7Bsgbf1TSIIpZWqZOlacmM7UIUndqGIlwUGglnog2UvFXirykuynISTSVlGJJEO9sabY3TT0YutujnMta7fMGcYk9V7xCSm+G4rvhqK7EahmOjLtVSo+6RqASVK0JlcCKfoXgQ5M0YMI67Ysf8bqSfk="),
+    							Schematics.readBase64("bXNjaAB4nFWS626EIBCFB7ygi657eQ5+9CH6HA1V2myDuHF1m337DjhOUo3kk+EcZgaghauAPNjRgfLu6fzHWwPtcltsuK2j+bXew/Xfr/F2/nZwsvM4zW4w/RSe7jXNUDzt6hdQj94ui5vhOLowmPs8/bh+wfj5MaHU3G1wu0npbehxabUGP9kBqR1mu36bLxslL2h63MOEtfdufYD6TM4vAHiH/ZECh/hBFseMqUgkcVDbQvwqppoNDrDLNGsbpiPTidddSCkogwwdk7PIce5AIUHrRNoPUkaSuESjgqlNpDDWJUFUnEmTUX4Vkk5BPC+K1UiSaiipoji3u+TkUuJbMLWkLvcNkLb+aSTJlDF1TCdWnJku1CFF3ahTJTGDSB31QHEuNedSUy5iPw2pkLaKKqiTo0g1pe5msRdbdwuc61i7OecYU9R7zSek+W5ovhua7kakhunItFep+aQbACZF0YaykkgpfxnpwJRykHHd5vIHtvRCAw=="),
     							Schematics.readBase64("bXNjaAB4nFWS33KsIAzGo2tBRbd/9pzH8KZv06sOo9T2DCsdqu707U8CMdN6AT8D+UI+gB7+FlAt9upAe7c7//p8hqf1PcSP7TrcrPeDt3F20P2MwYON1xDdNIxh2d13iHC3282vcL66ZRo+Y/jnxhXD/RTtNg9vlv6+QX+Ndl1dhEvYXZzix+5+bK63xQc74bLydhlx7uM6D7NbXLS0oRux6LBso3fbF7Sf4ebisITJQU96bz7chtmuDgBe4NdX0nCioRJSiQocatnTCLVCJhHt60SvP0JwL/QodEmpBf5k5RPqtKxSiErJc4WUuLzDOZ2vUEiKM0pWIcq5tJpOAJSRT6CRHlm25BPUWJlyixNRl4gdSL1WXLdFyr4QZV8MzvnMFOtlNVej3KNaJf3mE5OnKhuRqBRKtp86pIpdVNgBxajbXLfGWSPoRH0iWj2nupRxLyoP7Iti74mehC5S90++hKSbO9fSuWbHiRR3qaVfLf1q6VdnZTheC0UaucFGbrBhP2qkdAtofsueUizfB+077rLhahXSUa3hagVm1kLHGzIAQmVeRKqEFLthcm5J1LGykVds5BUbecVG6nacS6+vEWqFDCt3rPwf0vpQUg=="),
     							Schematics.readBase64("bXNjaAB4nE1W7ZLaMAx0nC8CScgn3D1E/rQP1MmAj14nJDc54OYet29Sy5a2wEyy2NKuJMs26lW9Biqax6tR2WQeZvr189ePUjW338v6fr8OX+M0DdO4XozKn8dUMo3zyayqGtfrsprzcFrmh/leVlWc1/F+Gd7G021Zv1X9uVj/4WOcjTCVVzOfh491+WPIRhXr7TJczGzWkX62y8Os5/X9YZ5sth/Ll1mHeTkbtbnP0zKerXp+strDfD9N5v6p0s/TeLvZ4YIY3qbla7iMN6OU+qvkEwT2ofEzxCMGSoEyoNL50qMCaoA6MB/AfPRy9quBZJb1Nc1p1tBeKCDkYgloLmVz7WMJQot2HLlWOVAB5hK+FXwbaLhIQ9L9H4tEGnJcof3ugHKgAnbiGyGPCFlGPg836+YDeieOJLaZSR4RNCJoRKxBdnv41hx9pFpo9EAHzjLiPMhb8oihEUMjRq1iZlE+OstCcUZcoYRjJuQ7IrRI+BLwJahL4iPVhBrwtRx9wvFFlk0zc8oapOA0AnpnrJZCLYVaympk51Y63Fjke5L4RDf1udlu2nBuVPmYa78B8wbMG9Q+8zE7Xx8zdZ9m3YyrkanMR6q39r2lORtzBuYMzBkzk13p7MjTra8mPhd9SBo9r+WWY946H/LYWbacWbbONw0J+/hyq+prSigCSoBcFcKtRXtXAupwX7XCoprrsuM9TWMtxjqM9VznHXddwDHRWub+KAgpzj1QDdQC9fA4Ar1wl0hvBha5jHRhUcgdUXBuNBZjLMFYijHJt3D1CxyzrGXJa0l7zHcE9VLKHiVXnJCvM836NSIPXxdikdXac8y0ptIRe3TE3neEJpQDFbCTjthzRxCf7JSKV3VjkeyPCvujAnMF5oqZyc7vj8Qiv9LEJ7ui5pjpdJEdX3MlQ4uEuQZzzcxkJ7usxk6pcfo0vG6BRXKCNFzd2NrL+ddAo4FGwxpk588/8q3B13CFGtS+VfJpfR6aTknJo4VGC42WNciu5uhb8LS4DTrk0fn+s74d+DrwdahLh1O5ww0hJ2xgkeaYe9x0PW66Hjddjwr1UOuh1rMa2ZXwrTAmN12Pm65/ikVyO3Bf0U0mGgdoHJDRAb6yuoFFGmOSx5HzIJQCZbArMVYBNUDy7+H4pCaRvuBefeHZf3lEZ70=")};
         captureSchematic = Schematics.readBase64("bXNjaAB4nD3OSw6AIAxF0VdacOIGXISLMoaZnwR1/UpFHxMOt0kDOnQC26Y1w+a95IB07OXMBb0/x+2al3wdAAb4uetRh1CBUsqoSKVP0rbUW/EOfFubhrrtm7r+pmzKZmzGFtkiW2JL7c/iCpRSRkXq3SIPb1NrXw==");
@@ -366,7 +366,9 @@ public class HexedMod extends Plugin{
 
         Events.on(HexCaptureEvent.class, event -> {
         	updateText(event.player);
-        	loadout(event.player, event.hex.x, event.hex.y, captureSchematic, false);
+        	Tile tile = world.tile(event.hex.x, event.hex.y);
+        	tile.removeNet();
+            tile.setNet(Blocks.coreFoundation, event.player.getTeam(), 0);
             event.player.sendMessage("[accent]You gained [scarlet]1 [accent]experience for capturing a hex!");
             ply_db.addHexCaptures(event.player.uuid, 1);
         });
@@ -727,7 +729,9 @@ public class HexedMod extends Plugin{
         Time.runTask(60f * 10f, () -> {
             for(Player player : playerGroup.all()) {
                 Call.onConnect(player.con, "aamindustry.play.ai", 6567);
+                player.con.close();
             }
+
             // I shouldn't need this, all players should be gone since I connected them to hub
             // netServer.kickAll(KickReason.serverRestarting);
             Time.runTask(5f, () -> System.exit(2));
