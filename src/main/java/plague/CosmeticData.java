@@ -1,6 +1,5 @@
-package hexed;
+package plague;
 
-import arc.util.Log;
 import mindustry.content.*;
 import mindustry.entities.Effects;
 

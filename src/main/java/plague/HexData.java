@@ -1,19 +1,13 @@
-package hexed;
+package plague;
 
 import arc.*;
-import arc.graphics.Color;
-import arc.graphics.g2d.Draw;
-import arc.graphics.g2d.Lines;
-import arc.math.Mathf;
 import arc.struct.*;
 import arc.util.ArcAnnotate.*;
 import arc.util.*;
-import mindustry.entities.Damage;
 import mindustry.entities.bullet.BasicBulletType;
 import mindustry.entities.bullet.BulletType;
 import mindustry.entities.type.*;
 import mindustry.game.*;
-import mindustry.graphics.Pal;
 import mindustry.world.*;
 import mindustry.content.*;
 
@@ -141,7 +135,7 @@ public class HexData{
         public @Nullable Hex location;
         public float progressPercent;
         public boolean lastCaptured;
-        public Timekeeper lastMessage = new Timekeeper(HexedMod.messageTime);
+        public Timekeeper lastMessage = new Timekeeper(PlagueMod.messageTime);
     }
 
     public static class HexCaptureEvent{

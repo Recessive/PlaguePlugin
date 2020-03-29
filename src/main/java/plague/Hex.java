@@ -1,4 +1,4 @@
-package hexed;
+package plague;
 
 import arc.math.geom.*;
 import arc.util.ArcAnnotate.*;
@@ -27,7 +27,7 @@ public class Hex{
     public final float rad = radius * tilesize;
 
     public @Nullable Team controller;
-    public Timekeeper spawnTime = new Timekeeper(HexedMod.spawnDelay);
+    public Timekeeper spawnTime = new Timekeeper(PlagueMod.spawnDelay);
 
     public Hex(int id, int x, int y){
         this.id = id;
@@ -42,7 +42,7 @@ public class Hex{
     }
 
     public float getProgressPercent(Team team){
-        return progress[team.id] / HexedMod.itemRequirement * 100;
+        return progress[team.id] / PlagueMod.itemRequirement * 100;
     }
 
     public float getProgress(Team team){
@@ -80,7 +80,7 @@ public class Hex{
         }
 
         TeamData data = state.teams.getActive().max(t -> progress[t.team.id]);
-        if(data != null && data.team != Team.derelict && progress[data.team.id] >= HexedMod.itemRequirement){
+        if(data != null && data.team != Team.derelict && progress[data.team.id] >= PlagueMod.itemRequirement){
             return data.team;
         }
         return null;

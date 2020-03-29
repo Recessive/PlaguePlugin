@@ -1,6 +1,7 @@
 {
-  "name": "Hexed",
+  "name": "Plague",
   "author": "Recessive",
-  "description": "epic mindustry battle royale",
+  "main": "plague.PlagueMod",
+  "description": "Plugin for plague game mode",
   "version": 0.0
 }

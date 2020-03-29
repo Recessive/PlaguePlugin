@@ -1,4 +1,4 @@
-package hexed;
+package plague;
 
 //TODO put in other plugin
 public class CurseFilter{
