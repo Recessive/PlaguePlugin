@@ -201,10 +201,19 @@ public class PlagueMod extends Plugin{
             if(event.team == Team.green){
                 event.tile.removeNet();
                 if(Build.validPlace(event.team, event.tile.x, event.tile.y, Blocks.spectre, 0)){ // Use spectre in place of core, as core always returns false
+                    // Check if the core is within 50 blocks of another core
+                    Tile nearestCore = state.teams.closestEnemyCore(event.tile.x, event.tile.y, event.team).tile;
+                    Team chosenTeam;
+                    if(cartesianDistance(event.tile.x, event.tile.y, nearestCore.x, nearestCore.y) < 50){
+                        chosenTeam = nearestCore.getTeam();
+                    }else{
+                        chosenTeam = Team.all()[teams+6];
+                        teams ++;
+                    }
+
                     Player player = playerGroup.getByID(event.builder.getID());
-                    player.setTeam(Team.all()[teams+6]);
+                    player.setTeam(chosenTeam);
                     player.name = filterColor(player.name, "[olive]");
-                    teams ++;
                     event.tile.setNet(Blocks.coreFoundation, event.builder.getTeam(), 0);
                     for(ItemStack stack : state.rules.loadout){
                         Call.transferItemTo(stack.item, stack.amount, event.tile.drawx(), event.tile.drawy(), event.tile);
