@@ -206,7 +206,9 @@ public class PlagueMod extends Plugin{
             //tile.setNet(Blocks.coreFoundation, Team.green, 0);
             tile = world.tile(255,255);
             tile.setNet(Blocks.coreFoundation, Team.crux, 0);
-            // tile.setNet(Blocks.coreFoundation, Team.purple, 0);
+            for(ItemStack stack : state.rules.loadout){
+                Call.transferItemTo(stack.item, stack.amount, tile.drawx(), tile.drawy(), tile);
+            }
         });
 
         handler.register("countdown", "Get the hexed restart countdown.", args -> {
