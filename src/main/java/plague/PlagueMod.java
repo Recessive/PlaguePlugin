@@ -1,6 +1,7 @@
 package plague;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicReference;
 
 import arc.*;
 import arc.func.Boolf;
@@ -18,6 +19,7 @@ import mindustry.plugin.*;
 import mindustry.type.*;
 import mindustry.world.*;
 import mindustry.world.blocks.defense.turrets.ChargeTurret;
+import mindustry.world.blocks.storage.CoreBlock;
 
 import static arc.util.Log.info;
 import static java.lang.Math.abs;
@@ -62,11 +64,8 @@ public class PlagueMod extends Plugin{
 
   	private String[] announcements = {"Join the discord at: [purple]https://discord.gg/GEnYcSv", "Rank up to earn [darkgray]common[white] trails or donate to get [purple]epic[white] ones!", "The top 5 point scoring players at the end of the month will get a [pink]unique [white]trail!", "[gold]Spectres[white] do [scarlet]4x [white]damage and have [scarlet]3x [white]health!", "Use [accent]/hub[white] to return to the hub!"};
   	private int announcementIndex = 0;
-
-  	private int lives = 1;
-    private Map<String, List<Integer>> playerShowBuild = new HashMap<String, List<Integer>>();
     
-    private Map<String, Boolean> core_count = new HashMap<String, Boolean>();
+    private Map<String, Team> lastTeam = new HashMap<String, Team>();
 
     private Array<Block> bannedTurrets = new Array<>();
 
@@ -122,6 +121,18 @@ public class PlagueMod extends Plugin{
         ((ChargeTurret)(lancer)).shootType = PlagueData.getLLaser();
 
         netServer.assigner = (player, players) -> {
+            if(lastTeam.containsKey(player.uuid)){
+                int teamSize = 0;
+                Team prev = lastTeam.get(player.uuid);
+                for(Player _: playerGroup.all()){
+                    if(_.getTeam() == prev){
+                        teamSize ++;
+                    }
+                }
+                if(teamSize > 0){
+                    return prev;
+                }
+            }
 
             if(counter < infectTime){
                 survivors ++;
@@ -189,12 +200,22 @@ public class PlagueMod extends Plugin{
         });
 
         Events.on(EventType.PlayerLeave.class, event -> {
-            if(event.player.getTeam() != Team.crux){
-                killTiles(event.player.getTeam(), event.player);
-                survivors --;
-            }else{
-                infected --;
+            int teamSize = 0;
+            for(Player player: playerGroup.all()){
+                if(player.getTeam() == event.player.getTeam()){
+                    teamSize ++;
+                }
             }
+            if(event.player.getTeam() != Team.crux && teamSize < 2) {
+                killTiles(event.player.getTeam(), event.player);
+            }
+            if(event.player.getTeam() == Team.crux){
+                infected --;
+            }else{
+                survivors --;
+            }
+
+            lastTeam.put(event.player.uuid, event.player.getTeam());
         });
 
         Events.on(EventType.BuildSelectEvent.class, event ->{
@@ -202,19 +223,21 @@ public class PlagueMod extends Plugin{
                 event.tile.removeNet();
                 if(Build.validPlace(event.team, event.tile.x, event.tile.y, Blocks.spectre, 0)){ // Use spectre in place of core, as core always returns false
                     // Check if the core is within 50 blocks of another core
-                    Tile nearestCore = state.teams.closestEnemyCore(event.tile.x, event.tile.y, event.team).tile;
-                    Team chosenTeam;
-                    if(cartesianDistance(event.tile.x, event.tile.y, nearestCore.x, nearestCore.y) < 50){
-                        chosenTeam = nearestCore.getTeam();
-                    }else{
-                        chosenTeam = Team.all()[teams+6];
-                        teams ++;
-                    }
+                    Tile nearestCore;
+                    final Team[] chosenTeam = {Team.all()[teams+6]};
+                    teams ++;
+                    state.teams.eachEnemyCore(event.team, core -> {
+                        if(cartesianDistance(event.tile.x, event.tile.y, core.tile.x, core.tile.y) < 90 && core.getTeam() != Team.crux) {
+                            chosenTeam[0] = core.getTeam();
+                            teams--;
+                        }
+                    });
 
                     Player player = playerGroup.getByID(event.builder.getID());
-                    player.setTeam(chosenTeam);
+                    player.setTeam(chosenTeam[0]);
                     player.name = filterColor(player.name, "[olive]");
                     event.tile.setNet(Blocks.coreFoundation, event.builder.getTeam(), 0);
+                    state.teams.registerCore((CoreBlock.CoreEntity) event.tile.entity);
                     for(ItemStack stack : state.rules.loadout){
                         Call.transferItemTo(stack.item, stack.amount, event.tile.drawx(), event.tile.drawy(), event.tile);
                     }
