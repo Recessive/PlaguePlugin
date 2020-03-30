@@ -90,6 +90,7 @@ public class PlagueMod extends Plugin{
         rules.playerHealthMultiplier = 0.5f;
         rules.canGameOver = false;
         rules.reactorExplosions = false;
+        rules.respawnTime = 0;
         // rules.bannedBlocks.addAll(Blocks.solarPanel, Blocks.largeSolarPanel);
         rules.bannedBlocks.add(Blocks.arc);
 
@@ -105,7 +106,7 @@ public class PlagueMod extends Plugin{
         bannedTurrets.addAll(Blocks.scatter, Blocks.scorch, Blocks.wave, Blocks.lancer, Blocks.arc, Blocks.swarmer, Blocks.salvo,
                 Blocks.fuse, Blocks.cyclone, Blocks.spectre, Blocks.meltdown, Blocks.hail, Blocks.ripple, Blocks.shockMine);
 
-        Blocks.powerSource.health = Integer.MAX_VALUE; // Make power source invincible
+        Blocks.powerSource.breakable = false; // Make power source invincible
 
         /*for(Block b : content.blocks()){
             b.targetable = false;
@@ -199,7 +200,7 @@ public class PlagueMod extends Plugin{
                     return false;
                 }
             }
-            if(action.block != null && action.type == Administration.ActionType.breakBlock && (action.block == Blocks.powerSource || action.block == Blocks.itemSource)){
+            if((action.type == Administration.ActionType.breakBlock || action.type == Administration.ActionType.placeBlock) && (action.block == Blocks.powerSource || action.block == Blocks.itemSource)){
                 return false;
             }
 
@@ -208,9 +209,10 @@ public class PlagueMod extends Plugin{
 
         Events.on(EventType.PlayerJoin.class, event -> {
             Tile tile = world.tile(255, 255);
+            Team prev = event.player.getTeam();
+            player.setTeam(Team.crux);
             Call.onUnitRespawn(tile, event.player);
-            Call.onUnitRespawn(tile, event.player);
-            Call.onUnitRespawn(tile, event.player);
+            player.setTeam(prev);
         });
 
         Events.on(EventType.PlayerLeave.class, event -> {
