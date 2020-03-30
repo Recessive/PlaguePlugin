@@ -242,6 +242,8 @@ public class HexedMod extends Plugin{
 
         Events.on(PlayerJoin.class, event -> {
 
+            event.player.getTeam().data().brokenBlocks.clear();
+
 
             cos_db.loadPlayer(event.player.uuid);
 
