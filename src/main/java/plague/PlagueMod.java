@@ -122,24 +122,12 @@ public class PlagueMod extends Plugin{
 
             for (Player player : playerGroup.all()) {
                 if (player.getTeam() != Team.derelict && player.getTeam().cores().isEmpty() && counter > infectTime) {
-                    infected ++;
-                    survivors --;
-                    killTiles(player.getTeam(), player);
-                    player.setTeam(Team.crux);
-                    player.kill();
-                    Call.onSetRules(player.con, noTurretRules);
-                    Call.sendMessage("[accent]" + player.name + "[white] was [red]infected[white]!");
+                    infect(player);
                 }
             }
-            if(counter > infectTime && infected == 0 && playerGroup.all().size > 0){
-                infected ++;
-                survivors --;
+            if(counter > infectTime && counter < infectTime*2 && infected == 0 && playerGroup.all().size > 0){
                 Player player = playerGroup.all().random();
-                killTiles(player.getTeam(), player);
-                player.setTeam(Team.crux);
-                player.kill();
-                Call.onSetRules(player.con, noTurretRules);
-                Call.sendMessage("[accent]" + player.name + "[white] was [red]infected[white]!");
+                infect(player);
             }
 
             if (interval.get(timerPlagueInflux, plagueInfluxTime)){
