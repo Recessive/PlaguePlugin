@@ -1,7 +1,7 @@
 package plague;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import arc.*;
 import arc.func.Boolf;
@@ -42,10 +42,10 @@ public class PlagueMod extends Plugin{
     public static final int messageTime = 1;
 
     //in ticks: 60 minutes: 60 * 60 * 60
-    private int roundTime = 60 * 60 * 60;
+    private int roundTime = 60 * 60 * 45;
     //in ticks: 30 seconds
     private final static int infectTime = 60 * 120;
-    private final static int plagueInfluxTime = 60 * 60 * 1, infectWarnTime = 60 * 20, survivorWarnTime = 60 * 60 * 30;
+    private final static int plagueInfluxTime = 60 * 60 * 1, infectWarnTime = 60 * 20, survivorWarnTime = 60 * 60 * 10;
 
     private final static int timerPlagueInflux = 0, timerInfectWarn = 1, timerSurvivorWarn = 2;
 
@@ -145,13 +145,18 @@ public class PlagueMod extends Plugin{
                 return Team.crux;
             }
         };
-
+        AtomicBoolean countOn = new AtomicBoolean(true);
         Events.on(EventType.Trigger.update, ()-> {
             if(survivors < 1 && counter > infectTime || counter > roundTime){
                 endGame();
             }
-            if (interval.get(timerInfectWarn, infectWarnTime) && counter+1 < infectTime) {
-                Call.sendMessage("[accent]You have [scarlet]" + (int) Math.ceil((infectTime - counter) / 60) + " [accent]seconds left to place a core. Place any block to place a core.");
+            if (counter+1 < infectTime && ((int) Math.ceil((roundTime - counter) / 60)) % 20 == 0){
+                if(countOn.get()){
+                    Call.sendMessage("[accent]You have [scarlet]" + (int) Math.ceil((infectTime - counter) / 60) + " [accent]seconds left to place a core. Place any block to place a core.");
+                    countOn.set(false);
+                }
+            }else{
+                countOn.set(true);
             }
 
             if (interval.get(timerSurvivorWarn, survivorWarnTime)) {
