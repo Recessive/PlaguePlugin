@@ -206,6 +206,8 @@ public class PlagueMod extends Plugin{
         Events.on(EventType.PlayerJoin.class, event -> {
             Tile tile = world.tile(255, 255);
             Call.onUnitRespawn(tile, event.player);
+            Call.onUnitRespawn(tile, event.player);
+            Call.onUnitRespawn(tile, event.player);
         });
 
         Events.on(EventType.PlayerLeave.class, event -> {
@@ -289,7 +291,7 @@ public class PlagueMod extends Plugin{
 
             // Add power infinite
             tile = world.tile(255,265);
-            tile.setNet(Blocks.powerSource, Team.crux, 0);
+            // tile.setNet(Blocks.powerSource, Team.crux, 0);
         });
 
         handler.register("countdown", "Get the hexed restart countdown.", args -> {
