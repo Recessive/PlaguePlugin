@@ -45,14 +45,6 @@ public class PlagueGenerator extends Generator{
         super(size, size);
     }
 
-    public void loadData(HexData d) {
-        terrain_type = d.terrain_type;
-        map_type = d.map_type;
-
-        floors = d.floors;
-        blocks = d.blocks;
-    }
-
     @Override
     public void generate(Tile[][] tiles) {
 
@@ -92,7 +84,7 @@ public class PlagueGenerator extends Generator{
                     floor = Blocks.moss;
                     wall = Blocks.air;
                 }else {
-                    floor = Blocks.shale;
+                    floor = Blocks.darksand;
                     wall = Blocks.duneRocks;
                 }
 
