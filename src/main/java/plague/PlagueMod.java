@@ -70,12 +70,15 @@ public class PlagueMod extends Plugin{
     
     private Map<String, Boolean> core_count = new HashMap<String, Boolean>();
 
+    private Array<Block> bannedTurrets;
+
 
     @Override
     public void init(){
 
 
-    	loadouts.add(ItemStack.list(Items.copper, 1000, Items.lead, 1000, Items.graphite, 200, Items.metaglass, 200, Items.silicon, 200));
+    	loadouts.add(ItemStack.list(Items.copper, 5000, Items.lead, 5000, Items.graphite, 1000, Items.silicon, 1000));
+    	loadouts.add(ItemStack.list(Items.copper, 500, Items.lead, 500, Items.graphite, 200, Items.silicon, 200));
         rules.pvp = !true;
         rules.tags.put("plague", "true");
         rules.loadout = loadouts.get(0);
@@ -94,18 +97,22 @@ public class PlagueMod extends Plugin{
                 Blocks.crawlerFactory, Blocks.titanFactory, Blocks.fortressFactory);
 
         noTurretRules = rules.copy();
-        noTurretRules.bannedBlocks.addAll(Blocks.duo, Blocks.scatter, Blocks.scorch, Blocks.wave, Blocks.lancer, Blocks.arc, Blocks.swarmer, Blocks.salvo,
+        noTurretRules.bannedBlocks.addAll(Blocks.scatter, Blocks.scorch, Blocks.wave, Blocks.lancer, Blocks.arc, Blocks.swarmer, Blocks.salvo,
                 Blocks.fuse, Blocks.cyclone, Blocks.spectre, Blocks.meltdown, Blocks.hail, Blocks.ripple, Blocks.shockMine);
+
+        bannedTurrets.addAll(Blocks.scatter, Blocks.scorch, Blocks.wave, Blocks.lancer, Blocks.arc, Blocks.swarmer, Blocks.salvo,
+                Blocks.fuse, Blocks.cyclone, Blocks.spectre, Blocks.meltdown, Blocks.hail, Blocks.ripple, Blocks.shockMine);
+
+        /*for(Block b : content.blocks()){
+            b.targetable = false;
+        }*/
 
         Core.settings.putSave("playerlimit", 0);
 
         // Create the two cores at spawn:
         //
 
-
-        TeamAssigner prev = netServer.assigner;
         netServer.assigner = (player, players) -> {
-            Array<Player> arr = Array.with(players);
 
             if(counter < infectTime){
                 survivors ++;
