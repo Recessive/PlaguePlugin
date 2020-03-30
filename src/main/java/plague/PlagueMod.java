@@ -125,10 +125,12 @@ public class PlagueMod extends Plugin{
 
             if(counter < infectTime){
                 survivors ++;
+                player.name = filterColor(player.name, "[royal]");
                 return Team.green;
             }else{
                 infected ++;
                 Call.onSetRules(player.con, noTurretRules);
+                player.name = filterColor(player.name, "[scarlet]");
                 return Team.crux;
             }
         };
@@ -197,6 +199,7 @@ public class PlagueMod extends Plugin{
                 if(Build.validPlace(event.team, event.tile.x, event.tile.y, Blocks.spectre, 0)){ // Use spectre in place of core, as core always returns false
                     Player player = playerGroup.getByID(event.builder.getID());
                     player.setTeam(Team.all()[teams+6]);
+                    player.name = filterColor(player.name, "[olive]");
                     teams ++;
                     event.tile.setNet(Blocks.coreFoundation, event.builder.getTeam(), 0);
                     for(ItemStack stack : state.rules.loadout){
@@ -207,6 +210,8 @@ public class PlagueMod extends Plugin{
             }
 
         });
+
+
 
     }
 
@@ -291,6 +296,7 @@ public class PlagueMod extends Plugin{
         survivors --;
         killTiles(player.getTeam(), player);
         player.setTeam(Team.crux);
+        player.name = filterColor(player.name, "[scarlet]");
         player.kill();
         Call.onSetRules(player.con, noTurretRules);
         Call.sendMessage("[accent]" + player.name + "[white] was [red]infected[white]!");
