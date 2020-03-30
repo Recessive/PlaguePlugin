@@ -112,6 +112,7 @@ public class PlagueMod extends Plugin{
                 return Team.green;
             }else{
                 infected ++;
+                Call.onSetRules(player.con, noTurretRules);
                 return Team.crux;
             }
         };
