@@ -45,7 +45,7 @@ public class PlagueMod extends Plugin{
     //in ticks: 60 minutes: 60 * 60 * 60
     private int roundTime = 60 * 60 * 45;
     //in ticks: 30 seconds
-    private final static int infectTime = 60 * 120;
+    private final static int infectTime = 60 * 60 * 4;
     private final static int plagueInfluxTime = 60 * 60 * 1, infectWarnTime = 60 * 20, survivorWarnTime = 60 * 60 * 10;
 
     private final static int timerPlagueInflux = 0, timerInfectWarn = 1, timerSurvivorWarn = 2;
