@@ -44,7 +44,10 @@ public class PlagueMod extends Plugin{
     //in ticks: 60 minutes: 60 * 60 * 60
     private int roundTime = 60 * 60 * 60;
     //in ticks: 30 seconds
-    private final static int infectTime = 60 * 30;
+    private final static int infectTime = 60 * 120;
+    private final static int plagueInfluxTime = 60 * 60 * 1;
+
+    private final static int timerPlagueInflux = 0;
 
     private int lastMin;
 
@@ -139,6 +142,14 @@ public class PlagueMod extends Plugin{
                 Call.sendMessage("[accent]" + player.name + "[white] was [red]infected[white]!");
             }
 
+            if (interval.get(timerPlagueInflux, plagueInfluxTime)){
+                Tile tile = Team.crux.cores().get(0).tile;
+                for(ItemStack stack : loadouts.get(1)){
+                    Call.transferItemTo(stack.item, stack.amount, tile.drawx(), tile.drawy(), tile);
+                }
+                // Call.sendMessage("The [red]Plague [white] was reinforced with resources");
+            }
+
 
             counter += Time.delta();
             lastMin = (int) Math.ceil((roundTime - counter) / 60 / 60);
@@ -153,6 +164,7 @@ public class PlagueMod extends Plugin{
                     return false;
                 }
             }
+
             return true;
         });
 
