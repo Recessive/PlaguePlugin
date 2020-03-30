@@ -129,16 +129,14 @@ public class PlagueMod extends Plugin{
                         teamSize ++;
                     }
                 }
-                if(teamSize > 0){
-                    if(prev == Team.green) player.name = filterColor(player.name, "[royal]");
-                    else if(prev == Team.crux) player.name = filterColor(player.name, "[scarlet]");
-                    else player.name = filterColor(player.name, "[olive]");
+                if(teamSize > 0 && prev != Team.green && prev != Team.crux){
+                    survivors++;
+                    player.name = filterColor(player.name, "[olive]");
                     return prev;
                 }
             }
 
             if(counter < infectTime){
-                survivors ++;
                 player.name = filterColor(player.name, "[royal]");
                 return Team.green;
             }else{
@@ -150,8 +148,8 @@ public class PlagueMod extends Plugin{
         };
         AtomicBoolean countOn = new AtomicBoolean(true);
         Events.on(EventType.Trigger.update, ()-> {
+            Log.info(survivors);
             if(survivors < 1 && counter > infectTime || counter > roundTime){
-                Log.info(survivors);
                 endGame();
             }
             if (counter+1 < infectTime && ((int) Math.ceil((roundTime - counter) / 60)) % 20 == 0){
@@ -337,16 +335,8 @@ public class PlagueMod extends Plugin{
     void endGame(){
         if(restarting) return;
 
-        boolean survived = false;
         for(Player player: playerGroup.all()){
-            if(player.getTeam() != Team.crux && player.getTeam() != Team.derelict){
-                survived = true;
-                break;
-            }
-        }
-
-        for(Player player: playerGroup.all()){
-            if(survived){
+            if(survivors == 0){
                 Call.onInfoMessage(player.con, "[accent]--ROUND OVER--\n\n[green]Survivors[lightgray] win!");
             }else{
                 Call.onInfoMessage(player.con, "[accent]--ROUND OVER--\n\n[red]Plague[lightgray] wins!");
