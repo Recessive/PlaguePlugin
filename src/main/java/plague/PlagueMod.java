@@ -131,8 +131,8 @@ public class PlagueMod extends Plugin{
                 }
                 if(teamSize > 0){
                     if(prev == Team.green) player.name = filterColor(player.name, "[royal]");
-                    else if(prev == Team.crux) player.name = filterColor(player.name, "[royal]");
-                    else player.name = filterColor(player.name, "[royal]");
+                    else if(prev == Team.crux) player.name = filterColor(player.name, "[scarlet]");
+                    else player.name = filterColor(player.name, "[olive]");
                     return prev;
                 }
             }
@@ -316,10 +316,16 @@ public class PlagueMod extends Plugin{
     }
 
     void infect(Player player){
+        int teamSize = 0;
+        for(Player _: playerGroup.all()){
+            if(_.getTeam() == player.getTeam()){
+                teamSize ++;
+            }
+        }
         infected ++;
         survivors --;
         Call.sendMessage("[accent]" + player.name + "[white] was [red]infected[white]!");
-        killTiles(player.getTeam(), player);
+        if(teamSize < 2) killTiles(player.getTeam(), player);
         player.setTeam(Team.crux);
         player.name = filterColor(player.name, "[scarlet]");
         player.kill();
