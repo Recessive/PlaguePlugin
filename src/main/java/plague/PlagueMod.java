@@ -148,7 +148,6 @@ public class PlagueMod extends Plugin{
         };
         AtomicBoolean countOn = new AtomicBoolean(true);
         Events.on(EventType.Trigger.update, ()-> {
-            Log.info(survivors);
             if(survivors < 1 && counter > infectTime || counter > roundTime){
                 endGame();
             }
@@ -221,7 +220,7 @@ public class PlagueMod extends Plugin{
             }
             if(event.player.getTeam() == Team.crux){
                 infected --;
-            }else{
+            }else if (event.player.getTeam() != Team.green){
                 survivors --;
             }
 
@@ -287,6 +286,10 @@ public class PlagueMod extends Plugin{
             for(ItemStack stack : state.rules.loadout){
                 Call.transferItemTo(stack.item, stack.amount, tile.drawx(), tile.drawy(), tile);
             }
+
+            // Add power infinite
+            tile = world.tile(255,265);
+            tile.setNet(Blocks.powerSource, Team.crux, 0);
         });
 
         handler.register("countdown", "Get the hexed restart countdown.", args -> {
@@ -326,7 +329,7 @@ public class PlagueMod extends Plugin{
             }
         }
         infected ++;
-        survivors --;
+        if(player.getTeam() != Team.green) survivors --;
         Call.sendMessage("[accent]" + player.name + "[white] was [red]infected[white]!");
         if(teamSize < 2) killTiles(player.getTeam(), player);
         player.setTeam(Team.crux);
@@ -339,7 +342,7 @@ public class PlagueMod extends Plugin{
         if(restarting) return;
 
         for(Player player: playerGroup.all()){
-            if(survivors == 0){
+            if(survivors > 0){
                 Call.onInfoMessage(player.con, "[accent]--ROUND OVER--\n\n[green]Survivors[lightgray] win!");
             }else{
                 Call.onInfoMessage(player.con, "[accent]--ROUND OVER--\n\n[red]Plague[lightgray] wins!");
