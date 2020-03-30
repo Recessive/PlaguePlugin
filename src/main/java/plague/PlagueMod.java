@@ -45,7 +45,7 @@ public class PlagueMod extends Plugin{
     private final static int infectTime = 60 * 120;
     private final static int plagueInfluxTime = 60 * 60 * 1, infectWarnTime = 60 * 20;
 
-    private final static int timerPlagueInflux = 0, timerInfectWar = 1;
+    private final static int timerPlagueInflux = 0, timerInfectWarn = 1;
 
     private int lastMin;
 
@@ -137,12 +137,8 @@ public class PlagueMod extends Plugin{
             if(survivors < 1 && counter > infectTime || counter > roundTime){
                 endGame();
             }
-
-            if(counter < infectTime){
-                if (interval.get(timerInfectWar, infectWarnTime)) {
-                    Call.sendMessage("You have " + (infectTime - counter) + " seconds left to place a core. Place any block to place a core");
-                }
-
+            if (interval.get(timerInfectWarn, infectWarnTime) && counter+1 < infectTime) {
+                Call.sendMessage("[accent]You have [scarlet]" + (int) Math.ceil((infectTime - counter) / 60 + 1) + " [accent]seconds left to place a core. Place any block to place a core.");
             }
 
             for (Player player : playerGroup.all()) {
