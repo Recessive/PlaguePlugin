@@ -130,6 +130,9 @@ public class PlagueMod extends Plugin{
                     }
                 }
                 if(teamSize > 0){
+                    if(prev == Team.green) player.name = filterColor(player.name, "[royal]");
+                    else if(prev == Team.crux) player.name = filterColor(player.name, "[royal]");
+                    else player.name = filterColor(player.name, "[royal]");
                     return prev;
                 }
             }
@@ -300,26 +303,6 @@ public class PlagueMod extends Plugin{
 
         handler.<Player>register("hub", "Connect to the AA hub server", (args, player) -> {
             Call.onConnect(player.con, "aamindustry.play.ai", 6567);
-        });
-
-        handler.<Player>register("spectate", "Enter spectator mode. This destroys your base.", (args, player) -> {
-             if(player.getTeam() == Team.derelict){
-                 player.sendMessage("[scarlet]You're already spectating.");
-             }else{
-                 killTiles(player.getTeam(), player);
-                 player.kill();
-                 player.setTeam(Team.derelict);
-             }
-        });
-
-        handler.<Player>register("spec", "Alias for spectate", (args, player) -> {
-            if(player.getTeam() == Team.derelict){
-                player.sendMessage("[scarlet]You're already spectating.");
-            }else{
-                killTiles(player.getTeam(), player);
-                player.kill();
-                player.setTeam(Team.derelict);
-            }
         });
 
         handler.<Player>register("time", "Display the time left", (args, player) -> {
