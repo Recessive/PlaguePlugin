@@ -15,6 +15,7 @@ import mindustry.entities.type.*;
 import mindustry.game.EventType;
 import mindustry.game.*;
 import mindustry.gen.*;
+import mindustry.net.Administration;
 import mindustry.plugin.*;
 import mindustry.type.*;
 import mindustry.world.*;
@@ -196,7 +197,7 @@ public class PlagueMod extends Plugin{
                     return false;
                 }
             }
-            if(action.block != null && (action.block == Blocks.powerSource || action.block == Blocks.itemSource)){
+            if(action.block != null && action.type == Administration.ActionType.breakBlock && (action.block == Blocks.powerSource || action.block == Blocks.itemSource)){
                 return false;
             }
 
@@ -291,7 +292,7 @@ public class PlagueMod extends Plugin{
 
             // Add power infinite
             tile = world.tile(255,265);
-            // tile.setNet(Blocks.powerSource, Team.crux, 0);
+            tile.setNet(Blocks.powerSource, Team.crux, 0);
         });
 
         handler.register("countdown", "Get the hexed restart countdown.", args -> {
