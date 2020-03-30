@@ -197,6 +197,9 @@ public class PlagueMod extends Plugin{
                     return false;
                 }
             }
+            if(action.block != null && (action.block == Blocks.powerSource || action.block == Blocks.itemSource)){
+                return false;
+            }
 
             return true;
         });
