@@ -1,17 +1,16 @@
 package plague;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import arc.*;
-import arc.graphics.Color;
+import arc.func.Boolf;
 import arc.math.*;
 import arc.struct.*;
 import arc.util.*;
+import mindustry.Vars;
 import mindustry.content.*;
 import mindustry.core.GameState.*;
-import mindustry.core.NetServer.*;
-import mindustry.entities.traits.BuilderTrait;
+import mindustry.entities.bullet.BulletType;
 import mindustry.entities.type.*;
 import mindustry.game.EventType;
 import mindustry.game.*;
@@ -19,7 +18,7 @@ import mindustry.gen.*;
 import mindustry.plugin.*;
 import mindustry.type.*;
 import mindustry.world.*;
-import mindustry.world.blocks.storage.CoreBlock;
+import mindustry.world.blocks.defense.turrets.ChargeTurret;
 
 import static arc.util.Log.info;
 import static java.lang.Math.abs;
@@ -112,8 +111,15 @@ public class PlagueMod extends Plugin{
 
         Core.settings.putSave("playerlimit", 0);
 
-        // Create the two cores at spawn:
-        //
+        // Disable lancer pierce:
+        Block lancer = Vars.content.blocks().find(new Boolf<Block>() {
+            @Override
+            public boolean get(Block block) {
+                return block.name.equals("lancer");
+            }
+        });
+
+        ((ChargeTurret)(lancer)).shootType = PlagueData.getLLaser();
 
         netServer.assigner = (player, players) -> {
 
