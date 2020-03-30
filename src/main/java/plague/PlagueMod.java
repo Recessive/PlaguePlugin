@@ -294,12 +294,12 @@ public class PlagueMod extends Plugin{
     void infect(Player player){
         infected ++;
         survivors --;
+        Call.sendMessage("[accent]" + player.name + "[white] was [red]infected[white]!");
         killTiles(player.getTeam(), player);
         player.setTeam(Team.crux);
         player.name = filterColor(player.name, "[scarlet]");
         player.kill();
         Call.onSetRules(player.con, noTurretRules);
-        Call.sendMessage("[accent]" + player.name + "[white] was [red]infected[white]!");
     }
 
     void endGame(){
