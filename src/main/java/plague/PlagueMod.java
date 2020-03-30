@@ -140,7 +140,7 @@ public class PlagueMod extends Plugin{
                 endGame();
             }
             if (interval.get(timerInfectWarn, infectWarnTime) && counter+1 < infectTime) {
-                Call.sendMessage("[accent]You have [scarlet]" + (int) Math.ceil((infectTime - counter) / 60 + 1) + " [accent]seconds left to place a core. Place any block to place a core.");
+                Call.sendMessage("[accent]You have [scarlet]" + (int) Math.ceil((infectTime - counter) / 60) + " [accent]seconds left to place a core. Place any block to place a core.");
             }
 
             for (Player player : playerGroup.all()) {

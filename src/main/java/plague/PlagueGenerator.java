@@ -81,7 +81,7 @@ public class PlagueGenerator extends Generator{
                 Block floor;
                 centreDist = Math.sqrt(Math.pow(cx - x, 2) + Math.pow(cy - y, 2));
                 if (centreDist < 100) {
-                    floor = Blocks.moss;
+                    floor = Blocks.darksand;
                     wall = Blocks.air;
                 }else {
                     floor = Blocks.darksand;
