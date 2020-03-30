@@ -200,7 +200,7 @@ public class PlagueMod extends Plugin{
                     return false;
                 }
             }
-            if((action.type == Administration.ActionType.breakBlock || action.type == Administration.ActionType.placeBlock) && (action.block == Blocks.powerSource || action.block == Blocks.itemSource)){
+            if((action.type == Administration.ActionType.breakBlock || action.type == Administration.ActionType.placeBlock) && (action.tile.block() == Blocks.powerSource || action.tile.block() == Blocks.itemSource)){
                 return false;
             }
 
@@ -209,10 +209,7 @@ public class PlagueMod extends Plugin{
 
         Events.on(EventType.PlayerJoin.class, event -> {
             Tile tile = world.tile(255, 255);
-            Team prev = event.player.getTeam();
-            player.setTeam(Team.crux);
             Call.onUnitRespawn(tile, event.player);
-            player.setTeam(prev);
         });
 
         Events.on(EventType.PlayerLeave.class, event -> {
