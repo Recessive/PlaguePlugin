@@ -124,8 +124,8 @@ public class PlagueMod extends Plugin{
             if(lastTeam.containsKey(player.uuid)){
                 int teamSize = 0;
                 Team prev = lastTeam.get(player.uuid);
-                for(Player _: playerGroup.all()){
-                    if(_.getTeam() == prev){
+                for(Player ply: playerGroup.all()){
+                    if(ply.getTeam() == prev){
                         teamSize ++;
                     }
                 }
@@ -151,6 +151,7 @@ public class PlagueMod extends Plugin{
         AtomicBoolean countOn = new AtomicBoolean(true);
         Events.on(EventType.Trigger.update, ()-> {
             if(survivors < 1 && counter > infectTime || counter > roundTime){
+                Log.info(survivors);
                 endGame();
             }
             if (counter+1 < infectTime && ((int) Math.ceil((roundTime - counter) / 60)) % 20 == 0){
@@ -230,6 +231,7 @@ public class PlagueMod extends Plugin{
             if(event.team == Team.green){
                 event.tile.removeNet();
                 if(Build.validPlace(event.team, event.tile.x, event.tile.y, Blocks.spectre, 0)){ // Use spectre in place of core, as core always returns false
+                    survivors ++;
                     // Check if the core is within 50 blocks of another core
                     Tile nearestCore;
                     final Team[] chosenTeam = {Team.all()[teams+6]};
@@ -317,8 +319,8 @@ public class PlagueMod extends Plugin{
 
     void infect(Player player){
         int teamSize = 0;
-        for(Player _: playerGroup.all()){
-            if(_.getTeam() == player.getTeam()){
+        for(Player ply: playerGroup.all()){
+            if(ply.getTeam() == player.getTeam()){
                 teamSize ++;
             }
         }
