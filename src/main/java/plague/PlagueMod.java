@@ -40,12 +40,12 @@ public class PlagueMod extends Plugin{
     public static final int messageTime = 1;
 
     //in ticks: 60 minutes: 60 * 60 * 60
-    private int roundTime = 60 * 60 * 90;
+    private int roundTime = 60 * 60 * 60;
     //in ticks: 30 seconds
     private final static int infectTime = 60 * 120;
-    private final static int plagueInfluxTime = 60 * 60 * 1, infectWarnTime = 60 * 20;
+    private final static int plagueInfluxTime = 60 * 60 * 1, infectWarnTime = 60 * 20, survivorWarnTime = 60 * 60 * 30;
 
-    private final static int timerPlagueInflux = 0, timerInfectWarn = 1;
+    private final static int timerPlagueInflux = 0, timerInfectWarn = 1, timerSurvivorWarn = 2;
 
     private int lastMin;
 
@@ -141,6 +141,10 @@ public class PlagueMod extends Plugin{
             }
             if (interval.get(timerInfectWarn, infectWarnTime) && counter+1 < infectTime) {
                 Call.sendMessage("[accent]You have [scarlet]" + (int) Math.ceil((infectTime - counter) / 60) + " [accent]seconds left to place a core. Place any block to place a core.");
+            }
+
+            if (interval.get(timerSurvivorWarn, survivorWarnTime)) {
+                Call.sendMessage("[olive]Survivors[accent] must survive [scarlet]" + lastMin + "[accent] more minutes to win");
             }
 
             for (Player player : playerGroup.all()) {
