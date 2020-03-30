@@ -105,6 +105,8 @@ public class PlagueMod extends Plugin{
         bannedTurrets.addAll(Blocks.scatter, Blocks.scorch, Blocks.wave, Blocks.lancer, Blocks.arc, Blocks.swarmer, Blocks.salvo,
                 Blocks.fuse, Blocks.cyclone, Blocks.spectre, Blocks.meltdown, Blocks.hail, Blocks.ripple, Blocks.shockMine);
 
+        Blocks.powerSource.health = Integer.MAX_VALUE; // Make power source invincible
+
         /*for(Block b : content.blocks()){
             b.targetable = false;
         }*/
