@@ -190,7 +190,7 @@ public class PlagueMod extends Plugin{
 
         netServer.admins.addActionFilter((action) -> {
             if(action.player != null){
-                if(cartesianDistance(action.tile.x, action.tile.y, 255, 255) < 100 && action.player.getTeam() != Team.crux) {
+                if(cartesianDistance(action.tile.x, action.tile.y, 255, 255) < 150 && action.player.getTeam() != Team.crux) {
                     return false;
                 }
                 if(action.player.getTeam() == Team.crux && bannedTurrets.contains(action.block)){
