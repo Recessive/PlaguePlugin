@@ -92,6 +92,7 @@ public class PlagueMod extends Plugin{
         rules.canGameOver = false;
         rules.reactorExplosions = false;
         // rules.bannedBlocks.addAll(Blocks.solarPanel, Blocks.largeSolarPanel);
+        rules.bannedBlocks.add(Blocks.arc);
 
 
         noMechRules = rules.copy();
