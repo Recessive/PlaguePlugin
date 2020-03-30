@@ -145,8 +145,13 @@ public class PlagueMod extends Plugin{
         });
 
         netServer.admins.addActionFilter((action) -> {
-            if(cartesianDistance(action.tile.x, action.tile.y, 255, 255) < 100) {
-                return false;
+            if(action.player != null){
+                if(cartesianDistance(action.tile.x, action.tile.y, 255, 255) < 100 && action.player.getTeam() != Team.crux) {
+                    return false;
+                }
+                if(action.player.getTeam() == Team.crux && bannedTurrets.contains(action.block)){
+                    return false;
+                }
             }
             return true;
         });
