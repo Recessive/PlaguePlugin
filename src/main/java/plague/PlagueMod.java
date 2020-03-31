@@ -166,7 +166,7 @@ public class PlagueMod extends Plugin{
         };
         AtomicBoolean countOn = new AtomicBoolean(true);
         Events.on(EventType.Trigger.update, ()-> {
-            if(survivors < 1 && counter > infectTime || counter > roundTime){
+            if(survivors < 1 && counter > infectTime || counter > roundTime || infected == playerGroup.all().size){
                 endGame();
             }
             if (counter+1 < infectTime && ((int) Math.ceil((roundTime - counter) / 60)) % 20 == 0){
