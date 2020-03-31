@@ -123,6 +123,9 @@ public class PlagueMod extends Plugin{
 
         // Blocks.coreFoundation.unloadable = false;
 
+        Block crawler = Vars.content.blocks().find(block -> block.name.equals("crawler-factory"));
+        ((UnitFactory)(crawler)).unitType = UnitTypes.titan;
+
         /*Block dagger = Vars.content.blocks().find(block -> block.name.equals("dagger-factory"));
         ((UnitFactory)(dagger)).unitType = UnitTypes.titan;*/
 
