@@ -129,6 +129,8 @@ public class PlagueMod extends Plugin{
         Block titan = Vars.content.blocks().find(block -> block.name.equals("titan-factory"));
         ((UnitFactory)(titan)).unitType = UnitTypes.eruptor;
 
+        UnitTypes.eruptor.health *= 3;
+
         /*Block fortress = Vars.content.blocks().find(block -> block.name.equals("fortress-factory"));
         ((UnitFactory)(fortress)).unitType = UnitTypes.fortress;*/
 
