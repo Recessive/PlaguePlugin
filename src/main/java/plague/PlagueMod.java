@@ -142,14 +142,8 @@ public class PlagueMod extends Plugin{
 
         netServer.assigner = (player, players) -> {
             if(lastTeam.containsKey(player.uuid)){
-                int teamSize = 0;
                 Team prev = lastTeam.get(player.uuid);
-                for(Player ply: playerGroup.all()){
-                    if(ply.getTeam() == prev){
-                        teamSize ++;
-                    }
-                }
-                if(teamSize > 0 && prev != Team.blue && prev != Team.crux){
+                if(teamSize(prev) > 0 && prev != Team.blue && prev != Team.crux){
                     survivors++;
                     player.name = filterColor(player.name, "[olive]");
                     return prev;
@@ -195,8 +189,7 @@ public class PlagueMod extends Plugin{
                     alive = true;
                 }
             }
-            if(!alive && counter > infectTime){
-                Log.info("No players left alive");
+            if((!alive && counter > infectTime) || counter > roundTime){
                 endGame();
             }
             if(counter > infectTime && counter < infectTime*2 && infected == 0 && playerGroup.all().size > 0){
@@ -252,13 +245,7 @@ public class PlagueMod extends Plugin{
         });
 
         Events.on(EventType.PlayerLeave.class, event -> {
-            int teamSize = 0;
-            for(Player player: playerGroup.all()){
-                if(player.getTeam() == event.player.getTeam()){
-                    teamSize ++;
-                }
-            }
-            if(event.player.getTeam() != Team.crux && teamSize < 2) {
+            if(event.player.getTeam() != Team.crux && teamSize(event.player.getTeam()) < 2) {
                 killTiles(event.player.getTeam(), event.player);
             }
             if(event.player.getTeam() == Team.crux){
@@ -361,19 +348,35 @@ public class PlagueMod extends Plugin{
             player.sendMessage(String.valueOf(player.getTeam().enemies()));
         });
 
+        handler.<Player>register("infect", "Infect yourself", (args, player) -> {
+            Team plyTeam = player.getTeam();
+            if(plyTeam != Team.crux){
+                if(teamSize(plyTeam) < 2){
+                    killTiles(plyTeam, player);
+                }
+                infect(player);
+            }else{
+                player.sendMessage("You are already infected!");
+            }
+
+        });
+
+    }
+
+    int teamSize(Team t){
+        int size = 0;
+        for(Player player : playerGroup.all()){
+            if (player.getTeam() == t) size ++;
+        }
+        return size;
     }
 
     void infect(Player player){
-        int teamSize = 0;
-        for(Player ply: playerGroup.all()){
-            if(ply.getTeam() == player.getTeam()){
-                teamSize ++;
-            }
-        }
+
         infected ++;
         if(player.getTeam() != Team.blue) survivors --;
         Call.sendMessage("[accent]" + player.name + "[white] was [red]infected[white]!");
-        if(teamSize < 2) killTiles(player.getTeam(), player);
+        if(teamSize(player.getTeam()) < 2) killTiles(player.getTeam(), player);
         player.setTeam(Team.crux);
         player.name = filterColor(player.name, "[scarlet]");
         player.kill();
