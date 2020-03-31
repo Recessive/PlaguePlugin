@@ -44,7 +44,7 @@ public class PlagueMod extends Plugin{
     public static final int messageTime = 1;
 
     //in ticks: 60 minutes: 60 * 60 * 60
-    private int roundTime = 60 * 60 * 30;
+    private int roundTime = 60 * 60 * 40;
     //in ticks: 30 seconds
     private final static int infectTime = 60 * 60 * 2;
     private final static int plagueInfluxTime = 60 * 60 * 1, infectWarnTime = 60 * 20, survivorWarnTime = 60 * 60 * 10;
@@ -125,6 +125,7 @@ public class PlagueMod extends Plugin{
 
         Block crawler = Vars.content.blocks().find(block -> block.name.equals("crawler-factory"));
         ((UnitFactory)(crawler)).unitType = UnitTypes.titan;
+        ((UnitFactory)(crawler)).maxSpawn = 2;
 
         /*Block dagger = Vars.content.blocks().find(block -> block.name.equals("dagger-factory"));
         ((UnitFactory)(dagger)).unitType = UnitTypes.titan;*/
