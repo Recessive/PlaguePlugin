@@ -44,7 +44,7 @@ public class PlagueMod extends Plugin{
     public static final int messageTime = 1;
 
     //in ticks: 60 minutes: 60 * 60 * 60
-    private int roundTime = 60 * 60 * 45;
+    private int roundTime = 60 * 60 * 30;
     //in ticks: 30 seconds
     private final static int infectTime = 60 * 60 * 2;
     private final static int plagueInfluxTime = 60 * 60 * 1, infectWarnTime = 60 * 20, survivorWarnTime = 60 * 60 * 10;
@@ -193,7 +193,8 @@ public class PlagueMod extends Plugin{
                     alive = true;
                 }
             }
-            if(!alive){
+            if(!alive && counter > infectTime){
+                Log.info("No players left alive");
                 endGame();
             }
             if(counter > infectTime && counter < infectTime*2 && infected == 0 && playerGroup.all().size > 0){
