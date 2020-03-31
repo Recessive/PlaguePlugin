@@ -21,6 +21,7 @@ import mindustry.type.*;
 import mindustry.world.*;
 import mindustry.world.blocks.defense.turrets.ChargeTurret;
 import mindustry.world.blocks.storage.CoreBlock;
+import mindustry.world.blocks.units.UnitFactory;
 
 import static arc.util.Log.info;
 import static java.lang.Math.abs;
@@ -122,20 +123,19 @@ public class PlagueMod extends Plugin{
 
         // Blocks.coreFoundation.unloadable = false;
 
-        /*for(Block b : content.blocks()){
-            b.targetable = false;
-        }*/
+        /*Block dagger = Vars.content.blocks().find(block -> block.name.equals("dagger-factory"));
+        ((UnitFactory)(dagger)).unitType = UnitTypes.titan;*/
+
+        Block titan = Vars.content.blocks().find(block -> block.name.equals("titan-factory"));
+        ((UnitFactory)(titan)).unitType = UnitTypes.fortress;
+
+        Block fortress = Vars.content.blocks().find(block -> block.name.equals("fortress-factory"));
+        ((UnitFactory)(fortress)).unitType = UnitTypes.chaosArray;
 
         Core.settings.putSave("playerlimit", 0);
 
         // Disable lancer pierce:
-        Block lancer = Vars.content.blocks().find(new Boolf<Block>() {
-            @Override
-            public boolean get(Block block) {
-                return block.name.equals("lancer");
-            }
-        });
-
+        Block lancer = Vars.content.blocks().find(block -> block.name.equals("lancer"));
         ((ChargeTurret)(lancer)).shootType = PlagueData.getLLaser();
 
         netServer.assigner = (player, players) -> {
@@ -225,7 +225,8 @@ public class PlagueMod extends Plugin{
             if((action.type == Administration.ActionType.breakBlock || action.type == Administration.ActionType.placeBlock) && (action.tile.block() == Blocks.powerSource || action.tile.block() == Blocks.itemSource)){
                 return false;
             }
-            if(action.type == Administration.ActionType.configure && action.tile.block() == Blocks.powerSource){
+            if(action.type == Administration.ActionType.configure && action.tile.block() == Blocks.powerSource && action.player != null){
+                // Call.sendMessage(action.player.name + " is mucking with the power infinite");
                 action.player.sendMessage("[accent]You just desynced yourself. Use [scarlet]/sync to resync");
                 return false;
             }
