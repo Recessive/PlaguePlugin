@@ -376,7 +376,7 @@ public class PlagueMod extends Plugin{
 
         for(Player player: playerGroup.all()){
             if(survivors > 0){
-                Call.onInfoMessage(player.con, "[accent]--ROUND OVER--\n\n[blue]Survivors[lightgray] win!");
+                Call.onInfoMessage(player.con, "[accent]--ROUND OVER--\n\n[green]Survivors[lightgray] win!");
             }else{
                 Call.onInfoMessage(player.con, "[accent]--ROUND OVER--\n\n[red]Plague[lightgray] wins!");
             }
