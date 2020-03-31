@@ -68,6 +68,8 @@ public class PlagueMod extends Plugin{
     
     private Map<String, Team> lastTeam = new HashMap<String, Team>();
 
+    private List<String> needsChanging = new ArrayList<>();
+
     private Array<Block> bannedTurrets = new Array<>();
 
 
@@ -117,6 +119,8 @@ public class PlagueMod extends Plugin{
                 Blocks.thoriumReactor, Blocks.impactReactor);
 
         Blocks.powerSource.breakable = false; // Make power source invincible
+
+        // Blocks.coreFoundation.unloadable = false;
 
         /*for(Block b : content.blocks()){
             b.targetable = false;
@@ -182,6 +186,10 @@ public class PlagueMod extends Plugin{
                 if (player.getTeam() != Team.derelict && player.getTeam().cores().isEmpty() && counter > infectTime) {
                     infect(player);
                 }
+                if (needsChanging.contains(player.uuid) && !player.dead) {
+                    player.setTeam(Team.blue);
+                    needsChanging.remove(player.uuid);
+                }
             }
             if(counter > infectTime && counter < infectTime*2 && infected == 0 && playerGroup.all().size > 0){
                 Player player = playerGroup.all().random();
@@ -222,8 +230,12 @@ public class PlagueMod extends Plugin{
         });
 
         Events.on(EventType.PlayerJoin.class, event -> {
-            Tile tile = world.tile(255, 255);
-            Call.onUnitRespawn(tile, event.player);
+            // Tile tile = world.tile(255, 255);
+            if(event.player.getTeam() == Team.blue){
+                event.player.setTeam(Team.crux);
+                needsChanging.add(event.player.uuid);
+            }
+
         });
 
         Events.on(EventType.PlayerLeave.class, event -> {
@@ -251,7 +263,6 @@ public class PlagueMod extends Plugin{
                 if(Build.validPlace(event.team, event.tile.x, event.tile.y, Blocks.spectre, 0)){ // Use spectre in place of core, as core always returns false
                     survivors ++;
                     // Check if the core is within 50 blocks of another core
-                    Tile nearestCore;
                     final Team[] chosenTeam = {Team.all()[teams+6]};
                     teams ++;
                     state.teams.eachEnemyCore(event.team, core -> {
