@@ -45,7 +45,7 @@ public class PlagueMod extends Plugin{
     //in ticks: 60 minutes: 60 * 60 * 60
     private int roundTime = 60 * 60 * 45;
     //in ticks: 30 seconds
-    private final static int infectTime = 60 * 60 * 4;
+    private final static int infectTime = 60 * 60 * 2;
     private final static int plagueInfluxTime = 60 * 60 * 1, infectWarnTime = 60 * 20, survivorWarnTime = 60 * 60 * 10;
 
     private final static int timerPlagueInflux = 0, timerInfectWarn = 1, timerSurvivorWarn = 2;
@@ -78,7 +78,7 @@ public class PlagueMod extends Plugin{
 
 
     	loadouts.add(ItemStack.list(Items.copper, 5000, Items.lead, 5000, Items.graphite, 1000, Items.silicon, 1000));
-    	loadouts.add(ItemStack.list(Items.copper, 500, Items.lead, 500, Items.graphite, 200, Items.silicon, 200));
+    	loadouts.add(ItemStack.list(Items.titanium, 1000, Items.graphite, 400, Items.silicon, 400));
         rules.pvp = !true;
         rules.tags.put("plague", "true");
         rules.loadout = loadouts.get(0);
@@ -223,6 +223,10 @@ public class PlagueMod extends Plugin{
                 }
             }
             if((action.type == Administration.ActionType.breakBlock || action.type == Administration.ActionType.placeBlock) && (action.tile.block() == Blocks.powerSource || action.tile.block() == Blocks.itemSource)){
+                return false;
+            }
+            if(action.type == Administration.ActionType.configure && action.tile.block() == Blocks.powerSource){
+                action.player.sendMessage("[accent]You just desynced yourself. Use [scarlet]/sync to resync");
                 return false;
             }
 
