@@ -127,10 +127,10 @@ public class PlagueMod extends Plugin{
         ((UnitFactory)(dagger)).unitType = UnitTypes.titan;*/
 
         Block titan = Vars.content.blocks().find(block -> block.name.equals("titan-factory"));
-        ((UnitFactory)(titan)).unitType = UnitTypes.fortress;
+        ((UnitFactory)(titan)).unitType = UnitTypes.eruptor;
 
-        Block fortress = Vars.content.blocks().find(block -> block.name.equals("fortress-factory"));
-        ((UnitFactory)(fortress)).unitType = UnitTypes.chaosArray;
+        /*Block fortress = Vars.content.blocks().find(block -> block.name.equals("fortress-factory"));
+        ((UnitFactory)(fortress)).unitType = UnitTypes.fortress;*/
 
         Core.settings.putSave("playerlimit", 0);
 
@@ -166,9 +166,7 @@ public class PlagueMod extends Plugin{
         };
         AtomicBoolean countOn = new AtomicBoolean(true);
         Events.on(EventType.Trigger.update, ()-> {
-            if(survivors < 1 && counter > infectTime || counter > roundTime || infected == playerGroup.all().size){
-                endGame();
-            }
+
             if (counter+1 < infectTime && ((int) Math.ceil((roundTime - counter) / 60)) % 20 == 0){
                 if(countOn.get()){
                     Call.sendMessage("[accent]You have [scarlet]" + (int) Math.ceil((infectTime - counter) / 60) + " [accent]seconds left to place a core. Place any block to place a core.");
@@ -181,15 +179,22 @@ public class PlagueMod extends Plugin{
             if (interval.get(timerSurvivorWarn, survivorWarnTime)) {
                 Call.sendMessage("[olive]Survivors[accent] must survive [scarlet]" + lastMin + "[accent] more minutes to win");
             }
-
+            boolean alive = false;
             for (Player player : playerGroup.all()) {
-                if (player.getTeam() != Team.derelict && player.getTeam().cores().isEmpty() && counter > infectTime) {
+                Team ply_team = player.getTeam();
+                if (ply_team != Team.derelict && ply_team.cores().isEmpty() && counter > infectTime) {
                     infect(player);
                 }
                 if (needsChanging.contains(player.uuid) && !player.dead) {
                     player.setTeam(Team.blue);
                     needsChanging.remove(player.uuid);
                 }
+                if(ply_team != Team.derelict && ply_team != Team.crux){
+                    alive = true;
+                }
+            }
+            if(!alive){
+                endGame();
             }
             if(counter > infectTime && counter < infectTime*2 && infected == 0 && playerGroup.all().size > 0){
                 Player player = playerGroup.all().random();
