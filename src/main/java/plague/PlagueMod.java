@@ -235,7 +235,7 @@ public class PlagueMod extends Plugin{
             }
             if(action.type == Administration.ActionType.configure && action.tile.block() == Blocks.powerSource && action.player != null){
                 // Call.sendMessage(action.player.name + " is mucking with the power infinite");
-                action.player.sendMessage("[accent]You just desynced yourself. Use [scarlet]/sync to resync");
+                action.player.sendMessage("[accent]You just desynced yourself. Use [scarlet]/sync[accent] to resync");
                 return false;
             }
 
