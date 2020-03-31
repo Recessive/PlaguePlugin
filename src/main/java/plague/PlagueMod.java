@@ -143,7 +143,7 @@ public class PlagueMod extends Plugin{
                         teamSize ++;
                     }
                 }
-                if(teamSize > 0 && prev != Team.green && prev != Team.crux){
+                if(teamSize > 0 && prev != Team.blue && prev != Team.crux){
                     survivors++;
                     player.name = filterColor(player.name, "[olive]");
                     return prev;
@@ -152,7 +152,7 @@ public class PlagueMod extends Plugin{
 
             if(counter < infectTime){
                 player.name = filterColor(player.name, "[royal]");
-                return Team.green;
+                return Team.blue;
             }else{
                 infected ++;
                 Call.onSetRules(player.con, noTurretRules);
@@ -206,7 +206,11 @@ public class PlagueMod extends Plugin{
                 if(cartesianDistance(action.tile.x, action.tile.y, 255, 255) < 150 && action.player.getTeam() != Team.crux) {
                     return false;
                 }
-                if(action.player.getTeam() == Team.crux && bannedTurrets.contains(action.block)){
+                if(action.player.getTeam() == Team.crux && noTurretRules.bannedBlocks.contains(action.block)){
+                    return false;
+                }
+
+                if(action.player.getTeam() != Team.crux && action.player.getTeam() != Team.blue && noMechRules.bannedBlocks.contains(action.block)){
                     return false;
                 }
             }
@@ -234,7 +238,7 @@ public class PlagueMod extends Plugin{
             }
             if(event.player.getTeam() == Team.crux){
                 infected --;
-            }else if (event.player.getTeam() != Team.green){
+            }else if (event.player.getTeam() != Team.blue){
                 survivors --;
             }
 
@@ -242,7 +246,7 @@ public class PlagueMod extends Plugin{
         });
 
         Events.on(EventType.BuildSelectEvent.class, event ->{
-            if(event.team == Team.green){
+            if(event.team == Team.blue){
                 event.tile.removeNet();
                 if(Build.validPlace(event.team, event.tile.x, event.tile.y, Blocks.spectre, 0)){ // Use spectre in place of core, as core always returns false
                     survivors ++;
@@ -294,7 +298,7 @@ public class PlagueMod extends Plugin{
 
 
             Tile tile = world.tile(255,255);
-            //tile.setNet(Blocks.coreFoundation, Team.green, 0);
+            //tile.setNet(Blocks.coreFoundation, Team.blue, 0);
             tile = world.tile(255,255);
             tile.setNet(Blocks.coreFoundation, Team.crux, 0);
             for(ItemStack stack : state.rules.loadout){
@@ -343,7 +347,7 @@ public class PlagueMod extends Plugin{
             }
         }
         infected ++;
-        if(player.getTeam() != Team.green) survivors --;
+        if(player.getTeam() != Team.blue) survivors --;
         Call.sendMessage("[accent]" + player.name + "[white] was [red]infected[white]!");
         if(teamSize < 2) killTiles(player.getTeam(), player);
         player.setTeam(Team.crux);
@@ -357,7 +361,7 @@ public class PlagueMod extends Plugin{
 
         for(Player player: playerGroup.all()){
             if(survivors > 0){
-                Call.onInfoMessage(player.con, "[accent]--ROUND OVER--\n\n[green]Survivors[lightgray] win!");
+                Call.onInfoMessage(player.con, "[accent]--ROUND OVER--\n\n[blue]Survivors[lightgray] win!");
             }else{
                 Call.onInfoMessage(player.con, "[accent]--ROUND OVER--\n\n[red]Plague[lightgray] wins!");
             }
