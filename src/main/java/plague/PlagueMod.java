@@ -176,7 +176,7 @@ public class PlagueMod extends Plugin{
             }
 
             if (interval.get(timerSurvivorWarn, survivorWarnTime)) {
-                Call.sendMessage("[olive]Survivors[accent] must survive [scarlet]" + lastMin + "[accent] more minutes to win");
+                if(lastMin != 0) Call.sendMessage("[olive]Survivors[accent] must survive [scarlet]" + lastMin + "[accent] more minutes to win");
             }
             boolean alive = false;
             for (Player player : playerGroup.all()) {
