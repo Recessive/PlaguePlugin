@@ -19,6 +19,7 @@ import mindustry.net.Administration;
 import mindustry.plugin.*;
 import mindustry.type.*;
 import mindustry.world.*;
+import mindustry.world.blocks.defense.DeflectorWall;
 import mindustry.world.blocks.defense.turrets.ChargeTurret;
 import mindustry.world.blocks.storage.CoreBlock;
 import mindustry.world.blocks.units.UnitFactory;
@@ -96,6 +97,7 @@ public class PlagueMod extends Plugin{
         rules.respawnTime = 0;
         // rules.bannedBlocks.addAll(Blocks.solarPanel, Blocks.largeSolarPanel);
         rules.bannedBlocks.add(Blocks.arc);
+        // rules.bannedBlocks.add(Blocks.commandCenter);
 
 
         noMechRules = rules.copy();
@@ -133,10 +135,22 @@ public class PlagueMod extends Plugin{
         Block titan = Vars.content.blocks().find(block -> block.name.equals("titan-factory"));
         ((UnitFactory)(titan)).unitType = UnitTypes.eruptor;
 
-        UnitTypes.eruptor.health *= 3;
+        UnitTypes.eruptor.health *= 2;
 
         /*Block fortress = Vars.content.blocks().find(block -> block.name.equals("fortress-factory"));
         ((UnitFactory)(fortress)).unitType = UnitTypes.fortress;*/
+
+        // Update phase wall to only deflect 50% of the time
+        /*Block phaseSmall = Vars.content.blocks().find(block -> block.name.equals("phase-wall"));
+        Vars.content.blocks().remove(phaseSmall);
+        phaseSmall = PlagueData.newPhaseSmall();
+        Vars.content.blocks().add(phaseSmall);*/
+
+        /*Block phaseLarge = Vars.content.blocks().find(block -> block.name.equals("phase-wall-large"));
+        Vars.content.blocks().remove(phaseLarge);
+        phaseLarge = PlagueData.newPhaseLarge();
+        Vars.content.blocks().add(phaseLarge);*/
+
 
         Core.settings.putSave("playerlimit", 0);
 
@@ -285,6 +299,7 @@ public class PlagueMod extends Plugin{
                         Call.transferItemTo(stack.item, stack.amount, event.tile.drawx(), event.tile.drawy(), event.tile);
                     }
                     Call.onSetRules(player.con, noMechRules);
+                    Call.onUnitRespawn(event.tile, player);
                 }
             }
 
