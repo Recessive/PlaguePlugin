@@ -63,6 +63,8 @@ public class PlagueGenerator extends Generator{
         gapGen.block = Blocks.air;
         gapGen.floorGen = false;
         gapGen.falloff = (float) 0.2;
+        gapGen.scl = (float) 20;
+        gapGen.threshold = (float) 0.45;
 
         tendrilFilter mossGen = new tendrilFilter();
         mossGen.floor = Blocks.moss;
@@ -134,8 +136,9 @@ public class PlagueGenerator extends Generator{
 
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
-                if (floodGrid[x][y] == 1){
-                    bridgeGap(tiles[x][y], floodGrid, tiles);
+                if (floodGrid[x][y] == 0){
+                    //bridgeGap(tiles[x][y], floodGrid, tiles);
+                    tiles[x][y].setBlock(Blocks.duneRocks);
                 }
             }
         }
