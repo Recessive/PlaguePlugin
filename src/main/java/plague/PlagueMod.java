@@ -328,7 +328,7 @@ public class PlagueMod extends Plugin{
 
             Tile tile = world.tile(255,255);
             //tile.setNet(Blocks.coreFoundation, Team.blue, 0);
-            tile = world.tile(255,255);
+            tile = world.tile(601/2,601/2);
             tile.setNet(Blocks.coreFoundation, Team.crux, 0);
             for(ItemStack stack : state.rules.loadout){
                 Call.transferItemTo(stack.item, stack.amount, tile.drawx(), tile.drawy(), tile);

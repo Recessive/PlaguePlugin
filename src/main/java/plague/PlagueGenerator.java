@@ -31,7 +31,7 @@ public class PlagueGenerator extends Generator{
     // |
     // v
 
-    public static final int size = 511;
+    public static final int size = 601;
     int terrain_type;
     int map_type;
 
@@ -63,7 +63,7 @@ public class PlagueGenerator extends Generator{
         gapGen.block = Blocks.air;
         gapGen.floorGen = false;
         gapGen.falloff = (float) 0.2;
-        gapGen.scl = (float) 20;
+        gapGen.scl = (float) 40;
         gapGen.threshold = (float) 0.45;
 
         tendrilFilter mossGen = new tendrilFilter();
@@ -167,14 +167,31 @@ public class PlagueGenerator extends Generator{
 
             Tile t = tileFlood.remove(0);
 
-            for(int xsign = -1; xsign < 2; xsign++){
+            if (floodGrid[t.x+1][t.y] == 0) {
+                floodGrid[t.x+1][t.y] = 1;
+                tileFlood.add(tiles[t.x+1][t.y]);
+            }
+            if (floodGrid[t.x-1][t.y] == 0) {
+                floodGrid[t.x-1][t.y] = 1;
+                tileFlood.add(tiles[t.x-1][t.y]);
+            }
+            if (floodGrid[t.x][t.y+1] == 0) {
+                floodGrid[t.x][t.y+1] = 1;
+                tileFlood.add(tiles[t.x][t.y+1]);
+            }
+            if (floodGrid[t.x][t.y-1] == 0) {
+                floodGrid[t.x][t.y-1] = 1;
+                tileFlood.add(tiles[t.x][t.y-1]);
+            }
+
+            /*for(int xsign = -1; xsign < 2; xsign++){
                 for(int ysign = -1; ysign < 2; ysign++){
                     if(xsign == 0 && ysign == 0){
                         continue;
                     }
-                    /*if(t.x+xsign < 0 || t.x+xsign > size || t.y+ysign < 0 || t.y+ysign > size){
+                    *//*if(t.x+xsign < 0 || t.x+xsign > size || t.y+ysign < 0 || t.y+ysign > size){
                         continue;
-                    }*/
+                    }*//*
                     if (floodGrid[t.x+xsign][t.y+ysign] == 0) {
                         if(noWalls(tiles[t.x+xsign][t.y+ysign], tiles)){
                             floodGrid[t.x+xsign][t.y+ysign] = 3;
@@ -185,7 +202,7 @@ public class PlagueGenerator extends Generator{
                         tileFlood.add(tiles[t.x+xsign][t.y+ysign]);
                     }
                 }
-            }
+            }*/
 
 
             // t.setFloor((Floor) Blocks.salt);
