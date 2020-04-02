@@ -98,7 +98,7 @@ public class PlagueMod extends Plugin{
         rules.respawnTime = 0;
         // rules.bannedBlocks.addAll(Blocks.solarPanel, Blocks.largeSolarPanel);
         rules.bannedBlocks.addAll(Blocks.arc, Blocks.melter);
-        // rules.bannedBlocks.add(Blocks.commandCenter);
+        rules.bannedBlocks.add(Blocks.commandCenter); // Can't be trusted
 
 
         noMechRules = rules.copy();
