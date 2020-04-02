@@ -11,6 +11,7 @@ import arc.util.*;
 import mindustry.Vars;
 import mindustry.content.*;
 import mindustry.core.GameState.*;
+import mindustry.entities.traits.SpawnerTrait;
 import mindustry.entities.type.*;
 import mindustry.game.EventType;
 import mindustry.game.*;
@@ -121,7 +122,7 @@ public class PlagueMod extends Plugin{
                 Blocks.turbineGenerator, Blocks.differentialGenerator, Blocks.rtgGenerator, Blocks.solarPanel, Blocks.largeSolarPanel,
                 Blocks.thoriumReactor, Blocks.impactReactor);
 
-        Blocks.powerSource.breakable = false; // Make power source invincible
+        Blocks.powerSource.health = Integer.MAX_VALUE;
 
         // Blocks.coreFoundation.unloadable = false;
 
@@ -299,10 +300,8 @@ public class PlagueMod extends Plugin{
                         Call.transferItemTo(stack.item, stack.amount, event.tile.drawx(), event.tile.drawy(), event.tile);
                     }
                     Call.onSetRules(player.con, noMechRules);
-                    Call.onUnitRespawn(event.tile, player);
                 }
             }
-
         });
 
 
@@ -334,6 +333,7 @@ public class PlagueMod extends Plugin{
             for(ItemStack stack : state.rules.loadout){
                 Call.transferItemTo(stack.item, stack.amount, tile.drawx(), tile.drawy(), tile);
             }
+            tile.block().health = Integer.MAX_VALUE; // Set core health to infinite so it can't be broken
 
             // Add power infinite
             tile = world.tile(255,265);
