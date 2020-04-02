@@ -97,7 +97,7 @@ public class PlagueMod extends Plugin{
         rules.reactorExplosions = false;
         rules.respawnTime = 0;
         // rules.bannedBlocks.addAll(Blocks.solarPanel, Blocks.largeSolarPanel);
-        rules.bannedBlocks.add(Blocks.arc);
+        rules.bannedBlocks.addAll(Blocks.arc, Blocks.melter);
         // rules.bannedBlocks.add(Blocks.commandCenter);
 
 
@@ -333,7 +333,7 @@ public class PlagueMod extends Plugin{
             for(ItemStack stack : state.rules.loadout){
                 Call.transferItemTo(stack.item, stack.amount, tile.drawx(), tile.drawy(), tile);
             }
-            tile.block().health = Integer.MAX_VALUE; // Set core health to infinite so it can't be broken
+            // tile.block().health = Integer.MAX_VALUE; // Set core health to infinite so it can't be broken
 
             // Add power infinite
             tile = world.tile(255,265);
