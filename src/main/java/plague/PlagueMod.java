@@ -336,7 +336,7 @@ public class PlagueMod extends Plugin{
             // tile.block().health = Integer.MAX_VALUE; // Set core health to infinite so it can't be broken
 
             // Add power infinite
-            tile = world.tile(255,265);
+            tile = world.tile(601/2,601/2+10);
             tile.setNet(Blocks.powerSource, Team.crux, 0);
         });
 
