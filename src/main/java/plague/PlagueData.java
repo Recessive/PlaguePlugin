@@ -10,8 +10,10 @@ import mindustry.entities.bullet.BasicBulletType;
 import mindustry.entities.bullet.BulletType;
 import mindustry.entities.type.*;
 import mindustry.game.*;
+import mindustry.gen.Sounds;
 import mindustry.type.Category;
 import mindustry.type.ItemStack;
+import mindustry.type.Weapon;
 import mindustry.world.*;
 import mindustry.content.*;
 import mindustry.world.blocks.defense.DeflectorWall;
@@ -44,6 +46,23 @@ public class PlagueData {
             requirements(Category.defense, ItemStack.with(Items.phasefabric, 24));
             health = 150 * 4 * 4;
             size = 2;
+        }};
+    }
+
+    public static Weapon nerfedChaos(){
+        return new Weapon("chaos"){{
+            length = 8f;
+            reload = 50f;
+            width = 17f;
+            alternate = true;
+            recoil = 3f;
+            shake = 2f;
+            shots = 1;
+            spacing = 4f;
+            shotDelay = 5;
+            ejectEffect = Fx.shellEjectMedium;
+            bullet = Bullets.flakSurge;
+            shootSound = Sounds.shootBig;
         }};
     }
 

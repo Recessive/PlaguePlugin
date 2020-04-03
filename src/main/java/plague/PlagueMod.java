@@ -126,20 +126,22 @@ public class PlagueMod extends Plugin{
 
         // Blocks.coreFoundation.unloadable = false;
 
+        Block dagger = Vars.content.blocks().find(block -> block.name.equals("dagger-factory"));
+        ((UnitFactory)(dagger)).unitType = UnitTypes.fortress;
+
         Block crawler = Vars.content.blocks().find(block -> block.name.equals("crawler-factory"));
         ((UnitFactory)(crawler)).unitType = UnitTypes.titan;
         ((UnitFactory)(crawler)).maxSpawn = 2;
-
-        /*Block dagger = Vars.content.blocks().find(block -> block.name.equals("dagger-factory"));
-        ((UnitFactory)(dagger)).unitType = UnitTypes.titan;*/
 
         Block titan = Vars.content.blocks().find(block -> block.name.equals("titan-factory"));
         ((UnitFactory)(titan)).unitType = UnitTypes.eruptor;
 
         UnitTypes.eruptor.health *= 2;
 
-        /*Block fortress = Vars.content.blocks().find(block -> block.name.equals("fortress-factory"));
-        ((UnitFactory)(fortress)).unitType = UnitTypes.fortress;*/
+        Block fortress = Vars.content.blocks().find(block -> block.name.equals("fortress-factory"));
+        ((UnitFactory)(fortress)).unitType = UnitTypes.chaosArray;
+
+        UnitTypes.chaosArray.weapon = PlagueData.nerfedChaos();
 
         // Update phase wall to only deflect 50% of the time
         /*Block phaseSmall = Vars.content.blocks().find(block -> block.name.equals("phase-wall"));
