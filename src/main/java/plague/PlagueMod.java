@@ -285,12 +285,14 @@ public class PlagueMod extends Plugin{
                 if(Build.validPlace(event.team, event.tile.x, event.tile.y, Blocks.spectre, 0)){ // Use spectre in place of core, as core always returns false
                     survivors ++;
                     // Check if the core is within 50 blocks of another core
-                    final Team[] chosenTeam = {Team.all()[teams+6]};
+                    final Team[] chosenTeam = {Team.all()[teams]};
                     teams ++;
+                    final boolean[] breakLoop = {false};
                     state.teams.eachEnemyCore(event.team, core -> {
-                        if(cartesianDistance(event.tile.x, event.tile.y, core.tile.x, core.tile.y) < 90 && core.getTeam() != Team.crux) {
+                        if(!breakLoop[0] && cartesianDistance(event.tile.x, event.tile.y, core.tile.x, core.tile.y) < 100 && core.getTeam() != Team.crux) {
                             chosenTeam[0] = core.getTeam();
                             teams--;
+                            breakLoop[0] = true;
                         }
                     });
 

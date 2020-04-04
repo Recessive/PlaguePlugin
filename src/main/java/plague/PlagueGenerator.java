@@ -85,7 +85,6 @@ public class PlagueGenerator extends Generator{
                 if (centreDist < 100) {
                     wall = Blocks.air;
                 }else {
-                    floor = Blocks.darksand;
                     wall = Blocks.duneRocks;
                 }
 
