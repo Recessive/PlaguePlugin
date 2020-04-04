@@ -103,7 +103,7 @@ public class PlagueMod extends Plugin{
                 Blocks.crawlerFactory, Blocks.titanFactory, Blocks.fortressFactory);
 
         plagueBanned = rules.copy();
-        plagueBanned.bannedBlocks.addAll(Blocks.scatter, Blocks.scorch, Blocks.wave, Blocks.lancer, Blocks.arc, Blocks.swarmer, Blocks.salvo,
+        plagueBanned.bannedBlocks.addAll(Blocks.duo, Blocks.scatter, Blocks.scorch, Blocks.wave, Blocks.lancer, Blocks.arc, Blocks.swarmer, Blocks.salvo,
                 Blocks.fuse, Blocks.cyclone, Blocks.spectre, Blocks.meltdown, Blocks.hail, Blocks.ripple, Blocks.shockMine);
 
         // Add power blocks to this because apparantly people don't know how to not build power blocks
@@ -113,7 +113,8 @@ public class PlagueMod extends Plugin{
                 Blocks.thoriumReactor, Blocks.impactReactor);
 
         plagueBanned.bannedBlocks.addAll(Blocks.surgeWall, Blocks.surgeWallLarge, Blocks.thoriumWall, Blocks.thoriumWallLarge, Blocks.phaseWall,
-        Blocks.phaseWallLarge, Blocks.titaniumWall, Blocks.titaniumWallLarge, Blocks.copperWallLarge, Blocks.copperWall, Blocks.door, Blocks.doorLarge);
+            Blocks.phaseWallLarge, Blocks.titaniumWall, Blocks.titaniumWallLarge, Blocks.copperWallLarge, Blocks.copperWall, Blocks.door,
+                Blocks.doorLarge, Blocks.plastaniumWall, Blocks.plastaniumWallLarge);
 
         plagueBanned.bannedBlocks.addAll(Blocks.mendProjector);
 
