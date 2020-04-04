@@ -98,6 +98,7 @@ public class PlagueMod extends Plugin{
         rules.respawnTime = 0;
         // rules.bannedBlocks.addAll(Blocks.solarPanel, Blocks.largeSolarPanel);
         rules.bannedBlocks.addAll(Blocks.arc, Blocks.melter);
+        rules.bannedBlocks.addAll(Blocks.revenantFactory, Blocks.wraithFactory, Blocks.ghoulFactory);
         // rules.bannedBlocks.add(Blocks.commandCenter); // Can't be trusted
 
 
@@ -259,7 +260,9 @@ public class PlagueMod extends Plugin{
         });
 
         Events.on(EventType.PlayerJoin.class, event -> {
-            if(event.player.uuid == "rJ2w2dsR3gQAAAAAfJfvXA==") event.player.isAdmin = true;
+            if(event.player.uuid.equals("rJ2w2dsR3gQAAAAAfJfvXA==")){
+                event.player.isAdmin = true;
+            }
             // Tile tile = world.tile(255, 255);
             if(event.player.getTeam() == Team.blue){
                 event.player.setTeam(Team.crux);
