@@ -80,10 +80,9 @@ public class PlagueGenerator extends Generator{
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
                 Block wall;
-                Block floor;
+                Block floor = Blocks.darksand;
                 centreDist = Math.sqrt(Math.pow(cx - x, 2) + Math.pow(cy - y, 2));
                 if (centreDist < 100) {
-                    floor = Blocks.darksand;
                     wall = Blocks.air;
                 }else {
                     floor = Blocks.darksand;
@@ -105,6 +104,8 @@ public class PlagueGenerator extends Generator{
                 }
                 if (centreDist >= 100) {
                     gapGen.apply(in);
+                }
+                if (centreDist >= 150){
                     mossGen.apply(in);
                 }
 
