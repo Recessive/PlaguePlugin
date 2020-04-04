@@ -4,14 +4,12 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import arc.*;
-import arc.func.Boolf;
 import arc.math.*;
 import arc.struct.*;
 import arc.util.*;
 import mindustry.Vars;
 import mindustry.content.*;
 import mindustry.core.GameState.*;
-import mindustry.entities.traits.SpawnerTrait;
 import mindustry.entities.type.*;
 import mindustry.game.EventType;
 import mindustry.game.*;
@@ -20,7 +18,6 @@ import mindustry.net.Administration;
 import mindustry.plugin.*;
 import mindustry.type.*;
 import mindustry.world.*;
-import mindustry.world.blocks.defense.DeflectorWall;
 import mindustry.world.blocks.defense.turrets.ChargeTurret;
 import mindustry.world.blocks.storage.CoreBlock;
 import mindustry.world.blocks.units.UnitFactory;
@@ -56,7 +53,7 @@ public class PlagueMod extends Plugin{
     private int lastMin;
 
     private final Rules rules = new Rules();
-    private Rules noTurretRules = new Rules();
+    private Rules survivorBanned = new Rules();
     private Rules noMechRules = new Rules();
     private Interval interval = new Interval(5);
 
@@ -73,7 +70,7 @@ public class PlagueMod extends Plugin{
 
     private List<String> needsChanging = new ArrayList<>();
 
-    private Array<Block> bannedTurrets = new Array<>();
+    private Array<Block> plagueBanned = new Array<>();
 
 
     @Override
@@ -106,22 +103,27 @@ public class PlagueMod extends Plugin{
         noMechRules.bannedBlocks.addAll(Blocks.commandCenter, Blocks.wraithFactory, Blocks.ghoulFactory, Blocks.revenantFactory, Blocks.daggerFactory,
                 Blocks.crawlerFactory, Blocks.titanFactory, Blocks.fortressFactory);
 
-        noTurretRules = rules.copy();
-        noTurretRules.bannedBlocks.addAll(Blocks.scatter, Blocks.scorch, Blocks.wave, Blocks.lancer, Blocks.arc, Blocks.swarmer, Blocks.salvo,
+        survivorBanned = rules.copy();
+        survivorBanned.bannedBlocks.addAll(Blocks.scatter, Blocks.scorch, Blocks.wave, Blocks.lancer, Blocks.arc, Blocks.swarmer, Blocks.salvo,
                 Blocks.fuse, Blocks.cyclone, Blocks.spectre, Blocks.meltdown, Blocks.hail, Blocks.ripple, Blocks.shockMine);
 
         // Add power blocks to this because apparantly people don't know how to not build power blocks
 
-        noTurretRules.bannedBlocks.addAll(Blocks.battery, Blocks.batteryLarge, Blocks.combustionGenerator, Blocks.thermalGenerator,
+        survivorBanned.bannedBlocks.addAll(Blocks.battery, Blocks.batteryLarge, Blocks.combustionGenerator, Blocks.thermalGenerator,
                 Blocks.turbineGenerator, Blocks.differentialGenerator, Blocks.rtgGenerator, Blocks.solarPanel, Blocks.largeSolarPanel,
                 Blocks.thoriumReactor, Blocks.impactReactor);
 
-        bannedTurrets.addAll(Blocks.scatter, Blocks.scorch, Blocks.wave, Blocks.lancer, Blocks.arc, Blocks.swarmer, Blocks.salvo,
+        plagueBanned.addAll(Blocks.scatter, Blocks.scorch, Blocks.wave, Blocks.lancer, Blocks.arc, Blocks.swarmer, Blocks.salvo,
                 Blocks.fuse, Blocks.cyclone, Blocks.spectre, Blocks.meltdown, Blocks.hail, Blocks.ripple, Blocks.shockMine);
 
-        bannedTurrets.addAll(Blocks.battery, Blocks.batteryLarge, Blocks.combustionGenerator, Blocks.thermalGenerator,
+        plagueBanned.addAll(Blocks.battery, Blocks.batteryLarge, Blocks.combustionGenerator, Blocks.thermalGenerator,
                 Blocks.turbineGenerator, Blocks.differentialGenerator, Blocks.rtgGenerator, Blocks.solarPanel, Blocks.largeSolarPanel,
                 Blocks.thoriumReactor, Blocks.impactReactor);
+
+        plagueBanned.addAll(Blocks.surgeWall, Blocks.surgeWallLarge, Blocks.thoriumWall, Blocks.thoriumWallLarge, Blocks.phaseWall,
+        Blocks.phaseWallLarge, Blocks.titaniumWall, Blocks.titaniumWallLarge, Blocks.copperWallLarge, Blocks.copperWall);
+
+        plagueBanned.addAll(Blocks.mendProjector);
 
         Blocks.powerSource.health = Integer.MAX_VALUE;
 
@@ -179,7 +181,7 @@ public class PlagueMod extends Plugin{
                 return Team.blue;
             }else{
                 infected ++;
-                Call.onSetRules(player.con, noTurretRules);
+                Call.onSetRules(player.con, survivorBanned);
                 player.name = filterColor(player.name, "[scarlet]");
                 return Team.crux;
             }
@@ -239,7 +241,7 @@ public class PlagueMod extends Plugin{
                 if(cartesianDistance(action.tile.x, action.tile.y, world.width()/2, world.height()/2) < 150 && action.player.getTeam() != Team.crux) {
                     return false;
                 }
-                if(action.player.getTeam() == Team.crux && noTurretRules.bannedBlocks.contains(action.block)){
+                if(action.player.getTeam() == Team.crux && survivorBanned.bannedBlocks.contains(action.block)){
                     return false;
                 }
 
@@ -407,7 +409,7 @@ public class PlagueMod extends Plugin{
         player.setTeam(Team.crux);
         player.name = filterColor(player.name, "[scarlet]");
         player.kill();
-        Call.onSetRules(player.con, noTurretRules);
+        Call.onSetRules(player.con, survivorBanned);
     }
 
     void endGame(){
