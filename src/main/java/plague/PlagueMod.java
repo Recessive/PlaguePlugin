@@ -234,7 +234,7 @@ public class PlagueMod extends Plugin{
                 if(cartesianDistance(action.tile.x, action.tile.y, world.width()/2, world.height()/2) < 150 && action.player.getTeam() != Team.crux) {
                     return false;
                 }
-                if(cartesianDistance(action.tile.x, action.tile.y, world.width()/2, world.height()/2) > 2000 && action.player.getTeam() == Team.crux) {
+                if(cartesianDistance(action.tile.x, action.tile.y, world.width()/2, world.height()/2) > 200 && action.player.getTeam() == Team.crux) {
                     return false;
                 }
                 if(action.player.getTeam() == Team.crux && plagueBanned.bannedBlocks.contains(action.block)){
