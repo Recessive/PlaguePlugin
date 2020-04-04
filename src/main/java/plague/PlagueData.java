@@ -57,7 +57,7 @@ public class PlagueData {
             alternate = true;
             recoil = 3f;
             shake = 2f;
-            shots = 1;
+            shots = 2;
             spacing = 4f;
             shotDelay = 5;
             ejectEffect = Fx.shellEjectMedium;
