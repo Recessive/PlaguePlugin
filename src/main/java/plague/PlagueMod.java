@@ -236,7 +236,7 @@ public class PlagueMod extends Plugin{
 
         netServer.admins.addActionFilter((action) -> {
             if(action.player != null){
-                if(cartesianDistance(action.tile.x, action.tile.y, 255, 255) < 150 && action.player.getTeam() != Team.crux) {
+                if(cartesianDistance(action.tile.x, action.tile.y, world.width()/2, world.height()/2) < 150 && action.player.getTeam() != Team.crux) {
                     return false;
                 }
                 if(action.player.getTeam() == Team.crux && noTurretRules.bannedBlocks.contains(action.block)){
@@ -336,7 +336,7 @@ public class PlagueMod extends Plugin{
 
             Tile tile = world.tile(255,255);
             //tile.setNet(Blocks.coreFoundation, Team.blue, 0);
-            tile = world.tile(601/2,601/2);
+            tile = world.tile(world.width()/2,world.height()/2);
             tile.setNet(Blocks.coreFoundation, Team.crux, 0);
             for(ItemStack stack : state.rules.loadout){
                 Call.transferItemTo(stack.item, stack.amount, tile.drawx(), tile.drawy(), tile);
@@ -344,7 +344,7 @@ public class PlagueMod extends Plugin{
             // tile.block().health = Integer.MAX_VALUE; // Set core health to infinite so it can't be broken
 
             // Add power infinite
-            tile = world.tile(601/2,601/2+10);
+            tile = world.tile(world.width()/2,world.height()/2+10);
             tile.setNet(Blocks.powerSource, Team.crux, 0);
         });
 
