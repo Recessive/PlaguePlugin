@@ -210,7 +210,7 @@ public class PlagueMod extends Plugin{
                 }
             }
             if((!alive && counter > infectTime) || counter > roundTime){
-                endGame();
+                endGame(alive);
             }
             if(counter > infectTime && counter < infectTime*2 && infected == 0 && playerGroup.all().size > 0){
                 Player player = playerGroup.all().random();
@@ -353,7 +353,7 @@ public class PlagueMod extends Plugin{
             Log.info("Time until round ends: &lc{0} minutes", (int)(roundTime - counter) / 60 / 60);
         });
 
-        handler.register("end", "End the game.", args -> endGame());
+        handler.register("end", "End the game.", args -> endGame(true));
 
         handler.register("r", "Restart the server.", args -> System.exit(2));
 
@@ -415,11 +415,12 @@ public class PlagueMod extends Plugin{
         Call.onSetRules(player.con, plagueBanned);
     }
 
-    void endGame(){
+    void endGame(boolean survivorWin){
         if(restarting) return;
 
+
         for(Player player: playerGroup.all()){
-            if(survivors > 0){
+            if(survivorWin){
                 Call.onInfoMessage(player.con, "[accent]--ROUND OVER--\n\n[green]Survivors[lightgray] win!");
             }else{
                 Call.onInfoMessage(player.con, "[accent]--ROUND OVER--\n\n[red]Plague[lightgray] wins!");
