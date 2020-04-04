@@ -85,7 +85,7 @@ public class PlagueMod extends Plugin{
         rules.blockHealthMultiplier = 1f;
         rules.unitBuildSpeedMultiplier = 1f;
         rules.playerDamageMultiplier = 0f;
-        rules.enemyCoreBuildRadius = 100 * tilesize;
+        //rules.enemyCoreBuildRadius = 100 * tilesize;
         rules.unitDamageMultiplier = 1f;
         rules.playerHealthMultiplier = 0.5f;
         rules.canGameOver = false;
