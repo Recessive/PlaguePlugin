@@ -285,7 +285,7 @@ public class PlagueMod extends Plugin{
                 if(Build.validPlace(event.team, event.tile.x, event.tile.y, Blocks.spectre, 0)){ // Use spectre in place of core, as core always returns false
                     survivors ++;
                     // Check if the core is within 50 blocks of another core
-                    final Team[] chosenTeam = {Team.all()[teams]};
+                    final Team[] chosenTeam = {Team.all()[teams+6]};
                     teams ++;
                     final boolean[] breakLoop = {false};
                     state.teams.eachEnemyCore(event.team, core -> {
@@ -370,6 +370,10 @@ public class PlagueMod extends Plugin{
 
         handler.<Player>register("enemies", "List enemies", (args, player) -> {
             player.sendMessage(String.valueOf(player.getTeam().enemies()));
+        });
+
+        handler.<Player>register("whoami", "Prints your team", (args, player) -> {
+            player.sendMessage(String.valueOf(player.getTeam()));
         });
 
         handler.<Player>register("infect", "Infect yourself", (args, player) -> {
