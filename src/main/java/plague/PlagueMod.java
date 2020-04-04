@@ -131,9 +131,9 @@ public class PlagueMod extends Plugin{
         ((UnitFactory)(dagger)).unitType = UnitTypes.fortress;
         ((UnitFactory)(dagger)).maxSpawn = 1;
 
-        /*Block crawler = Vars.content.blocks().find(block -> block.name.equals("crawler-factory"));
-        ((UnitFactory)(crawler)).unitType = UnitTypes.titan;
-        ((UnitFactory)(crawler)).maxSpawn = 1;*/
+        Block crawler = Vars.content.blocks().find(block -> block.name.equals("crawler-factory"));
+        //((UnitFactory)(crawler)).unitType = UnitTypes.titan;
+        ((UnitFactory)(crawler)).maxSpawn = 1;
 
         Block titan = Vars.content.blocks().find(block -> block.name.equals("titan-factory"));
         ((UnitFactory)(titan)).unitType = UnitTypes.eruptor;
