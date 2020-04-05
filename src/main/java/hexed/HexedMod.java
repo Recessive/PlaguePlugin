@@ -118,7 +118,7 @@ public class HexedMod extends Plugin{
     	loadouts.add(ItemStack.list(Items.copper, 4000, Items.lead, 4000, Items.graphite, 1000, Items.metaglass, 250, Items.silicon, 500, Items.titanium, 400, Items.thorium, 200));
     	loadouts.add(ItemStack.list(Items.copper, 4000, Items.lead, 4000, Items.graphite, 1000, Items.metaglass, 500, Items.silicon, 500, Items.titanium, 1000, Items.thorium, 1000));
 
-        rules.pvp = true;
+        rules.pvp = !true;
         rules.tags.put("hexed", "true");
         rules.loadout = loadouts.get(0);
         rules.buildCostMultiplier = 1f;
@@ -252,64 +252,64 @@ public class HexedMod extends Plugin{
             String prefix = (String) cos_db.entries.get(event.player.uuid).get("color");
             String no_color = filterColor(event.player.name, prefix);
 
-            int rank_num = ply_db.getHexesCaptured(event.player.uuid)/25 % 4 + 1;
+            int rank_num = ply_db.getHexesCaptured(event.player.uuid)/50 % 4 + 1;
 
             int capped = ply_db.getHexesCaptured(event.player.uuid);
 
             List<String> curr_trails = cos_db.getTrails(event.player.uuid);
-            if (capped < 100){
+            if (capped < 200){
                 event.player.name = "[accent]<[#cd7f32]Bronze " + rank_num + "[accent]>[white] " + no_color;
             }
-            if (capped >= 100 && capped < 200){
+            if (capped >= 200 && capped < 400){
                 event.player.name = "[accent]<[#C0C0C0]Silver " + rank_num + "[accent]>[white] " + no_color;
             }
-            if (capped >= 200 && capped < 300){
+            if (capped >= 400 && capped < 600){
                 event.player.name = "[accent]<[gold]Gold " + rank_num + "[accent]>[white] " + no_color;
             }
-            if (capped >= 300 && capped < 400){
+            if (capped >= 600 && capped < 800){
                 event.player.name = "[accent]<[#697998]Platinum " + rank_num + "[accent]>[white] " + no_color;
             }
-            if (capped >= 400 && capped < 500){
+            if (capped >= 800 && capped < 1000){
                 event.player.name = "[accent]<[#00ccff]Diamond " + rank_num + "[accent]>[white] " + no_color;
             }
-            if (capped >= 500 && capped < 600){
+            if (capped >= 1000 && capped < 1200){
                 event.player.name = "[accent]<[#ff5050]Master " + rank_num + "[accent]>[white] " + no_color;
             }
-            if (capped >= 600){
+            if (capped >= 1200){
                 event.player.name = "[accent]<[#660066]Grand Master[accent]>[white] " + no_color;
             }
             ply_db.setName(event.player.uuid, event.player.name);
 
-            if (capped >= 100){
+            /*if (capped >= 200){
                 if(!curr_trails.contains("16")){
                     cos_db.addTrail(event.player.uuid, "16");
                 }
             }
-            if (capped >= 200){
+            if (capped >= 400){
                 if(!curr_trails.contains("11")){
                     cos_db.addTrail(event.player.uuid, "11");
                 }
             }
 
-            if (capped >= 300){
+            if (capped >= 600){
                 if(!curr_trails.contains("7")){
                     cos_db.addTrail(event.player.uuid, "7");
                 }
             }
 
-            if (capped >= 400){
+            if (capped >= 800){
                 if(!curr_trails.contains("13")){
                     cos_db.addTrail(event.player.uuid, "13");
                 }
             }
 
-            if (capped >= 500){
+            if (capped >= 1000){
                 if(!curr_trails.contains("27")){
                     cos_db.addTrail(event.player.uuid, "27");
                 }
-            }
+            }*/
 
-            if (capped >= 500){
+            if (capped >= 1200){
                 if(!curr_trails.contains("107")){
                     cos_db.addTrail(event.player.uuid, "107");
                 }
@@ -512,6 +512,10 @@ public class HexedMod extends Plugin{
             Call.onConnect(player.con, "aamindustry.play.ai", 6567);
         });
 
+        handler.<Player>register("discord", "Prints the discord link", (args, player) -> {
+            player.sendMessage("[purple]https://discord.gg/GEnYcSv");
+        });
+
         handler.<Player>register("spectate", "Enter spectator mode. This destroys your base.", (args, player) -> {
              if(player.getTeam() == Team.derelict){
                  player.sendMessage("[scarlet]You're already spectating.");
@@ -609,7 +613,7 @@ public class HexedMod extends Plugin{
                     return;
                 }
                 cos_db.setTrail(player.uuid, trail);
-                player.sendMessage("[accent]Set trail to [scarlet]" + trail);
+                player.sendMessage("[accent]Set trail to [scarlet]" + (trail-1));
             }else{
 
 
