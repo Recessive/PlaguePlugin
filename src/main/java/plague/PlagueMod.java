@@ -373,6 +373,10 @@ public class PlagueMod extends Plugin{
             player.sendMessage("[purple]https://discord.gg/GEnYcSv");
         });
 
+        handler.<Player>register("uuid", "Prints your uuid", (args, player) -> {
+            player.sendMessage("Your uuid is: " + player.uuid);
+        });
+
         handler.<Player>register("time", "Display the time left", (args, player) -> {
             player.sendMessage(String.valueOf("[scarlet]" + lastMin + "[lightgray] mins. remaining\n"));
         });
