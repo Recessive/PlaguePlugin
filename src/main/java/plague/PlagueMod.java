@@ -46,6 +46,7 @@ public class PlagueMod extends Plugin{
     private int roundTime = 60 * 60 * 40;
     //in ticks: 30 seconds
     private final static int infectTime = 60 * 60 * 2;
+    private final static int gracePeriod = 60 * 60 * 10;
     private final static int plagueInfluxTime = 60 * 60 * 1, infectWarnTime = 60 * 20, survivorWarnTime = 60 * 60 * 10;
 
     private final static int timerPlagueInflux = 0, timerInfectWarn = 1, timerSurvivorWarn = 2;
@@ -96,8 +97,6 @@ public class PlagueMod extends Plugin{
         rules.bannedBlocks.addAll(Blocks.revenantFactory, Blocks.wraithFactory, Blocks.ghoulFactory);
         rules.bannedBlocks.add(Blocks.commandCenter); // Can't be trusted
 
-
-
         survivorBanned = rules.copy();
         survivorBanned.bannedBlocks.addAll(Blocks.commandCenter, Blocks.wraithFactory, Blocks.ghoulFactory, Blocks.revenantFactory, Blocks.daggerFactory,
                 Blocks.crawlerFactory, Blocks.titanFactory, Blocks.fortressFactory);
@@ -121,6 +120,16 @@ public class PlagueMod extends Plugin{
         Blocks.powerSource.health = Integer.MAX_VALUE;
 
         // Blocks.coreFoundation.unloadable = false;
+
+        Array<Float> origSpeed = new Array<>();
+
+        for(UnitType unit : content.units()){
+            origSpeed.add(unit.speed);
+            if(unit.name == "draug"){
+                continue;
+            }
+            unit.speed = 0;
+        }
 
         Block dagger = Vars.content.blocks().find(block -> block.name.equals("dagger-factory"));
         ((UnitFactory)(dagger)).unitType = UnitTypes.fortress;
@@ -180,16 +189,35 @@ public class PlagueMod extends Plugin{
                 return Team.crux;
             }
         };
-        AtomicBoolean countOn = new AtomicBoolean(true);
+        AtomicBoolean infectCountOn = new AtomicBoolean(true);
+        AtomicBoolean graceCountOn = new AtomicBoolean(true);
+        AtomicBoolean graceOver = new AtomicBoolean(false);
         Events.on(EventType.Trigger.update, ()-> {
 
             if (counter+1 < infectTime && ((int) Math.ceil((roundTime - counter) / 60)) % 20 == 0){
-                if(countOn.get()){
+                if(infectCountOn.get()){
                     Call.sendMessage("[accent]You have [scarlet]" + (int) Math.ceil((infectTime - counter) / 60) + " [accent]seconds left to place a core. Place any block to place a core.");
-                    countOn.set(false);
+                    infectCountOn.set(false);
                 }
             }else{
-                countOn.set(true);
+                infectCountOn.set(true);
+            }
+
+            if (counter+1 < gracePeriod && counter+1 > infectTime && ((int) Math.ceil((roundTime - counter) / 60)) % 60 == 0){
+                if(graceCountOn.get()){
+                    Call.sendMessage("[accent]Grace period ends in [scarlet]" + (int) Math.ceil((gracePeriod - counter) / 60 / 60) + " [accent]minutes.");
+                    graceCountOn.set(false);
+                }
+            }else{
+                graceCountOn.set(true);
+            }
+
+            if(counter+1 > gracePeriod && !graceOver.get()){
+                Call.sendMessage("[accent]Grace period has expired");
+                graceOver.set(true);
+                for(int i = 0; i < content.units().size; i++){
+                    content.units().get(i).speed = origSpeed.get(i);
+                }
             }
 
             if (interval.get(timerSurvivorWarn, survivorWarnTime)) {
@@ -374,7 +402,7 @@ public class PlagueMod extends Plugin{
         });
 
         handler.<Player>register("uuid", "Prints your uuid", (args, player) -> {
-            player.sendMessage("Your uuid is: " + player.uuid);
+            player.sendMessage("[accent]Your uuid is: [scarlet]" + player.uuid);
         });
 
         handler.<Player>register("time", "Display the time left", (args, player) -> {
