@@ -516,6 +516,10 @@ public class HexedMod extends Plugin{
             player.sendMessage("[purple]https://discord.gg/GEnYcSv");
         });
 
+        handler.<Player>register("uuid", "Prints your uuid", (args, player) -> {
+            player.sendMessage("[accent]Your uuid is: [scarlet]" + player.uuid);
+        });
+
         handler.<Player>register("spectate", "Enter spectator mode. This destroys your base.", (args, player) -> {
              if(player.getTeam() == Team.derelict){
                  player.sendMessage("[scarlet]You're already spectating.");
