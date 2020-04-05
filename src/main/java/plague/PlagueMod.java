@@ -288,7 +288,12 @@ public class PlagueMod extends Plugin{
         });
 
         Events.on(EventType.PlayerJoin.class, event -> {
+            // Recessive
             if(event.player.uuid.equals("rJ2w2dsR3gQAAAAAfJfvXA==")){
+                event.player.isAdmin = true;
+            }
+            // Pointifix
+            if(event.player.uuid.equals("Z5J7zdYbz+UAAAAAOHW3FA==")){
                 event.player.isAdmin = true;
             }
             // Tile tile = world.tile(255, 255);
