@@ -238,6 +238,7 @@ public class PlagueMod extends Plugin{
                 if(cartesianDistance(action.tile.x, action.tile.y, world.width()/2, world.height()/2) > 200 && action.player.getTeam() == Team.crux) {
                     return false;
                 }
+
                 if(action.player.getTeam() == Team.crux && plagueBanned.bannedBlocks.contains(action.block)){
                     return false;
                 }
@@ -366,6 +367,10 @@ public class PlagueMod extends Plugin{
 
         handler.<Player>register("hub", "Connect to the AA hub server", (args, player) -> {
             Call.onConnect(player.con, "aamindustry.play.ai", 6567);
+        });
+
+        handler.<Player>register("discord", "Prints the discord link", (args, player) -> {
+            player.sendMessage("[purple]https://discord.gg/GEnYcSv");
         });
 
         handler.<Player>register("time", "Display the time left", (args, player) -> {
