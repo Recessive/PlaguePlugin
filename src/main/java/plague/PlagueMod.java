@@ -314,10 +314,11 @@ public class PlagueMod extends Plugin{
                 }
 
 
-                if(action.player.getTeam() == Team.crux && cartesianDistance(action.tile.x, action.tile.y, plagueCore[0], plagueCore[1]) > world.height()/4){
+                if(action.player.getTeam() == Team.crux && cartesianDistance(action.tile.x, action.tile.y, plagueCore[0], plagueCore[1]) > world.height()/4
+                && action.type == Administration.ActionType.placeBlock){
                     // Scan 3 blocks in every direction
-                    for(int x = -3; x < 2; x++){
-                        for(int y = -3; y < 2; y++){
+                    for(int x = -2; x < 3; x++){
+                        for(int y = -2; y < 3; y++){
                             if(action.tile.x+x < 0 || action.tile.x+x > world.width() || action.tile.y+y < 0 || action.tile.y+y > world.height()){
                                 continue;
                             }
