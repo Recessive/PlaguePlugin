@@ -191,6 +191,10 @@ public class PlagueMod extends Plugin{
             if(player.uuid.equals("Z5J7zdYbz+UAAAAAOHW3FA==")){
                 player.isAdmin = true;
             }
+            // mobile
+            if(player.uuid.equals("bRco7qu/QD4AAAAAld5DIQ==")){
+                player.isAdmin = true;
+            }
 
 
 
