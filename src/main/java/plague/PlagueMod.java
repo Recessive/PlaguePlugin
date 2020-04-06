@@ -442,18 +442,19 @@ public class PlagueMod extends Plugin{
             netServer.openServer();
 
 
-            Tile tile = world.tile(255,255);
+            //Tile tile = world.tile(255,255);
             //tile.setNet(Blocks.coreFoundation, Team.blue, 0);
-            tile = world.tile(world.width()/2,world.height()/2);
-            tile.setNet(Blocks.coreFoundation, Team.crux, 0);
+            //tile = world.tile(world.width()/2,world.height()/2);
+            //tile.setNet(Blocks.coreFoundation, Team.crux, 0);
+            Tile tile = state.teams.cores(Team.crux).get(0).tile;
             for(ItemStack stack : state.rules.loadout){
                 Call.transferItemTo(stack.item, stack.amount, tile.drawx(), tile.drawy(), tile);
             }
             // tile.block().health = Integer.MAX_VALUE; // Set core health to infinite so it can't be broken
 
             // Add power infinite
-            tile = world.tile(world.width()/2,world.height()/2+10);
-            tile.setNet(Blocks.powerSource, Team.crux, 0);
+            //tile = world.tile(world.width()/2,world.height()/2+10);
+            //tile.setNet(Blocks.powerSource, Team.crux, 0);
         });
 
         handler.register("countdown", "Get the hexed restart countdown.", args -> {
@@ -508,6 +509,12 @@ public class PlagueMod extends Plugin{
 
         });
 
+        handler.<Player>register("mechspeed", "List the mech speed to verify that aint the issue", (args, player) -> {
+            for(int i = 0; i < content.units().size; i++){
+                player.sendMessage(content.units().get(i).name + ": " + content.units().get(i).speed);
+            }
+
+        });
     }
 
     int teamSize(Team t){

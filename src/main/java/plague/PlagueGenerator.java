@@ -6,6 +6,7 @@ import arc.struct.*;
 import arc.util.*;
 import arc.util.noise.*;
 import mindustry.content.*;
+import mindustry.game.Team;
 import mindustry.maps.*;
 import mindustry.maps.filters.*;
 import mindustry.maps.filters.GenerateFilter.*;
@@ -13,6 +14,8 @@ import mindustry.maps.generators.*;
 import mindustry.net.Net;
 import mindustry.world.*;
 import mindustry.world.blocks.Floor;
+import mindustry.world.blocks.StaticWall;
+import mindustry.world.meta.BlockGroup;
 import org.javatuples.Pair;
 
 import java.lang.reflect.Field;
@@ -118,7 +121,8 @@ public class PlagueGenerator extends Generator{
             }
         }
 
-
+        tiles[size/2][size/2].setNet(Blocks.coreFoundation, Team.crux, 0);
+        tiles[size/2][size/2+10].setNet(Blocks.powerSource, Team.crux, 0);
         world.setMap(new Map(StringMap.of("name", "Patient Zero", "author", "Recessive")));
     }
 
@@ -150,7 +154,9 @@ public class PlagueGenerator extends Generator{
         int[][] floodGrid = new int[size][size];
         for(int x = 0; x < tiles.length; x++){
             for(int y = 0; y < tiles[0].length; y++){
-                if(tiles[x][y].block() != Blocks.air) floodGrid[x][y] = 2;
+                if(tiles[x][y].block() instanceof StaticWall){
+                    floodGrid[x][y] = 2;
+                }
             }
         }
         List<Tile> tileFlood = new ArrayList<>();
