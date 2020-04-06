@@ -67,12 +67,14 @@ public class PlagueMod extends Plugin{
     private Array<Array<ItemStack>> loadouts = new Array<>(4);
 
     private double counter = 0f;
+    private String mapName;
+    private String mapAuthor;
+
 
   	private String[] announcements = {"Join the discord at: [purple]https://discord.gg/GEnYcSv", "Rank up to earn [darkgray]common[white] trails or donate to get [purple]epic[white] ones!", "The top 5 point scoring players at the end of the month will get a [pink]unique [white]trail!", "[gold]Spectres[white] do [scarlet]4x [white]damage and have [scarlet]3x [white]health!", "Use [accent]/hub[white] to return to the hub!"};
   	private int announcementIndex = 0;
     
     private Map<String, Team> lastTeam = new HashMap<String, Team>();
-
     private List<String> needsChanging = new ArrayList<>();
 
 
@@ -329,6 +331,7 @@ public class PlagueMod extends Plugin{
                 event.player.setTeam(Team.crux);
                 needsChanging.add(event.player.uuid);
             }
+            event.player.sendMessage("[accent]Map: [scarlet]" + mapName + "\n[accent]Author: [scarlet]" + mapAuthor);
 
         });
 
@@ -415,6 +418,10 @@ public class PlagueMod extends Plugin{
                 try{world.loadMap(maps.customMaps().get(currMap-1));} catch (MapException ignored) {}
             }
             PlagueGenerator.inverseFloodFill(world.getTiles());
+            mapName = world.getMap().name();
+            mapAuthor = world.getMap().author();
+
+
             state.rules = rules.copy();
             logic.play();
             netServer.openServer();

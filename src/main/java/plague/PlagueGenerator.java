@@ -119,7 +119,7 @@ public class PlagueGenerator extends Generator{
         }
 
 
-        world.setMap(new Map(StringMap.of("name", "Plague")));
+        world.setMap(new Map(StringMap.of("name", "Patient Zero", "author", "Recessive")));
     }
 
     private static void perimeterFlood(List<Tile> tileFlood, int[][] floodGrid, Tile[][] tiles){
