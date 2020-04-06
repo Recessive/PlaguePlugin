@@ -174,18 +174,31 @@ public class PlagueMod extends Plugin{
                 Team prev = lastTeam.get(player.uuid);
                 if(teamSize(prev) > 0 && prev != Team.blue && prev != Team.crux){
                     survivors++;
-                    player.name = filterColor(player.name, "[olive]");
+                    if(player.isAdmin){
+                        player.name = filterColor(player.name, "[green]");
+                    }else{
+                        player.name = filterColor(player.name, "[olive]");
+                    }
                     return prev;
                 }
             }
 
             if(counter < infectTime){
-                player.name = filterColor(player.name, "[royal]");
+                if(player.isAdmin){
+                    player.name = filterColor(player.name, "[blue]");
+                }else{
+                    player.name = filterColor(player.name, "[royal]");
+                }
+
                 return Team.blue;
             }else{
                 infected ++;
                 Call.onSetRules(player.con, plagueBanned);
-                player.name = filterColor(player.name, "[scarlet]");
+                if(player.isAdmin){
+                    player.name = filterColor(player.name, "[red]");
+                }else{
+                    player.name = filterColor(player.name, "[scarlet]");
+                }
                 return Team.crux;
             }
         };
@@ -294,7 +307,7 @@ public class PlagueMod extends Plugin{
             return true;
         });
 
-        Events.on(EventType.PlayerJoin.class, event -> {
+        Events.on(EventType.PlayerConnect.class, event -> {
             // Recessive
             if(event.player.uuid.equals("rJ2w2dsR3gQAAAAAfJfvXA==")){
                 event.player.isAdmin = true;
@@ -303,6 +316,9 @@ public class PlagueMod extends Plugin{
             if(event.player.uuid.equals("Z5J7zdYbz+UAAAAAOHW3FA==")){
                 event.player.isAdmin = true;
             }
+        });
+
+        Events.on(EventType.PlayerJoin.class, event -> {
             // Tile tile = world.tile(255, 255);
             if(event.player.getTeam() == Team.blue){
                 event.player.setTeam(Team.crux);
@@ -343,7 +359,11 @@ public class PlagueMod extends Plugin{
 
                     Player player = playerGroup.getByID(event.builder.getID());
                     player.setTeam(chosenTeam[0]);
-                    player.name = filterColor(player.name, "[olive]");
+                    if(player.isAdmin){
+                        player.name = filterColor(player.name, "[green]");
+                    }else{
+                        player.name = filterColor(player.name, "[olive]");
+                    }
                     event.tile.setNet(Blocks.coreFoundation, event.builder.getTeam(), 0);
                     state.teams.registerCore((CoreBlock.CoreEntity) event.tile.entity);
                     for(ItemStack stack : state.rules.loadout){
@@ -459,7 +479,11 @@ public class PlagueMod extends Plugin{
         Call.sendMessage("[accent]" + player.name + "[white] was [red]infected[white]!");
         if(teamSize(player.getTeam()) < 2) killTiles(player.getTeam(), player);
         player.setTeam(Team.crux);
-        player.name = filterColor(player.name, "[scarlet]");
+        if(player.isAdmin){
+            player.name = filterColor(player.name, "[red]");
+        }else{
+            player.name = filterColor(player.name, "[scarlet]");
+        }
         player.kill();
         Call.onSetRules(player.con, plagueBanned);
     }
