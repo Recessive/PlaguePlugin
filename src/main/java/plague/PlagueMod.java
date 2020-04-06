@@ -392,7 +392,7 @@ public class PlagueMod extends Plugin{
             }
 
             prefs = Preferences.userRoot().node(this.getClass().getName());
-            int lastMap = prefs.getInt("mapchoice",1);
+            int lastMap = prefs.getInt("mapchoice",0);
             Log.info("Last map:" + lastMap);
 
             List<Integer> choice = new ArrayList<>();
@@ -414,6 +414,7 @@ public class PlagueMod extends Plugin{
             }else{
                 try{world.loadMap(maps.customMaps().get(currMap-1));} catch (MapException ignored) {}
             }
+            PlagueGenerator.inverseFloodFill(world.getTiles());
             state.rules = rules.copy();
             logic.play();
             netServer.openServer();

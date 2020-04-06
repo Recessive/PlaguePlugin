@@ -74,9 +74,6 @@ public class PlagueGenerator extends Generator{
         int cy = size / 2;
         double centreDist = 0;
 
-        int[][] floodGrid = new int[size][size];
-
-
         for (int x = 0; x < width; x++) {
             for (int y = 0; y < height; y++) {
                 Block wall;
@@ -115,11 +112,6 @@ public class PlagueGenerator extends Generator{
                 if(x == 0 || x == size-1 || y == 0 || y == size-1){
                     in.block = Blocks.duneRocks;
                 }
-                if(in.block == Blocks.air){
-                    floodGrid[x][y] = 0;
-                }else{
-                    floodGrid[x][y] = 2;
-                }
 
 
                 tiles[x][y] = new Tile(x, y, in.floor.id, in.ore.id, in.block.id);
@@ -127,129 +119,52 @@ public class PlagueGenerator extends Generator{
         }
 
 
-        // Now flood the world and remove completely walled in areas
-
-        List<Tile> tileFlood = new ArrayList<>();
-        tileFlood.add(tiles[cx][cy]);
-
-        perimeterFlood(tileFlood, floodGrid, tiles);
-
-        for (int x = 0; x < width; x++) {
-            for (int y = 0; y < height; y++) {
-                if (floodGrid[x][y] == 0){
-                    //bridgeGap(tiles[x][y], floodGrid, tiles);
-                    tiles[x][y].setBlock(Blocks.duneRocks);
-                }
-            }
-        }
-
-
         world.setMap(new Map(StringMap.of("name", "Plague")));
     }
 
-    private boolean noWalls(Tile t, Tile[][] tiles){
-        if(tiles[t.x+1][t.y].block() != Blocks.air) return false;
-        if(tiles[t.x+1][t.y+1].block() != Blocks.air) return false;
-        if(tiles[t.x+1][t.y-1].block() != Blocks.air) return false;
-        if(tiles[t.x-1][t.y].block() != Blocks.air) return false;
-        if(tiles[t.x-1][t.y+1].block() != Blocks.air) return false;
-        if(tiles[t.x-1][t.y-1].block() != Blocks.air) return false;
-        if(tiles[t.x][t.y+1].block() != Blocks.air) return false;
-        if(tiles[t.x][t.y-1].block() != Blocks.air) return false;
-
-
-
-        return true;
-    }
-
-    private void perimeterFlood(List<Tile> tileFlood, int[][] floodGrid, Tile[][] tiles){
+    private static void perimeterFlood(List<Tile> tileFlood, int[][] floodGrid, Tile[][] tiles){
         while(!tileFlood.isEmpty()){
 
             Tile t = tileFlood.remove(0);
 
-            if (floodGrid[t.x+1][t.y] == 0) {
+            if (t.x+1 < tiles.length && floodGrid[t.x+1][t.y] == 0) {
                 floodGrid[t.x+1][t.y] = 1;
                 tileFlood.add(tiles[t.x+1][t.y]);
             }
-            if (floodGrid[t.x-1][t.y] == 0) {
+            if (t.x-1 > 0 && floodGrid[t.x-1][t.y] == 0) {
                 floodGrid[t.x-1][t.y] = 1;
                 tileFlood.add(tiles[t.x-1][t.y]);
             }
-            if (floodGrid[t.x][t.y+1] == 0) {
+            if (t.y+1 < tiles[0].length && floodGrid[t.x][t.y+1] == 0) {
                 floodGrid[t.x][t.y+1] = 1;
                 tileFlood.add(tiles[t.x][t.y+1]);
             }
-            if (floodGrid[t.x][t.y-1] == 0) {
+            if (t.y-1 > 0 && floodGrid[t.x][t.y-1] == 0) {
                 floodGrid[t.x][t.y-1] = 1;
                 tileFlood.add(tiles[t.x][t.y-1]);
             }
-
-            /*for(int xsign = -1; xsign < 2; xsign++){
-                for(int ysign = -1; ysign < 2; ysign++){
-                    if(xsign == 0 && ysign == 0){
-                        continue;
-                    }
-                    *//*if(t.x+xsign < 0 || t.x+xsign > size || t.y+ysign < 0 || t.y+ysign > size){
-                        continue;
-                    }*//*
-                    if (floodGrid[t.x+xsign][t.y+ysign] == 0) {
-                        if(noWalls(tiles[t.x+xsign][t.y+ysign], tiles)){
-                            floodGrid[t.x+xsign][t.y+ysign] = 3;
-                        }else{
-                            floodGrid[t.x+xsign][t.y+ysign] = 1;
-                        }
-
-                        tileFlood.add(tiles[t.x+xsign][t.y+ysign]);
-                    }
-                }
-            }*/
-
-
-            // t.setFloor((Floor) Blocks.salt);
-
         }
     }
 
-    private void clearWalls(float x1, float y1, float x2, float y2, int thickness, Tile[][] tiles, int[][] floodGrid){
-        float m = (y2-y1)/(x2-x1);
-        float c = y2 - m*x2;
-        int y;
-        float smaller = Math.min(x1, x2);
-        float larger = Math.max(x1, x2);
-        for(float x = smaller; x < larger; x ++){
-            y =(int) (m*x+c);
-            for(int xdelta = -thickness; xdelta < thickness; xdelta++){
-                for(int ydelta = -thickness; ydelta < thickness; ydelta++){
-                    if(!(y + ydelta < 1 || y + ydelta > size-2 || (int) x + xdelta < 1 || (int) x + xdelta > size-2)){
-                        tiles[(int) x + xdelta][y + ydelta].setBlock(Blocks.air);
-                        // tiles[(int) x + xdelta][y + ydelta].setFloor((Floor) Blocks.metalFloor3);
-                    }
-                }
+    public static void inverseFloodFill(Tile[][] tiles){
+        int[][] floodGrid = new int[size][size];
+        for(int x = 0; x < tiles.length; x++){
+            for(int y = 0; y < tiles[0].length; y++){
+                if(tiles[x][y].block() != Blocks.air) floodGrid[x][y] = 2;
             }
-
         }
-    }
+        List<Tile> tileFlood = new ArrayList<>();
+        tileFlood.add(tiles[tiles.length/2][tiles[0].length/2]);
+        perimeterFlood(tileFlood, floodGrid, tiles);
 
-    private Tile bridgeGap(Tile t, int[][] floodGrid, Tile[][] tiles){
-        int range = 15;
-        for(int x = -range; x < range; x ++){
-            if(t.x + x < 0 || t.x + x >= size){
-                continue;
-            }
-            for(int y = -range; y < range; y ++) {
-                if(t.y + y < 0 || t.y + y >= size){
-                    continue;
-                }
-                if(floodGrid[t.x+x][t.y+y] == 0){
-                    clearWalls(t.x, t.y, t.x+x, t.y+y, 2, tiles, floodGrid);
-                    return tiles[t.x+x][t.y+y];
+        for (int x = 0; x < tiles.length; x++) {
+            for (int y = 0; y < tiles[0].length; y++) {
+                if (floodGrid[x][y] == 0){
+                    tiles[x][y].setBlock(Blocks.duneRocks);
                 }
             }
         }
-        return null;
     }
-
-
 }
 
 class tendrilFilter extends GenerateFilter{
