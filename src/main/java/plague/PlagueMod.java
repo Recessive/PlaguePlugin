@@ -259,6 +259,7 @@ public class PlagueMod extends Plugin{
         });
 
         netServer.admins.addActionFilter((action) -> {
+
             if(action.player != null){
                 if(cartesianDistance(action.tile.x, action.tile.y, world.width()/2, world.height()/2) < 150 && action.player.getTeam() != Team.crux) {
                     return false;
@@ -273,6 +274,12 @@ public class PlagueMod extends Plugin{
 
                 if(action.player.getTeam() != Team.crux && action.player.getTeam() != Team.blue && survivorBanned.bannedBlocks.contains(action.block)){
                     return false;
+                }
+
+                if(action.type == Administration.ActionType.withdrawItem){
+                   if(action.item.flammability != 0 || action.item.explosiveness != 0){
+                       return false;
+                   }
                 }
             }
             if((action.type == Administration.ActionType.breakBlock || action.type == Administration.ActionType.placeBlock) && (action.tile.block() == Blocks.powerSource || action.tile.block() == Blocks.itemSource)){
