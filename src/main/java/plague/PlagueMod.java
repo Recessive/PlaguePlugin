@@ -101,7 +101,7 @@ public class PlagueMod extends Plugin{
         rules.reactorExplosions = false;
         rules.respawnTime = 0;
         // rules.bannedBlocks.addAll(Blocks.solarPanel, Blocks.largeSolarPanel);
-        rules.bannedBlocks.addAll(Blocks.arc, Blocks.melter);
+        rules.bannedBlocks.addAll(Blocks.arc);
         rules.bannedBlocks.addAll(Blocks.revenantFactory, Blocks.wraithFactory, Blocks.ghoulFactory);
         rules.bannedBlocks.add(Blocks.commandCenter); // Can't be trusted
 
