@@ -14,6 +14,7 @@ import mindustry.entities.type.*;
 import mindustry.game.EventType;
 import mindustry.game.*;
 import mindustry.gen.*;
+import mindustry.maps.MapException;
 import mindustry.net.Administration;
 import mindustry.plugin.*;
 import mindustry.type.*;
@@ -24,6 +25,7 @@ import mindustry.world.blocks.units.UnitFactory;
 
 import static arc.util.Log.info;
 import static java.lang.Math.abs;
+import java.util.prefs.Preferences;
 import static mindustry.Vars.*;
 
 public class PlagueMod extends Plugin{
@@ -31,6 +33,8 @@ public class PlagueMod extends Plugin{
     public int teams = 0;
     public int infected = 0;
     public int survivors = 0;
+
+    private Preferences prefs;
 
 	// TPS = 40
     //in seconds
@@ -170,6 +174,18 @@ public class PlagueMod extends Plugin{
         ((ChargeTurret)(lancer)).shootType = PlagueData.getLLaser();
 
         netServer.assigner = (player, players) -> {
+            // Make admins
+            // Recessive
+            if(player.uuid.equals("rJ2w2dsR3gQAAAAAfJfvXA==")){
+                player.isAdmin = true;
+            }
+            // Pointifix
+            if(player.uuid.equals("Z5J7zdYbz+UAAAAAOHW3FA==")){
+                player.isAdmin = true;
+            }
+
+
+
             if(lastTeam.containsKey(player.uuid)){
                 Team prev = lastTeam.get(player.uuid);
                 if(teamSize(prev) > 0 && prev != Team.blue && prev != Team.crux){
@@ -274,10 +290,10 @@ public class PlagueMod extends Plugin{
         netServer.admins.addActionFilter((action) -> {
 
             if(action.player != null){
-                if(cartesianDistance(action.tile.x, action.tile.y, world.width()/2, world.height()/2) < 150 && action.player.getTeam() != Team.crux) {
+                if(cartesianDistance(action.tile.x, action.tile.y, world.width()/2, world.height()/2) < world.height()/4 && action.player.getTeam() != Team.crux) {
                     return false;
                 }
-                if(cartesianDistance(action.tile.x, action.tile.y, world.width()/2, world.height()/2) > 200 && action.player.getTeam() == Team.crux) {
+                if(cartesianDistance(action.tile.x, action.tile.y, world.width()/2, world.height()/2) > world.height()/3 && action.player.getTeam() == Team.crux) {
                     return false;
                 }
 
@@ -305,17 +321,6 @@ public class PlagueMod extends Plugin{
             }
 
             return true;
-        });
-
-        Events.on(EventType.PlayerConnect.class, event -> {
-            // Recessive
-            if(event.player.uuid.equals("rJ2w2dsR3gQAAAAAfJfvXA==")){
-                event.player.isAdmin = true;
-            }
-            // Pointifix
-            if(event.player.uuid.equals("Z5J7zdYbz+UAAAAAOHW3FA==")){
-                event.player.isAdmin = true;
-            }
         });
 
         Events.on(EventType.PlayerJoin.class, event -> {
@@ -386,11 +391,29 @@ public class PlagueMod extends Plugin{
                 return;
             }
 
+            prefs = Preferences.userRoot().node(this.getClass().getName());
+            int lastMap = prefs.getInt("mapchoice",1);
+            Log.info("Last map:" + lastMap);
+
+            List<Integer> choice = new ArrayList<>();
+            for(int i =0; i < maps.customMaps().size+1; i++){
+                if(i!=lastMap && maps.customMaps().size > 0) choice.add(i);
+            }
+            Collections.shuffle(choice);
+
+            int currMap = choice.get(0);
+            Log.info("Current map:" + currMap);
+            prefs.putInt("mapchoice", currMap);
+
             logic.reset();
-            Log.info("Generating map...");
-            PlagueGenerator generator = new PlagueGenerator();
-            world.loadGenerator(generator);
-            info("Map generated.");
+            if(currMap == 0){
+                Log.info("Generating map...");
+                PlagueGenerator generator = new PlagueGenerator();
+                world.loadGenerator(generator);
+                Log.info("Map generated.");
+            }else{
+                try{world.loadMap(maps.customMaps().get(currMap-1));} catch (MapException ignored) {}
+            }
             state.rules = rules.copy();
             logic.play();
             netServer.openServer();
