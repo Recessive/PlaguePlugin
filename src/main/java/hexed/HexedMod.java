@@ -24,6 +24,7 @@ import mindustry.game.*;
 import mindustry.game.Schematic.*;
 import mindustry.game.Teams.*;
 import mindustry.gen.*;
+import mindustry.net.Administration;
 import mindustry.net.Packets.*;
 import mindustry.plugin.*;
 import mindustry.type.*;
@@ -118,7 +119,7 @@ public class HexedMod extends Plugin{
     	loadouts.add(ItemStack.list(Items.copper, 4000, Items.lead, 4000, Items.graphite, 1000, Items.metaglass, 250, Items.silicon, 500, Items.titanium, 400, Items.thorium, 200));
     	loadouts.add(ItemStack.list(Items.copper, 4000, Items.lead, 4000, Items.graphite, 1000, Items.metaglass, 500, Items.silicon, 500, Items.titanium, 1000, Items.thorium, 1000));
 
-        rules.pvp = !true;
+        rules.pvp = true;
         rules.tags.put("hexed", "true");
         rules.loadout = loadouts.get(0);
         rules.buildCostMultiplier = 1f;
@@ -396,6 +397,14 @@ public class HexedMod extends Plugin{
             }
         };
 
+        netServer.admins.addActionFilter((action) -> {
+            if (action.player != null && action.type == Administration.ActionType.withdrawItem) {
+                if (action.item.flammability != 0 || action.item.explosiveness != 0) {
+                    return false;
+                }
+            }
+            return true;
+        });
     }
 
     void updateText(Player player){
