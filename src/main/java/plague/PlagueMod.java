@@ -70,6 +70,8 @@ public class PlagueMod extends Plugin{
     private String mapName;
     private String mapAuthor;
 
+    private int[] plagueCore = new int[2];
+
 
   	private String[] announcements = {"Join the discord at: [purple]https://discord.gg/GEnYcSv", "Rank up to earn [darkgray]common[white] trails or donate to get [purple]epic[white] ones!", "The top 5 point scoring players at the end of the month will get a [pink]unique [white]trail!", "[gold]Spectres[white] do [scarlet]4x [white]damage and have [scarlet]3x [white]health!", "Use [accent]/hub[white] to return to the hub!"};
   	private int announcementIndex = 0;
@@ -154,6 +156,10 @@ public class PlagueMod extends Plugin{
         ((UnitFactory)(fortress)).unitType = UnitTypes.chaosArray;
         ((UnitFactory)(fortress)).produceTime *= 2;
         ((UnitFactory)(fortress)).maxSpawn = 1;
+
+        // Disable slag flammability to prevent griefing
+        Liquids.slag.flammability = 0;
+        Liquids.slag.explosiveness = 0;
 
         UnitTypes.chaosArray.weapon = PlagueData.nerfedChaos();
 
@@ -299,11 +305,26 @@ public class PlagueMod extends Plugin{
         netServer.admins.addActionFilter((action) -> {
 
             if(action.player != null){
-                if(cartesianDistance(action.tile.x, action.tile.y, world.width()/2, world.height()/2) < world.height()/4 && action.player.getTeam() != Team.crux) {
+                if(cartesianDistance(action.tile.x, action.tile.y, plagueCore[0], plagueCore[1]) < world.height()/4 && action.player.getTeam() != Team.crux) {
                     return false;
                 }
-                if(cartesianDistance(action.tile.x, action.tile.y, world.width()/2, world.height()/2) > world.height()/3 && action.player.getTeam() == Team.crux) {
-                    return false;
+
+
+                if(action.player.getTeam() == Team.crux && cartesianDistance(action.tile.x, action.tile.y, plagueCore[0], plagueCore[1]) > world.height()/4){
+                    // Scan 3 blocks in every direction
+                    for(int x = -3; x < 2; x++){
+                        for(int y = -3; y < 2; y++){
+                            if(action.tile.x+x < 0 || action.tile.x+x > world.width() || action.tile.y+y < 0 || action.tile.y+y > world.height()){
+                                continue;
+                            }
+                            Tile tile = world.tile(action.tile.x+x, action.tile.y+y);
+                            if(tile == null) continue;
+                            Team t = tile.getTeam();
+                            if(t != null && t != Team.crux && t != Team.derelict && tile.block() != Blocks.air){
+                                return false;
+                            }
+                        }
+                    }
                 }
 
                 if(action.player.getTeam() == Team.crux && plagueBanned.bannedBlocks.contains(action.block)){
@@ -420,7 +441,7 @@ public class PlagueMod extends Plugin{
             Collections.shuffle(choice);
 
             int currMap = choice.get(0);
-            Log.info("Current map:" + currMap);
+            Log.info("Choices:" + choice);
             prefs.putInt("mapchoice", currMap);
 
             logic.reset();
@@ -430,12 +451,13 @@ public class PlagueMod extends Plugin{
                 world.loadGenerator(generator);
                 Log.info("Map generated.");
             }else{
-                try{world.loadMap(maps.customMaps().get(currMap-1));} catch (MapException ignored) {}
+                world.loadMap(maps.customMaps().get(currMap-1));
             }
             PlagueGenerator.inverseFloodFill(world.getTiles());
             mapName = world.getMap().name();
             mapAuthor = world.getMap().author();
 
+            Log.info("Current map: " + mapName);
 
             state.rules = rules.copy();
             logic.play();
@@ -447,6 +469,8 @@ public class PlagueMod extends Plugin{
             //tile = world.tile(world.width()/2,world.height()/2);
             //tile.setNet(Blocks.coreFoundation, Team.crux, 0);
             Tile tile = state.teams.cores(Team.crux).get(0).tile;
+            plagueCore[0] = tile.x;
+            plagueCore[1] = tile.y;
             for(ItemStack stack : state.rules.loadout){
                 Call.transferItemTo(stack.item, stack.amount, tile.drawx(), tile.drawy(), tile);
             }
