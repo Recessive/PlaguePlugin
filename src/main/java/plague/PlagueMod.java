@@ -289,6 +289,13 @@ public class PlagueMod extends Plugin{
             lastMin = (int) Math.ceil((roundTime - counter) / 60 / 60);
         });
 
+        netServer.admins.addChatFilter((player, text) -> {
+            for(String swear : CurseFilter.swears){
+                text = text.replaceAll("(?i)" + swear, "");
+            }
+            return text;
+        });
+
         netServer.admins.addActionFilter((action) -> {
 
             if(action.player != null){
@@ -323,6 +330,14 @@ public class PlagueMod extends Plugin{
             }
 
             return true;
+        });
+
+        Events.on(EventType.PlayerConnect.class, event -> {
+            for(String swear : BannedNames.badNames){
+                if(event.player.name.toLowerCase().contains(swear)){
+                    event.player.name = event.player.name.replaceAll("(?i)" + swear, "");
+                }
+            }
         });
 
         Events.on(EventType.PlayerJoin.class, event -> {
