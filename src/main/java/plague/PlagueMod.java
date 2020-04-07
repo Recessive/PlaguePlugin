@@ -163,6 +163,9 @@ public class PlagueMod extends Plugin{
 
         UnitTypes.chaosArray.weapon = PlagueData.nerfedChaos();
 
+        Blocks.phaseWall.health /= 2;
+        Blocks.phaseWallLarge.health /= 2;
+
         // Update phase wall to only deflect 50% of the time
         /*Block phaseSmall = Vars.content.blocks().find(block -> block.name.equals("phase-wall"));
         Vars.content.blocks().remove(phaseSmall);
