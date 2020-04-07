@@ -411,7 +411,7 @@ public class PlagueMod extends Plugin{
 
         Events.on(EventType.BuildSelectEvent.class, event ->{
 
-            if(event.breaking && draugCount.get(event.team).contains(event.tile)){
+            if(event.breaking && draugCount.containsKey(event.team) && draugCount.get(event.team).contains(event.tile)){
                 draugCount.get(event.team).remove(event.tile);
             }
 
