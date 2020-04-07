@@ -129,33 +129,25 @@ public class PlagueMod extends Plugin{
 
         // Blocks.coreFoundation.unloadable = false;
 
-        Array<Float> origSpeed = new Array<>();
-
-        for(UnitType unit : content.units()){
-            origSpeed.add(unit.speed);
-            if(unit.name == "draug"){
-                continue;
-            }
-            unit.speed = 0;
-        }
 
         Block dagger = Vars.content.blocks().find(block -> block.name.equals("dagger-factory"));
         ((UnitFactory)(dagger)).unitType = UnitTypes.fortress;
-        ((UnitFactory)(dagger)).maxSpawn = 1;
+        ((UnitFactory)(dagger)).maxSpawn = 0; // 1
 
         Block crawler = Vars.content.blocks().find(block -> block.name.equals("crawler-factory"));
         //((UnitFactory)(crawler)).unitType = UnitTypes.titan;
-        ((UnitFactory)(crawler)).maxSpawn = 1;
+        ((UnitFactory)(crawler)).maxSpawn = 0; // 1
 
         Block titan = Vars.content.blocks().find(block -> block.name.equals("titan-factory"));
         ((UnitFactory)(titan)).unitType = UnitTypes.eruptor;
+        ((UnitFactory)(titan)).maxSpawn = 0; // 4
 
         UnitTypes.eruptor.health *= 2;
 
         Block fortress = Vars.content.blocks().find(block -> block.name.equals("fortress-factory"));
         ((UnitFactory)(fortress)).unitType = UnitTypes.chaosArray;
         ((UnitFactory)(fortress)).produceTime *= 2;
-        ((UnitFactory)(fortress)).maxSpawn = 1;
+        ((UnitFactory)(fortress)).maxSpawn = 0; // 1
 
         // Disable slag flammability to prevent griefing
         Liquids.slag.flammability = 0;
@@ -240,6 +232,7 @@ public class PlagueMod extends Plugin{
         AtomicBoolean infectCountOn = new AtomicBoolean(true);
         AtomicBoolean graceCountOn = new AtomicBoolean(true);
         AtomicBoolean graceOver = new AtomicBoolean(false);
+
         Events.on(EventType.Trigger.update, ()-> {
 
             if (counter+1 < infectTime && ((int) Math.ceil((roundTime - counter) / 60)) % 20 == 0){
@@ -263,9 +256,10 @@ public class PlagueMod extends Plugin{
             if(counter+1 > gracePeriod && !graceOver.get()){
                 Call.sendMessage("[accent]Grace period has expired");
                 graceOver.set(true);
-                for(int i = 0; i < content.units().size; i++){
-                    content.units().get(i).speed = origSpeed.get(i);
-                }
+                ((UnitFactory)(dagger)).maxSpawn = 1; // 1
+                ((UnitFactory)(crawler)).maxSpawn = 1; // 1
+                ((UnitFactory)(titan)).maxSpawn = 4; // 4
+                ((UnitFactory)(fortress)).maxSpawn = 1; // 1
             }
 
             if (interval.get(timerSurvivorWarn, survivorWarnTime)) {
