@@ -51,15 +51,6 @@ public class PlagueGenerator extends Generator{
     @Override
     public void generate(Tile[][] tiles) {
 
-
-        Array<GenerateFilter> ores = new Array<>();
-        maps.addDefaultOres(ores);
-        ores.each(o -> ((OreFilter) o).threshold -= 0.05f);
-        ores.insert(0, new OreFilter() {{
-            ore = Blocks.oreScrap;
-            scl += 2 / 2.1F;
-        }});
-
         GenerateInput in = new GenerateInput();
 
         tendrilFilter gapGen = new tendrilFilter();
@@ -98,9 +89,6 @@ public class PlagueGenerator extends Generator{
                 in.y = y;
                 in.width = in.height = size;
 
-                for (GenerateFilter f : ores) {
-                    f.apply(in);
-                }
                 if (centreDist >= 100) {
                     gapGen.apply(in);
                 }
@@ -108,10 +96,6 @@ public class PlagueGenerator extends Generator{
                     mossGen.apply(in);
                 }
 
-
-                /*if(ore == Blocks.air){
-                    floor = Blocks.sand;
-                }*/
                 if(x == 0 || x == size-1 || y == 0 || y == size-1){
                     in.block = Blocks.duneRocks;
                 }
@@ -124,6 +108,34 @@ public class PlagueGenerator extends Generator{
         tiles[size/2][size/2].setNet(Blocks.coreFoundation, Team.crux, 0);
         tiles[size/2][size/2+10].setNet(Blocks.powerSource, Team.crux, 0);
         world.setMap(new Map(StringMap.of("name", "Patient Zero", "author", "Recessive")));
+    }
+
+    public static void defaultOres(Tile[][] tiles){
+        GenerateInput in = new GenerateInput();
+        Array<GenerateFilter> ores = new Array<>();
+        maps.addDefaultOres(ores);
+        ores.each(o -> ((OreFilter) o).threshold -= 0.05f);
+        ores.insert(0, new OreFilter() {{
+            ore = Blocks.oreScrap;
+            scl += 2 / 2.1F;
+        }});
+
+        in.floor = (Floor) Blocks.darksand;
+        in.block = Blocks.duneRocks ;
+        in.width = in.height = size;
+
+        for (int x = 0; x < tiles.length; x++) {
+            for (int y = 0; y < tiles[x].length; y++) {
+                in.ore = Blocks.air;
+                in.x = x;
+                in.y = y;
+
+                for (GenerateFilter f : ores) {
+                    f.apply(in);
+                }
+                tiles[x][y].setOverlay(in.ore);
+            }
+        }
     }
 
     private static void perimeterFlood(List<Tile> tileFlood, int[][] floodGrid, Tile[][] tiles){

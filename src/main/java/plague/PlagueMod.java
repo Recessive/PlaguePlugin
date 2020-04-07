@@ -455,6 +455,11 @@ public class PlagueMod extends Plugin{
             int currMap = choice.get(0);
             Log.info("Choices:" + choice);
             prefs.putInt("mapchoice", currMap);
+            int i = 1;
+            for(mindustry.maps.Map m : maps.customMaps()){
+                Log.info(i + ": " + m.name());
+                i ++;
+            }
 
             logic.reset();
             if(currMap == 0){
@@ -466,6 +471,7 @@ public class PlagueMod extends Plugin{
                 world.loadMap(maps.customMaps().get(currMap-1));
             }
             PlagueGenerator.inverseFloodFill(world.getTiles());
+            PlagueGenerator.defaultOres(world.getTiles());
             mapName = world.getMap().name();
             mapAuthor = world.getMap().author();
 
