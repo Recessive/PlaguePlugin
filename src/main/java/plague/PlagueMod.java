@@ -51,9 +51,9 @@ public class PlagueMod extends Plugin{
     //in ticks: 30 seconds
     private final static int infectTime = 60 * 60 * 2;
     private final static int gracePeriod = 60 * 60 * 10;
-    private final static int plagueInfluxTime = 60 * 60 * 1, infectWarnTime = 60 * 20, survivorWarnTime = 60 * 60 * 10;
+    private final static int plagueInfluxTime = 60 * 60 * 1, infectWarnTime = 60 * 20, survivorWarnTime = 60 * 60 * 10, draugIncomeTime = 60 * 20;
 
-    private final static int timerPlagueInflux = 0, timerInfectWarn = 1, timerSurvivorWarn = 2;
+    private final static int timerPlagueInflux = 0, timerInfectWarn = 1, timerSurvivorWarn = 2, timerDraugIncome = 3;
 
     private int lastMin;
 
@@ -78,6 +78,8 @@ public class PlagueMod extends Plugin{
     
     private Map<String, Team> lastTeam = new HashMap<String, Team>();
     private List<String> needsChanging = new ArrayList<>();
+
+    private HashMap<Team, List<Tile>> draugCount = new HashMap<Team, List<Tile>>();
 
 
     @Override
@@ -128,6 +130,9 @@ public class PlagueMod extends Plugin{
         Blocks.powerSource.health = Integer.MAX_VALUE;
 
         // Blocks.coreFoundation.unloadable = false;
+
+        Block drauge = Vars.content.blocks().find(block -> block.name.equals("draug-factory"));
+        ((UnitFactory)(drauge)).maxSpawn = 0; // Should always be 0
 
 
         Block dagger = Vars.content.blocks().find(block -> block.name.equals("dagger-factory"));
@@ -232,6 +237,7 @@ public class PlagueMod extends Plugin{
         AtomicBoolean infectCountOn = new AtomicBoolean(true);
         AtomicBoolean graceCountOn = new AtomicBoolean(true);
         AtomicBoolean graceOver = new AtomicBoolean(false);
+        List<Team> alreadyChecked = new ArrayList<>();
 
         Events.on(EventType.Trigger.update, ()-> {
 
@@ -266,6 +272,9 @@ public class PlagueMod extends Plugin{
                 if(lastMin != 0) Call.sendMessage("[olive]Survivors[accent] must survive [scarlet]" + lastMin + "[accent] more minutes to win");
             }
             boolean alive = false;
+
+            boolean draugTime = interval.get(timerDraugIncome, draugIncomeTime);
+
             for (Player player : playerGroup.all()) {
                 Team ply_team = player.getTeam();
                 if (ply_team != Team.derelict && ply_team.cores().isEmpty() && counter > infectTime) {
@@ -278,7 +287,17 @@ public class PlagueMod extends Plugin{
                 if(ply_team != Team.derelict && ply_team != Team.crux){
                     alive = true;
                 }
+
+                if(draugTime && draugCount.containsKey(ply_team) && !alreadyChecked.contains(ply_team)){
+                    alreadyChecked.add(ply_team);
+                    CoreBlock.CoreEntity teamCore = state.teams.cores(ply_team).get(0);
+                    for(int i = 0; i < draugCount.get(ply_team).size(); i++){
+                        Call.transferItemTo(Items.copper, 40, teamCore.x, teamCore.y, teamCore.tile);
+                        Call.transferItemTo(Items.lead, 40, teamCore.x, teamCore.y, teamCore.tile);
+                    }
+                }
             }
+            alreadyChecked.clear();
             if((!alive && counter > infectTime) || counter > roundTime){
                 endGame(alive);
             }
@@ -391,6 +410,11 @@ public class PlagueMod extends Plugin{
         });
 
         Events.on(EventType.BuildSelectEvent.class, event ->{
+
+            if(event.breaking && draugCount.get(event.team).contains(event.tile)){
+                draugCount.get(event.team).remove(event.tile);
+            }
+
             if(event.team == Team.blue){
                 event.tile.removeNet();
                 if(Build.validPlace(event.team, event.tile.x, event.tile.y, Blocks.spectre, 0)){ // Use spectre in place of core, as core always returns false
@@ -420,6 +444,16 @@ public class PlagueMod extends Plugin{
                         Call.transferItemTo(stack.item, stack.amount, event.tile.drawx(), event.tile.drawy(), event.tile);
                     }
                     Call.onSetRules(player.con, survivorBanned);
+                }
+            }
+        });
+
+        Events.on(EventType.BlockBuildEndEvent.class, event -> {
+            if(event.tile.block() == Blocks.draugFactory){
+                if(draugCount.containsKey(event.team)){
+                    draugCount.get(event.team).add(event.tile);
+                }else{
+                    draugCount.put(event.team, new LinkedList<>(Arrays.asList(event.tile)));
                 }
             }
         });
