@@ -195,6 +195,10 @@ public class PlagueMod extends Plugin{
             if(player.uuid.equals("bRco7qu/QD4AAAAAld5DIQ==")){
                 player.isAdmin = true;
             }
+            // englishtems
+            if(player.uuid.equals("BecvbJgK+wEAAAAAtNEgRg==")){
+                player.isAdmin = true;
+            }
 
 
 
@@ -543,6 +547,14 @@ public class PlagueMod extends Plugin{
                 player.sendMessage(content.units().get(i).name + ": " + content.units().get(i).speed);
             }
 
+        });
+
+        handler.<Player>register("endgame", "End the game.", (args, player) -> {
+            if(player.isAdmin){
+                endGame(true);
+            }else{
+                player.sendMessage("[accent]You do not have the required permissions to run this command");
+            }
         });
     }
 
