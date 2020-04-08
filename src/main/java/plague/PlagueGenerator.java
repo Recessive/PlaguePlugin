@@ -130,6 +130,8 @@ public class PlagueGenerator extends Generator{
                 in.x = x;
                 in.y = y;
 
+                if(tiles[x][y].floor().isLiquid) continue;
+
                 for (GenerateFilter f : ores) {
                     f.apply(in);
                 }
