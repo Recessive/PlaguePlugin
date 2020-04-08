@@ -288,7 +288,7 @@ public class PlagueMod extends Plugin{
                     alive = true;
                 }
 
-                if(draugTime && draugCount.containsKey(ply_team) && !alreadyChecked.contains(ply_team)){
+                if(draugTime && draugCount.containsKey(ply_team) && !alreadyChecked.contains(ply_team) && state.teams.cores(ply_team).size > 0){
                     alreadyChecked.add(ply_team);
                     CoreBlock.CoreEntity teamCore = state.teams.cores(ply_team).get(0);
                     for(int i = 0; i < draugCount.get(ply_team).size(); i++){
