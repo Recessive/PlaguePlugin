@@ -625,13 +625,12 @@ public class PlagueMod extends Plugin{
         handler.<Player>register("history", "", "Display history of this tile", (args, player) -> {
             Deque<HistoryEntry> tileHistory = this.history[player.tileX()][player.tileY()];
 
-            player.sendMessage("[blue]History of tile (" + player.tileX() + "|" + player.tileY() + ")");
+            player.sendMessage("[royal]History of tile (" + player.tileX() + "|" + player.tileY() + "):");
             for (HistoryEntry historyEntry : tileHistory) {
                 if(historyEntry.breaking) {
-                    player.sendMessage(historyEntry.player.name + " broke this block");
-                    player.sendMessage(historyEntry.block + " " + historyEntry.player.name + " " + historyEntry.breaking + " (uuid: " + historyEntry.player.uuid +")");
+                    player.sendMessage(filterColor(historyEntry.player.name, "[scarlet]") + "[white] broke this block" + " (uuid: [scarlet]" + historyEntry.player.uuid +"[white])");
                 } else {
-                    player.sendMessage(historyEntry.player.name + " placed a " + historyEntry.block + " (uuid: " + historyEntry.player.uuid +")");
+                    player.sendMessage(filterColor(historyEntry.player.name, "[scarlet]") + "[white] placed a " + historyEntry.block + " (uuid: [scarlet]" + historyEntry.player.uuid +"[white])");
                 }
             }
         });
