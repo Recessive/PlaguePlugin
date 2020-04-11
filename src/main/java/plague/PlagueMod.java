@@ -511,7 +511,7 @@ public class PlagueMod extends Plugin{
             prefs = Preferences.userRoot().node(this.getClass().getName());
             int currMap = prefs.getInt("mapchoice",0);
             Log.info("Map choice: " + currMap);
-            //currMap = 0;
+            //currMap = 3;
 
             List<Integer> allMaps = new ArrayList<>();
 
@@ -529,7 +529,7 @@ public class PlagueMod extends Plugin{
             String str = "";
             str += "[accent]Vote on the next map using /votemap, voting between [scarlet]1[accent] and [scarlet]" + votableMaps.size() + "[accent] on the following maps:\n";
             for(int i = 0; i < votableMaps.size(); i++){
-                str += "[scarlet]" + (i+1) + "[white]: " + mapList.get(i) +  " ([accent]" + mapVotes.get(i) + "[white])\n";
+                str += "[scarlet]" + (i+1) + "[white]: " + mapList.get(i) +  "\n";
             }
             announcements[2] = str;
 
@@ -548,7 +548,10 @@ public class PlagueMod extends Plugin{
                 world.loadGenerator(generator);
                 Log.info("Map generated.");
             }else{
-                world.loadMap(maps.customMaps().get(currMap-1));
+                mindustry.maps.Map map = maps.customMaps().get(currMap-1);
+                rules.lighting = map.rules().lighting;
+                rules.ambientLight = map.rules().ambientLight;
+                world.loadMap(map);
             }
             Tile tile = state.teams.cores(Team.crux).get(0).tile;
             plagueCore[0] = tile.x;
