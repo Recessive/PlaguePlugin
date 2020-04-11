@@ -64,9 +64,9 @@ public class PlagueMod extends Plugin{
     //in ticks: 30 seconds
     private final static int infectTime = 60 * 60 * 2;
     private final static int gracePeriod = 60 * 60 * 10;
-    private final static int plagueInfluxTime = 60 * 60 * 1, infectWarnTime = 60 * 20, survivorWarnTime = 60 * 60 * 10, draugIncomeTime = 60 * 20;
+    private final static int plagueInfluxTime = 60 * 60 * 1, announcementTime = 60 * 60 * 10, survivorWarnTime = 60 * 60 * 10, draugIncomeTime = 60 * 20;
 
-    private final static int timerPlagueInflux = 0, timerInfectWarn = 1, timerSurvivorWarn = 2, timerDraugIncome = 3;
+    private final static int timerPlagueInflux = 0, timerAnnouncement = 1, timerSurvivorWarn = 2, timerDraugIncome = 3;
 
     private int lastMin;
 
@@ -86,13 +86,18 @@ public class PlagueMod extends Plugin{
     private int[] plagueCore = new int[2];
 
 
-  	private String[] announcements = {"Join the discord at: [purple]https://discord.gg/GEnYcSv", "Rank up to earn [darkgray]common[white] trails or donate to get [purple]epic[white] ones!", "The top 5 point scoring players at the end of the month will get a [pink]unique [white]trail!", "[gold]Spectres[white] do [scarlet]4x [white]damage and have [scarlet]3x [white]health!", "Use [accent]/hub[white] to return to the hub!"};
+  	private String[] announcements = {"Join the discord at: [purple]https://discord.gg/GEnYcSv", "Use [accent]/hub[white] to return to the hub!","INSERT MAP VOTE MESSAGE"};
   	private int announcementIndex = 0;
     
     private Map<String, Team> lastTeam = new HashMap<String, Team>();
     private List<String> needsChanging = new ArrayList<>();
 
     private HashMap<Team, List<Tile>> draugCount = new HashMap<Team, List<Tile>>();
+    private static final int voteSize = 5;
+    private List<String> mapList = new ArrayList<>();
+    private List<Integer> votableMaps = new ArrayList<>();
+    private List<Integer> mapVotes = new ArrayList<>();
+    private HashMap<String, Integer> playerMapVote = new HashMap<>();
 
 
     @Override
@@ -327,6 +332,11 @@ public class PlagueMod extends Plugin{
                 // Call.sendMessage("The [red]Plague [white] was reinforced with resources");
             }
 
+            if (interval.get(timerAnnouncement, announcementTime)){
+                Call.sendMessage(announcements[announcementIndex]);
+                announcementIndex = (announcementIndex + 1) % announcements.length;
+            }
+
 
             counter += Time.delta();
             lastMin = (int) Math.ceil((roundTime - counter) / 60 / 60);
@@ -499,23 +509,37 @@ public class PlagueMod extends Plugin{
             }
 
             prefs = Preferences.userRoot().node(this.getClass().getName());
-            int lastMap = prefs.getInt("mapchoice",0);
-            Log.info("Last map:" + lastMap);
+            int currMap = prefs.getInt("mapchoice",0);
+            Log.info("Map choice: " + currMap);
+            //currMap = 0;
 
-            List<Integer> choice = new ArrayList<>();
+            List<Integer> allMaps = new ArrayList<>();
+
             for(int i =0; i < maps.customMaps().size+1; i++){
-                if(i!=lastMap && maps.customMaps().size > 0) choice.add(i);
+                if(i!=currMap && maps.customMaps().size > 0) allMaps.add(i);
             }
-            Collections.shuffle(choice);
+            Collections.shuffle(allMaps);
+            for(int i =0; i < voteSize; i++){
+                int mapInd = allMaps.get(i);
+                votableMaps.add(mapInd);
+                if(mapInd == 0) mapList.add("Patient zero"); else mapList.add(maps.customMaps().get(mapInd-1).name());
+                mapVotes.add(0);
+            }
 
-            int currMap = choice.get(0);
-            Log.info("Choices:" + choice);
-            prefs.putInt("mapchoice", currMap);
+            String str = "";
+            str += "[accent]Vote on the next map using /votemap, voting between [scarlet]1[accent] and [scarlet]" + votableMaps.size() + "[accent] on the following maps:\n";
+            for(int i = 0; i < votableMaps.size(); i++){
+                str += "[scarlet]" + (i+1) + "[white]: " + mapList.get(i) +  " ([accent]" + mapVotes.get(i) + "[white])\n";
+            }
+            announcements[2] = str;
+
             int i = 1;
             for(mindustry.maps.Map m : maps.customMaps()){
                 Log.info(i + ": " + m.name());
                 i ++;
             }
+
+
 
             logic.reset();
             if(currMap == 0){
@@ -576,6 +600,38 @@ public class PlagueMod extends Plugin{
 
         handler.<Player>register("discord", "Prints the discord link", (args, player) -> {
             player.sendMessage("[purple]https://discord.gg/GEnYcSv");
+        });
+
+        handler.<Player>register("votemap", "<number>", "Vote for the next map", (args, player) -> {
+            int vote;
+            try{
+                vote = Integer.parseInt(args[0]);
+            }catch (NumberFormatException ignored){
+                vote = -1;
+            }
+
+            if(vote < 1 || vote > votableMaps.size()){
+                String str = "";
+                str += "[accent]Your vote must be between [scarlet]1[accent] and [scarlet]" + votableMaps.size() + "[accent] on the following maps:\n";
+                for(int i = 0; i < votableMaps.size(); i++){
+                    str += "[scarlet]" + (i+1) + "[white]: " + mapList.get(i) +  " ([accent]" + mapVotes.get(i) + "[white])\n";
+                }
+                player.sendMessage(str);
+                return;
+            }
+            vote -= 1;
+            if(playerMapVote.containsKey(player.uuid)){
+                int lastVote = playerMapVote.get(player.uuid);
+                mapVotes.set(lastVote, mapVotes.get(lastVote)-1);
+                playerMapVote.put(player.uuid, vote);
+                mapVotes.set(vote, mapVotes.get(vote)+1);
+                player.sendMessage("[accent]Changed vote from [scarlet]" + (lastVote+1) + "[accent] to [scarlet]" + (vote+1));
+            }else{
+                playerMapVote.put(player.uuid, vote);
+                mapVotes.set(vote, mapVotes.get(vote)+1);
+                player.sendMessage("[accent]You voted on map [scarlet]" + (vote+1));
+            }
+
         });
 
         handler.<Player>register("uuid", "Prints your uuid", (args, player) -> {
@@ -673,6 +729,13 @@ public class PlagueMod extends Plugin{
         }
         restarting = true;
         Log.info("&ly--SERVER RESTARTING--");
+
+        int votedMap = mapVotes.indexOf(Collections.max(mapVotes));
+        Log.info(votedMap);
+
+        prefs = Preferences.userRoot().node(this.getClass().getName());
+        prefs.putInt("mapchoice", votableMaps.get(votedMap));
+        Call.sendMessage("[accent]Loading map [scarlet]" + mapList.get(votedMap) + "[accent] with the most votes");
 
         Time.runTask(60f * 10f, () -> {
             for(Player player : playerGroup.all()) {
