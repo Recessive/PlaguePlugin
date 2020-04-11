@@ -28,7 +28,20 @@ import static java.lang.Math.abs;
 import java.util.prefs.Preferences;
 import static mindustry.Vars.*;
 
+class HistoryEntry {
+    Player player;
+    Block block;
+    boolean breaking;
+
+    public HistoryEntry(Player player, Block block, boolean breaking) {
+        this.player = player;
+        this.block = block;
+        this.breaking = breaking;
+    }
+}
+
 public class PlagueMod extends Plugin{
+    private Deque<HistoryEntry>[][] history;
 
     public int teams = 0;
     public int infected = 0;
@@ -458,8 +471,23 @@ public class PlagueMod extends Plugin{
             }
         });
 
+        Events.on(EventType.WorldLoadEvent.class, worldLoadEvent -> {
+            history = new ArrayDeque[Vars.world.width()][Vars.world.height()];
 
+            for(int x = 0; x < Vars.world.width(); x++){
+                for(int y = 0; y < Vars.world.height(); y++){
+                    history[x][y] = new ArrayDeque<HistoryEntry>();
+                }
+            }
+        });
 
+        Events.on(EventType.BlockBuildEndEvent.class, blockBuildEndEvent -> {
+            HistoryEntry historyEntry = new HistoryEntry(blockBuildEndEvent.player, blockBuildEndEvent.tile.block(), blockBuildEndEvent.breaking);
+
+            Deque<HistoryEntry> tileHistory = this.history[blockBuildEndEvent.tile.x][blockBuildEndEvent.tile.y];
+            if(tileHistory.size() > 10) tileHistory.removeFirst();
+            tileHistory.add(historyEntry);
+        });
     }
 
     @Override
@@ -591,6 +619,20 @@ public class PlagueMod extends Plugin{
                 endGame(true);
             }else{
                 player.sendMessage("[accent]You do not have the required permissions to run this command");
+            }
+        });
+        
+        handler.<Player>register("history", "", "Display history of this tile", (args, player) -> {
+            Deque<HistoryEntry> tileHistory = this.history[player.tileX()][player.tileY()];
+
+            player.sendMessage("[blue]History of tile (" + player.tileX() + "|" + player.tileY() + ")");
+            for (HistoryEntry historyEntry : tileHistory) {
+                if(historyEntry.breaking) {
+                    player.sendMessage(historyEntry.player.name + " broke this block");
+                    player.sendMessage(historyEntry.block + " " + historyEntry.player.name + " " + historyEntry.breaking + " (uuid: " + historyEntry.player.uuid +")");
+                } else {
+                    player.sendMessage(historyEntry.player.name + " placed a " + historyEntry.block + " (uuid: " + historyEntry.player.uuid +")");
+                }
             }
         });
     }
