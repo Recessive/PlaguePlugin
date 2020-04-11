@@ -164,17 +164,17 @@ public class PlagueGenerator extends Generator{
         }
     }
 
-    public static void inverseFloodFill(Tile[][] tiles){
+    public static void inverseFloodFill(Tile[][] tiles, int cx, int cy){
         int[][] floodGrid = new int[size][size];
         for(int x = 0; x < tiles.length; x++){
             for(int y = 0; y < tiles[0].length; y++){
-                if(tiles[x][y].block() instanceof StaticWall){
+                if(tiles[x][y].block() instanceof StaticWall || tiles[x][y].floor().isDeep()){
                     floodGrid[x][y] = 2;
                 }
             }
         }
         List<Tile> tileFlood = new ArrayList<>();
-        tileFlood.add(tiles[tiles.length/2][tiles[0].length/2]);
+        tileFlood.add(tiles[cx][cy]);
         perimeterFlood(tileFlood, floodGrid, tiles);
 
         for (int x = 0; x < tiles.length; x++) {

@@ -498,7 +498,10 @@ public class PlagueMod extends Plugin{
             }else{
                 world.loadMap(maps.customMaps().get(currMap-1));
             }
-            PlagueGenerator.inverseFloodFill(world.getTiles());
+            Tile tile = state.teams.cores(Team.crux).get(0).tile;
+            plagueCore[0] = tile.x;
+            plagueCore[1] = tile.y;
+            PlagueGenerator.inverseFloodFill(world.getTiles(), plagueCore[0], plagueCore[1]);
             PlagueGenerator.defaultOres(world.getTiles());
             mapName = world.getMap().name();
             mapAuthor = world.getMap().author();
@@ -514,9 +517,6 @@ public class PlagueMod extends Plugin{
             //tile.setNet(Blocks.coreFoundation, Team.blue, 0);
             //tile = world.tile(world.width()/2,world.height()/2);
             //tile.setNet(Blocks.coreFoundation, Team.crux, 0);
-            Tile tile = state.teams.cores(Team.crux).get(0).tile;
-            plagueCore[0] = tile.x;
-            plagueCore[1] = tile.y;
             for(ItemStack stack : state.rules.loadout){
                 Call.transferItemTo(stack.item, stack.amount, tile.drawx(), tile.drawy(), tile);
             }
