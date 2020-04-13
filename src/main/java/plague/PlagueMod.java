@@ -104,7 +104,7 @@ public class PlagueMod extends Plugin{
     public void init(){
 
 
-    	loadouts.add(ItemStack.list(Items.copper, 5000, Items.lead, 5000, Items.graphite, 1000, Items.silicon, 1000));
+    	loadouts.add(ItemStack.list(Items.copper, 25000, Items.lead, 25000, Items.graphite, 8000, Items.silicon, 8000, Items.titanium, 10000, Items.metaglass, 500));
     	loadouts.add(ItemStack.list(Items.titanium, 1000, Items.graphite, 400, Items.silicon, 400));
         rules.pvp = !true;
         rules.tags.put("plague", "true");
@@ -144,6 +144,7 @@ public class PlagueMod extends Plugin{
                 Blocks.doorLarge, Blocks.plastaniumWall, Blocks.plastaniumWallLarge);
 
         plagueBanned.bannedBlocks.addAll(Blocks.mendProjector);
+        plagueBanned.bannedBlocks.addAll(Blocks.glaivePad);
 
         Blocks.powerSource.health = Integer.MAX_VALUE;
 
@@ -461,11 +462,15 @@ public class PlagueMod extends Plugin{
                     }else{
                         player.name = filterColor(player.name, "[olive]");
                     }
-                    event.tile.setNet(Blocks.coreFoundation, event.builder.getTeam(), 0);
+                    event.tile.setNet(Blocks.coreFoundation, chosenTeam[0], 0);
                     state.teams.registerCore((CoreBlock.CoreEntity) event.tile.entity);
-                    for(ItemStack stack : state.rules.loadout){
-                        Call.transferItemTo(stack.item, stack.amount, event.tile.drawx(), event.tile.drawy(), event.tile);
+                    Log.info(state.teams.cores(chosenTeam[0]).size);
+                    if (state.teams.cores(chosenTeam[0]).size == 1){
+                        for(ItemStack stack : state.rules.loadout){
+                            Call.transferItemTo(stack.item, stack.amount, event.tile.drawx(), event.tile.drawy(), event.tile);
+                        }
                     }
+
                     Call.onSetRules(player.con, survivorBanned);
                 }
             }
@@ -510,8 +515,9 @@ public class PlagueMod extends Plugin{
 
             prefs = Preferences.userRoot().node(this.getClass().getName());
             int currMap = prefs.getInt("mapchoice",0);
+            prefs.putInt("mapchoice", 0); // This is just backup so the server reverts to patient zero if a map crashes
             Log.info("Map choice: " + currMap);
-            //currMap = 3;
+            //currMap = 15;
 
             List<Integer> allMaps = new ArrayList<>();
 
@@ -549,8 +555,6 @@ public class PlagueMod extends Plugin{
                 Log.info("Map generated.");
             }else{
                 mindustry.maps.Map map = maps.customMaps().get(currMap-1);
-                rules.lighting = map.rules().lighting;
-                rules.ambientLight = map.rules().ambientLight;
                 world.loadMap(map);
             }
             Tile tile = state.teams.cores(Team.crux).get(0).tile;
@@ -603,6 +607,10 @@ public class PlagueMod extends Plugin{
 
         handler.<Player>register("discord", "Prints the discord link", (args, player) -> {
             player.sendMessage("[purple]https://discord.gg/GEnYcSv");
+        });
+
+        handler.<Player>register("maps", "Show votable maps", (args, player) -> {
+            player.sendMessage(announcements[2]);
         });
 
         handler.<Player>register("votemap", "<number>", "Vote for the next map", (args, player) -> {
