@@ -471,6 +471,8 @@ public class PlagueMod extends Plugin{
                         }
                     }
 
+                    player.onRespawn(event.tile);
+
                     Call.onSetRules(player.con, survivorBanned);
                 }
             }
