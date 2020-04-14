@@ -99,6 +99,8 @@ public class PlagueMod extends Plugin{
     private List<Integer> mapVotes = new ArrayList<>();
     private HashMap<String, Integer> playerMapVote = new HashMap<>();
 
+    private HashMap<String, CustomPlayer> playerUtilMap = new HashMap<>();
+
 
     @Override
     public void init(){
@@ -418,6 +420,8 @@ public class PlagueMod extends Plugin{
             }
             event.player.sendMessage("[accent]Map: [scarlet]" + mapName + "\n[accent]Author: [scarlet]" + mapAuthor);
 
+            playerUtilMap.put(event.player.uuid,new CustomPlayer(event.player, 0));
+
         });
 
         Events.on(EventType.PlayerLeave.class, event -> {
@@ -471,7 +475,7 @@ public class PlagueMod extends Plugin{
                         }
                     }
 
-                    player.onRespawn(event.tile);
+                    player.onRespawn(state.teams.cores(chosenTeam[0]).get(0).tile);
 
                     Call.onSetRules(player.con, survivorBanned);
                 }
