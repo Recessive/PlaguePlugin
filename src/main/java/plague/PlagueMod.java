@@ -4,12 +4,14 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import arc.*;
+import arc.graphics.Color;
 import arc.math.*;
 import arc.struct.*;
 import arc.util.*;
 import mindustry.Vars;
 import mindustry.content.*;
 import mindustry.core.GameState.*;
+import mindustry.entities.Effects;
 import mindustry.entities.type.*;
 import mindustry.game.EventType;
 import mindustry.game.*;
@@ -26,6 +28,8 @@ import mindustry.world.blocks.units.UnitFactory;
 import static arc.util.Log.info;
 import static java.lang.Math.abs;
 import java.util.prefs.Preferences;
+
+import static java.lang.Math.random;
 import static mindustry.Vars.*;
 
 class HistoryEntry {
@@ -59,21 +63,26 @@ public class PlagueMod extends Plugin{
 
     public static final int messageTime = 1;
 
+    // Rank stuff
+    private static final int regularTime = 1440; // 24 hours in minutes
+
     //in ticks: 60 minutes: 60 * 60 * 60
     private int roundTime = 60 * 60 * 40;
     //in ticks: 30 seconds
-    private final static int infectTime = 60 * 60 * 2;
+    private final static int infectTime = 60 * 60 * 20;
     private final static int gracePeriod = 60 * 60 * 10;
-    private final static int plagueInfluxTime = 60 * 60 * 1, announcementTime = 60 * 60 * 5, survivorWarnTime = 60 * 60 * 10, draugIncomeTime = 60 * 20;
+    private final static int plagueInfluxTime = 60 * 60 * 1, announcementTime = 60 * 60 * 5, survivorWarnTime = 60 * 60 * 10, draugIncomeTime = 60 * 20
+            , minuteTime = 60 * 60, creepFXTime = 60 * 10, creepSpreadTime = 60 * 10;
 
-    private final static int timerPlagueInflux = 0, timerAnnouncement = 1, timerSurvivorWarn = 2, timerDraugIncome = 3;
+    private final static int timerPlagueInflux = 0, timerAnnouncement = 1, timerSurvivorWarn = 2, timerDraugIncome = 3, timerMinute = 4
+            , timerCreepFX = 5, timerCreepSpread = 6;
 
     private int lastMin;
 
     private final Rules rules = new Rules();
     private Rules survivorBanned = new Rules();
     private Rules plagueBanned = new Rules();
-    private Interval interval = new Interval(5);
+    private Interval interval = new Interval(10);
 
     private boolean restarting = false, registered = false;
 
@@ -101,10 +110,18 @@ public class PlagueMod extends Plugin{
 
     private HashMap<String, CustomPlayer> playerUtilMap = new HashMap<>();
 
+    private DBInterface playerDB = new DBInterface("players");
+
+    private boolean creep[][];
+    private List<Tile> creepPerimeter = new ArrayList<>();
+    List<String> creepStoppers = new ArrayList<>();
+
 
     @Override
     public void init(){
-
+        playerDB.connect("data/server_data.db");
+        creepStoppers.addAll(Arrays.asList(Blocks.thoriumWall.name, Blocks.thoriumWallLarge.name, Blocks.plastaniumWall.name, Blocks.plastaniumWallLarge.name,
+                Blocks.phaseWall.name, Blocks.phaseWallLarge.name, Blocks.surgeWall.name, Blocks.surgeWallLarge.name));
 
     	loadouts.add(ItemStack.list(Items.copper, 25000, Items.lead, 25000, Items.graphite, 8000, Items.silicon, 8000, Items.titanium, 10000, Items.metaglass, 500));
     	loadouts.add(ItemStack.list(Items.titanium, 1000, Items.graphite, 400, Items.silicon, 400));
@@ -125,13 +142,13 @@ public class PlagueMod extends Plugin{
         // rules.bannedBlocks.addAll(Blocks.solarPanel, Blocks.largeSolarPanel);
         rules.bannedBlocks.addAll(Blocks.arc);
         rules.bannedBlocks.addAll(Blocks.revenantFactory, Blocks.wraithFactory, Blocks.ghoulFactory);
-        rules.bannedBlocks.add(Blocks.commandCenter); // Can't be trusted
 
         survivorBanned = rules.copy();
         survivorBanned.bannedBlocks.addAll(Blocks.commandCenter, Blocks.wraithFactory, Blocks.ghoulFactory, Blocks.revenantFactory, Blocks.daggerFactory,
                 Blocks.crawlerFactory, Blocks.titanFactory, Blocks.fortressFactory);
 
         plagueBanned = rules.copy();
+        plagueBanned.bannedBlocks.add(Blocks.commandCenter); // Can't be trusted
         plagueBanned.bannedBlocks.addAll(Blocks.duo, Blocks.scatter, Blocks.scorch, Blocks.wave, Blocks.lancer, Blocks.arc, Blocks.swarmer, Blocks.salvo,
                 Blocks.fuse, Blocks.cyclone, Blocks.spectre, Blocks.meltdown, Blocks.hail, Blocks.ripple, Blocks.shockMine);
 
@@ -203,23 +220,12 @@ public class PlagueMod extends Plugin{
         ((ChargeTurret)(lancer)).shootType = PlagueData.getLLaser();
 
         netServer.assigner = (player, players) -> {
+            playerDB.loadRow(player.uuid);
             // Make admins
-            // Recessive
-            if(player.uuid.equals("rJ2w2dsR3gQAAAAAfJfvXA==")){
-                player.isAdmin = true;
-            }
-            // Pointifix
-            if(player.uuid.equals("Z5J7zdYbz+UAAAAAOHW3FA==")){
-                player.isAdmin = true;
-            }
-            // mobile
-            if(player.uuid.equals("bRco7qu/QD4AAAAAld5DIQ==")){
-                player.isAdmin = true;
-            }
-            // englishtems
-            if(player.uuid.equals("BecvbJgK+wEAAAAAtNEgRg==")){
-                player.isAdmin = true;
-            }
+            int playTime = (int) playerDB.entries.get(player.uuid).get("playTime");
+            playerUtilMap.put(player.uuid,new CustomPlayer(player, (int) playerDB.entries.get(player.uuid).get("rankLevel"), playTime));
+
+            if(playerUtilMap.get(player.uuid).rank == 4) player.isAdmin = true;
 
 
 
@@ -246,7 +252,12 @@ public class PlagueMod extends Plugin{
                 return Team.blue;
             }else{
                 infected ++;
-                Call.onSetRules(player.con, plagueBanned);
+                if(playerUtilMap.get(player.uuid).rank == 0){
+                    Call.onSetRules(player.con, plagueBanned);
+                }else{
+                    allowCC(player);
+                }
+                playerUtilMap.get(player.uuid).infected = true;
                 if(player.isAdmin){
                     player.name = filterColor(player.name, "[red]");
                 }else{
@@ -255,10 +266,12 @@ public class PlagueMod extends Plugin{
                 return Team.crux;
             }
         };
+
         AtomicBoolean infectCountOn = new AtomicBoolean(true);
         AtomicBoolean graceCountOn = new AtomicBoolean(true);
         AtomicBoolean graceOver = new AtomicBoolean(false);
         List<Team> alreadyChecked = new ArrayList<>();
+
 
         Events.on(EventType.Trigger.update, ()-> {
 
@@ -340,7 +353,35 @@ public class PlagueMod extends Plugin{
                 announcementIndex = (announcementIndex + 1) % announcements.length;
             }
 
+            for(int x = 0; x < world.width(); x++){
+                for(int y = 0; y < world.height(); y++){
+                    if(creep[x][y] && random() > 0.9999){// && dist+1 >= world.height()/4){
+                        Call.onEffectReliable(Fx.fire, x*tilesize, y*tilesize, 0, Color.green);
+                    }
+                }
+            }
 
+
+            if (interval.get(timerCreepSpread, creepSpreadTime)){
+                expandCreep();
+                for(Tile t : creepPerimeter){
+                    Call.onEffectReliable(Fx.heal, t.x*tilesize, t.y*tilesize, 0, Color.green);
+                }
+            }
+
+
+
+            if (interval.get(timerMinute, minuteTime)) {
+                for(Player player : playerGroup.all()){
+                    playerUtilMap.get(player.uuid).playTime += 1;
+                    Call.setHudTextReliable(player.con, "[accent]Play time: [scarlet]" + playerUtilMap.get(player.uuid).playTime + "[accent] mins.");
+                    if(playerUtilMap.get(player.uuid).rank == 0 && playerUtilMap.get(player.uuid).playTime >= regularTime){
+                        Call.sendMessage(filterColor(player.name, "[gold]") + "[royal] has ranked up to regular!");
+                        playerUtilMap.get(player.uuid).rank = 1;
+                        allowCC(player);
+                    }
+                }
+            }
             counter += Time.delta();
             lastMin = (int) Math.ceil((roundTime - counter) / 60 / 60);
         });
@@ -353,32 +394,20 @@ public class PlagueMod extends Plugin{
         });
 
         netServer.admins.addActionFilter((action) -> {
+            // If server is not synced with player, server will throw "Failed to to read remote method 'onTileTapped'!" error
 
             if(action.player != null){
-                if(cartesianDistance(action.tile.x, action.tile.y, plagueCore[0], plagueCore[1]) < world.height()/4 && action.player.getTeam() != Team.crux) {
+                if(creep[action.tile.x][action.tile.y] && action.player.getTeam() != Team.crux && action.type == Administration.ActionType.placeBlock) {
                     return false;
                 }
 
 
-                if(action.player.getTeam() == Team.crux && cartesianDistance(action.tile.x, action.tile.y, plagueCore[0], plagueCore[1]) > world.height()/4
-                && action.type == Administration.ActionType.placeBlock){
-                    // Scan 3 blocks in every direction
-                    for(int x = -2; x < 3; x++){
-                        for(int y = -2; y < 3; y++){
-                            if(action.tile.x+x < 0 || action.tile.x+x > world.width() || action.tile.y+y < 0 || action.tile.y+y > world.height()){
-                                continue;
-                            }
-                            Tile tile = world.tile(action.tile.x+x, action.tile.y+y);
-                            if(tile == null) continue;
-                            Team t = tile.getTeam();
-                            if(t != null && t != Team.crux && t != Team.derelict && tile.block() != Blocks.air){
-                                return false;
-                            }
-                        }
-                    }
+                if(action.player.getTeam() == Team.crux && !creep[action.tile.x][action.tile.y] && action.type == Administration.ActionType.placeBlock){
+                    return false;
                 }
 
-                if(action.player.getTeam() == Team.crux && plagueBanned.bannedBlocks.contains(action.block)){
+                if(action.player.getTeam() == Team.crux && plagueBanned.bannedBlocks.contains(action.block)
+                        && !(playerUtilMap.get(action.player.uuid).rank != 0 && action.block != null && action.block == Blocks.commandCenter)){
                     return false;
                 }
 
@@ -392,6 +421,11 @@ public class PlagueMod extends Plugin{
                    }
                 }
             }
+            if(action.type == Administration.ActionType.configure && action.tile.block() == Blocks.commandCenter && action.player != null
+                    && playerUtilMap.get(action.player.uuid).rank == 0){
+                return false;
+            }
+
             if((action.type == Administration.ActionType.breakBlock || action.type == Administration.ActionType.placeBlock) && (action.tile.block() == Blocks.powerSource || action.tile.block() == Blocks.itemSource)){
                 return false;
             }
@@ -400,7 +434,6 @@ public class PlagueMod extends Plugin{
                 action.player.sendMessage("[accent]You just desynced yourself. Use [scarlet]/sync[accent] to resync");
                 return false;
             }
-
             return true;
         });
 
@@ -413,14 +446,14 @@ public class PlagueMod extends Plugin{
         });
 
         Events.on(EventType.PlayerJoin.class, event -> {
+            Call.setHudTextReliable(event.player.con, "[accent]Play time: [scarlet]" + playerUtilMap.get(event.player.uuid).playTime + "[accent] mins.");
+
             // Tile tile = world.tile(255, 255);
             if(event.player.getTeam() == Team.blue){
                 event.player.setTeam(Team.crux);
                 needsChanging.add(event.player.uuid);
             }
             event.player.sendMessage("[accent]Map: [scarlet]" + mapName + "\n[accent]Author: [scarlet]" + mapAuthor);
-
-            playerUtilMap.put(event.player.uuid,new CustomPlayer(event.player, 0));
 
         });
 
@@ -435,6 +468,15 @@ public class PlagueMod extends Plugin{
             }
 
             lastTeam.put(event.player.uuid, event.player.getTeam());
+
+            // Handle all database side of things
+
+            playerDB.entries.get(event.player.uuid).put("playTime", playerUtilMap.get(event.player.uuid).playTime);
+            playerDB.entries.get(event.player.uuid).put("rankLevel", playerUtilMap.get(event.player.uuid).rank);
+
+
+            playerUtilMap.remove(event.player.uuid);
+            playerDB.saveRow(event.player.uuid);
         });
 
         Events.on(EventType.BuildSelectEvent.class, event ->{
@@ -475,6 +517,7 @@ public class PlagueMod extends Plugin{
                         }
                     }
 
+                    player.setDead(true);
                     player.onRespawn(state.teams.cores(chosenTeam[0]).get(0).tile);
 
                     Call.onSetRules(player.con, survivorBanned);
@@ -577,23 +620,71 @@ public class PlagueMod extends Plugin{
             logic.play();
             netServer.openServer();
 
+            // Initialise creep
+            creep = new boolean[world.width()][world.height()];
+            for(int x = 0; x < world.width(); x++){
+                for(int y = 0; y < world.height(); y++){
+                    float dist = cartesianDistance(x, y, plagueCore[0], plagueCore[1]);
+                    if(dist < world.height()/4 && !world.tile(x,y).block().isStatic()){
+                        creep[x][y] = true;
+                        if(dist+1 > world.height()/4) creepPerimeter.add(world.tile(x, y));
+                    }
+                }
+            }
 
-            //Tile tile = world.tile(255,255);
-            //tile.setNet(Blocks.coreFoundation, Team.blue, 0);
-            //tile = world.tile(world.width()/2,world.height()/2);
-            //tile.setNet(Blocks.coreFoundation, Team.crux, 0);
             for(ItemStack stack : state.rules.loadout){
                 Call.transferItemTo(stack.item, stack.amount, tile.drawx(), tile.drawy(), tile);
             }
-            // tile.block().health = Integer.MAX_VALUE; // Set core health to infinite so it can't be broken
-
-            // Add power infinite
-            //tile = world.tile(world.width()/2,world.height()/2+10);
-            //tile.setNet(Blocks.powerSource, Team.crux, 0);
         });
 
         handler.register("countdown", "Get the hexed restart countdown.", args -> {
             Log.info("Time until round ends: &lc{0} minutes", (int)(roundTime - counter) / 60 / 60);
+        });
+
+        handler.register("setplaytime", "<uuid> <playtime>", "Set the play time of a player", args -> {
+            int newTime;
+            try{
+                newTime = Integer.parseInt(args[1]);
+            }catch(NumberFormatException e){
+                Log.info("Invalid playtime input '" + args[1] + "'");
+                return;
+            }
+
+            if(!playerDB.entries.containsKey(args[0])){
+                playerDB.loadRow(args[0]);
+                playerDB.entries.get(args[0]).put("playTime", newTime);
+                playerDB.saveRow(args[0]);
+            }else{
+                Player player = playerUtilMap.get(args[0]).player;
+                playerUtilMap.get(args[0]).playTime = newTime;
+                Call.setHudTextReliable(player.con, "[accent]Play time: [scarlet]" + playerUtilMap.get(player.uuid).playTime + "[accent] mins.");
+            }
+            Log.info("Set uuid " + args[0] + " to have play time of " + args[1] + " minutes");
+
+        });
+
+        handler.register("setrank", "<uuid> <rank>", "Set the play time of a player", args -> {
+            int newRank;
+            try{
+                newRank = Integer.parseInt(args[1]);
+            }catch(NumberFormatException e){
+                Log.info("Invalid prank input '" + args[1] + "'");
+                return;
+            }
+            if(newRank < 0 || newRank > 4){
+                Log.info("Invalid prank input '" + args[1] + "'");
+                return;
+            }
+
+            if(!playerDB.entries.containsKey(args[0])){
+                playerDB.loadRow(args[0]);
+                playerDB.entries.get(args[0]).put("rankLevel", newRank);
+                playerDB.saveRow(args[0]);
+            }else{
+                playerUtilMap.get(args[0]).rank = newRank;
+            }
+            Log.info("Set uuid " + args[0] + " to have rank of " + args[1]);
+
         });
 
         handler.register("end", "End the game.", args -> endGame(true));
@@ -656,7 +747,7 @@ public class PlagueMod extends Plugin{
         });
 
         handler.<Player>register("time", "Display the time left", (args, player) -> {
-            player.sendMessage(String.valueOf("[scarlet]" + lastMin + "[lightgray] mins. remaining\n"));
+            player.sendMessage(String.valueOf("[scarlet]" + lastMin + "[lightgray] mins. remaining"));
         });
 
         handler.<Player>register("enemies", "List enemies", (args, player) -> {
@@ -665,6 +756,11 @@ public class PlagueMod extends Plugin{
 
         handler.<Player>register("whoami", "Prints your team", (args, player) -> {
             player.sendMessage(String.valueOf(player.getTeam()));
+        });
+
+        handler.<Player>register("block", "Prints the block you are currently on top off", (args, player) -> {
+            Tile t = world.tile(player.tileX(), player.tileY());
+            player.sendMessage("[accent]" + t.link().block().name);
         });
 
         handler.<Player>register("infect", "Infect yourself", (args, player) -> {
@@ -730,7 +826,60 @@ public class PlagueMod extends Plugin{
             player.name = filterColor(player.name, "[scarlet]");
         }
         player.kill();
-        Call.onSetRules(player.con, plagueBanned);
+        playerUtilMap.get(player.uuid).infected = true;
+        if(playerUtilMap.get(player.uuid).rank == 0){
+            Call.onSetRules(player.con, plagueBanned);
+        }else{
+            allowCC(player);
+        }
+    }
+
+    void allowCC(Player player){
+        if(playerUtilMap.get(player.uuid).infected){
+            Rules temp = plagueBanned.copy();
+            temp.bannedBlocks.remove(Blocks.commandCenter);
+            Call.onSetRules(player.con, temp);
+        }
+    }
+
+    void expandCreep(){
+        List<Tile> newList = new ArrayList<>();
+        for(Tile t : creepPerimeter){
+            if(t.x+1 < world.width() && !creep[t.x+1][t.y] && !world.tile(t.x+1,t.y).block().isStatic() && !world.tile(t.x+1,t.y).floor().isDeep()){
+                if(creepStoppers.contains(world.tile(t.x+1, t.y).link().block().name)){
+                    if(!newList.contains(t)) newList.add(t);
+                }else{
+                    newList.add(world.tile(t.x+1, t.y));
+                    creep[t.x+1][t.y] = true;
+                }
+
+            }
+            if(t.x-1 >= 0 && !creep[t.x-1][t.y] && !world.tile(t.x-1,t.y).block().isStatic() && !world.tile(t.x-1,t.y).floor().isDeep()){
+                if(creepStoppers.contains(world.tile(t.x-1, t.y).link().block().name)){
+                    if(!newList.contains(t)) newList.add(t);
+                }else{
+                    newList.add(world.tile(t.x-1, t.y));
+                    creep[t.x-1][t.y] = true;
+                }
+            }
+            if(t.y+1 < world.height() && !creep[t.x][t.y+1] && !world.tile(t.x,t.y+1).block().isStatic() && !world.tile(t.x,t.y+1).floor().isDeep()){
+                if(creepStoppers.contains(world.tile(t.x, t.y+1).link().block().name)){
+                    if(!newList.contains(t)) newList.add(t);
+                }else{
+                    newList.add(world.tile(t.x, t.y+1));
+                    creep[t.x][t.y+1] = true;
+                }
+            }
+            if(t.y-1 >= 0 && !creep[t.x][t.y-1] && !world.tile(t.x,t.y-1).block().isStatic() && !world.tile(t.x,t.y-1).floor().isDeep()){
+                if(creepStoppers.contains(world.tile(t.x, t.y-1).link().block().name)){
+                    if(!newList.contains(t)) newList.add(t);
+                }else{
+                    newList.add(world.tile(t.x, t.y-1));
+                    creep[t.x][t.y-1] = true;
+                }
+            }
+        }
+        creepPerimeter = newList;
     }
 
     void endGame(boolean survivorWin){
@@ -748,7 +897,6 @@ public class PlagueMod extends Plugin{
         Log.info("&ly--SERVER RESTARTING--");
 
         int votedMap = mapVotes.indexOf(Collections.max(mapVotes));
-        Log.info(votedMap);
 
         prefs = Preferences.userRoot().node(this.getClass().getName());
         prefs.putInt("mapchoice", votableMaps.get(votedMap));
