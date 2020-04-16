@@ -474,12 +474,14 @@ public class PlagueMod extends Plugin{
 
             // Handle all database side of things
 
-            playerDB.entries.get(event.player.uuid).put("playTime", playerUtilMap.get(event.player.uuid).playTime);
-            playerDB.entries.get(event.player.uuid).put("rankLevel", playerUtilMap.get(event.player.uuid).rank);
+            try{
+                playerDB.entries.get(event.player.uuid).put("playTime", playerUtilMap.get(event.player.uuid).playTime);
+                playerDB.entries.get(event.player.uuid).put("rankLevel", playerUtilMap.get(event.player.uuid).rank);
+                playerUtilMap.remove(event.player.uuid);
+                playerDB.saveRow(event.player.uuid);
+            }catch(NullPointerException ignore){}
 
 
-            playerUtilMap.remove(event.player.uuid);
-            playerDB.saveRow(event.player.uuid);
         });
 
         Events.on(EventType.BuildSelectEvent.class, event ->{
@@ -908,6 +910,12 @@ public class PlagueMod extends Plugin{
         Time.runTask(60f * 10f, () -> {
             for(Player player : playerGroup.all()) {
                 Call.onConnect(player.con, "aamindustry.play.ai", 6567);
+                playerDB.entries.get(player.uuid).put("playTime", playerUtilMap.get(player.uuid).playTime);
+                playerDB.entries.get(player.uuid).put("rankLevel", playerUtilMap.get(player.uuid).rank);
+
+
+                playerUtilMap.remove(player.uuid);
+                playerDB.saveRow(player.uuid);
                 //player.con.close();
             }
             // I shouldn't need this, all players should be gone since I connected them to hub
