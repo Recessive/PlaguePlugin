@@ -69,7 +69,7 @@ public class PlagueMod extends Plugin{
     //in ticks: 60 minutes: 60 * 60 * 60
     private int roundTime = 60 * 60 * 40;
     //in ticks: 30 seconds
-    private final static int infectTime = 60 * 60 * 20;
+    private final static int infectTime = 60 * 60 * 2;
     private final static int gracePeriod = 60 * 60 * 10;
     private final static int plagueInfluxTime = 60 * 60 * 1, announcementTime = 60 * 60 * 5, survivorWarnTime = 60 * 60 * 10, draugIncomeTime = 60 * 20
             , minuteTime = 60 * 60, creepFXTime = 60 * 10, creepSpreadTime = 60 * 10;
@@ -353,18 +353,21 @@ public class PlagueMod extends Plugin{
                 announcementIndex = (announcementIndex + 1) % announcements.length;
             }
 
-            for(int x = 0; x < world.width(); x++){
+            /*for(int x = 0; x < world.width(); x++){
                 for(int y = 0; y < world.height(); y++){
                     if(creep[x][y] && random() > 0.9999){// && dist+1 >= world.height()/4){
                         Call.onEffectReliable(Fx.fire, x*tilesize, y*tilesize, 0, Color.green);
                     }
                 }
-            }
+            }*/
 
 
             if (interval.get(timerCreepSpread, creepSpreadTime)){
                 expandCreep();
+                int n = 0;
                 for(Tile t : creepPerimeter){
+                    n ++;
+                    if(n % 5 != 0) continue;
                     Call.onEffectReliable(Fx.heal, t.x*tilesize, t.y*tilesize, 0, Color.green);
                 }
             }
@@ -905,7 +908,7 @@ public class PlagueMod extends Plugin{
         Time.runTask(60f * 10f, () -> {
             for(Player player : playerGroup.all()) {
                 Call.onConnect(player.con, "aamindustry.play.ai", 6567);
-                player.con.close();
+                //player.con.close();
             }
             // I shouldn't need this, all players should be gone since I connected them to hub
             // netServer.kickAll(KickReason.serverRestarting);
