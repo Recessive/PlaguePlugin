@@ -733,15 +733,17 @@ public class PlagueMod extends Plugin{
                 return;
             }
             vote -= 1;
+            int vote_power = 1;
+            if(playerUtilMap.get(player.uuid).rank == 2 || playerUtilMap.get(player.uuid).rank == 3) vote_power = 2;
             if(playerMapVote.containsKey(player.uuid)){
                 int lastVote = playerMapVote.get(player.uuid);
-                mapVotes.set(lastVote, mapVotes.get(lastVote)-1);
+                mapVotes.set(lastVote, mapVotes.get(lastVote)-vote_power);
                 playerMapVote.put(player.uuid, vote);
-                mapVotes.set(vote, mapVotes.get(vote)+1);
+                mapVotes.set(vote, mapVotes.get(vote)+vote_power);
                 player.sendMessage("[accent]Changed vote from [scarlet]" + (lastVote+1) + "[accent] to [scarlet]" + (vote+1));
             }else{
                 playerMapVote.put(player.uuid, vote);
-                mapVotes.set(vote, mapVotes.get(vote)+1);
+                mapVotes.set(vote, mapVotes.get(vote)+vote_power);
                 player.sendMessage("[accent]You voted on map [scarlet]" + (vote+1));
             }
 
