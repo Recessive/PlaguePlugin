@@ -223,7 +223,9 @@ public class PlagueMod extends Plugin{
             playerDB.loadRow(player.uuid);
             // Make admins
             int playTime = (int) playerDB.entries.get(player.uuid).get("playTime");
-            playerUtilMap.put(player.uuid,new CustomPlayer(player, (int) playerDB.entries.get(player.uuid).get("rankLevel"), playTime));
+            int rankLevel = (int) playerDB.entries.get(player.uuid).get("rankLevel");
+            int donateLevel = (int) playerDB.entries.get(player.uuid).get("donateLevel");
+            playerUtilMap.put(player.uuid,new CustomPlayer(player, rankLevel, donateLevel, playTime));
 
             if(playerUtilMap.get(player.uuid).rank == 4) player.isAdmin = true;
 
@@ -252,7 +254,7 @@ public class PlagueMod extends Plugin{
                 return Team.blue;
             }else{
                 infected ++;
-                if(playerUtilMap.get(player.uuid).rank == 0){
+                if(playerUtilMap.get(player.uuid).rank == 0 && playerUtilMap.get(player.uuid).donateLevel == 0){
                     Call.onSetRules(player.con, plagueBanned);
                 }else{
                     allowCC(player);
@@ -410,7 +412,7 @@ public class PlagueMod extends Plugin{
                 }
 
                 if(action.player.getTeam() == Team.crux && plagueBanned.bannedBlocks.contains(action.block)
-                        && !(playerUtilMap.get(action.player.uuid).rank != 0 && action.block != null && action.block == Blocks.commandCenter)){
+                        && !(playerUtilMap.get(action.player.uuid).rank != 0 || playerUtilMap.get(action.player.uuid).donateLevel != 0 && action.block != null && action.block == Blocks.commandCenter)){
                     return false;
                 }
 
@@ -477,6 +479,7 @@ public class PlagueMod extends Plugin{
             try{
                 playerDB.entries.get(event.player.uuid).put("playTime", playerUtilMap.get(event.player.uuid).playTime);
                 playerDB.entries.get(event.player.uuid).put("rankLevel", playerUtilMap.get(event.player.uuid).rank);
+                playerDB.entries.get(event.player.uuid).put("donateLevel", playerUtilMap.get(event.player.uuid).donateLevel);
                 playerUtilMap.remove(event.player.uuid);
                 playerDB.saveRow(event.player.uuid);
             }catch(NullPointerException ignore){}
@@ -668,7 +671,7 @@ public class PlagueMod extends Plugin{
 
         });
 
-        handler.register("setrank", "<uuid> <rank>", "Set the play time of a player", args -> {
+        handler.register("setrank", "<uuid> <rank>", "Set the rank of a player", args -> {
             int newRank;
             try{
                 newRank = Integer.parseInt(args[1]);
@@ -689,6 +692,30 @@ public class PlagueMod extends Plugin{
                 playerUtilMap.get(args[0]).rank = newRank;
             }
             Log.info("Set uuid " + args[0] + " to have rank of " + args[1]);
+
+        });
+
+        handler.register("setdonate", "<uuid> <level>", "Set the donateLevel of a player", args -> {
+            int newRank;
+            try{
+                newRank = Integer.parseInt(args[1]);
+            }catch(NumberFormatException e){
+                Log.info("Invalid donateLevel input '" + args[1] + "'");
+                return;
+            }
+            if(newRank < 0 || newRank > 4){
+                Log.info("Invalid donateLevel input '" + args[1] + "'");
+                return;
+            }
+
+            if(!playerDB.entries.containsKey(args[0])){
+                playerDB.loadRow(args[0]);
+                playerDB.entries.get(args[0]).put("donateLevel", newRank);
+                playerDB.saveRow(args[0]);
+            }else{
+                playerUtilMap.get(args[0]).donateLevel = newRank;
+            }
+            Log.info("Set uuid " + args[0] + " to have donateLevel of " + args[1]);
 
         });
 
@@ -733,17 +760,17 @@ public class PlagueMod extends Plugin{
                 return;
             }
             vote -= 1;
-            int vote_power = 1;
-            if(playerUtilMap.get(player.uuid).rank == 2 || playerUtilMap.get(player.uuid).rank == 3) vote_power = 2;
+            int votePower = 1;
+            if(playerUtilMap.get(player.uuid).donateLevel != 0) votePower = 2;
             if(playerMapVote.containsKey(player.uuid)){
                 int lastVote = playerMapVote.get(player.uuid);
-                mapVotes.set(lastVote, mapVotes.get(lastVote)-vote_power);
+                mapVotes.set(lastVote, mapVotes.get(lastVote)-votePower);
                 playerMapVote.put(player.uuid, vote);
-                mapVotes.set(vote, mapVotes.get(vote)+vote_power);
+                mapVotes.set(vote, mapVotes.get(vote)+votePower);
                 player.sendMessage("[accent]Changed vote from [scarlet]" + (lastVote+1) + "[accent] to [scarlet]" + (vote+1));
             }else{
                 playerMapVote.put(player.uuid, vote);
-                mapVotes.set(vote, mapVotes.get(vote)+vote_power);
+                mapVotes.set(vote, mapVotes.get(vote)+votePower);
                 player.sendMessage("[accent]You voted on map [scarlet]" + (vote+1));
             }
 
@@ -834,7 +861,7 @@ public class PlagueMod extends Plugin{
         }
         player.kill();
         playerUtilMap.get(player.uuid).infected = true;
-        if(playerUtilMap.get(player.uuid).rank == 0){
+        if(playerUtilMap.get(player.uuid).rank == 0 && playerUtilMap.get(player.uuid).donateLevel == 0){
             Call.onSetRules(player.con, plagueBanned);
         }else{
             allowCC(player);
