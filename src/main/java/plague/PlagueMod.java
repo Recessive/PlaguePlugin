@@ -497,7 +497,7 @@ public class PlagueMod extends Plugin{
 
             if(event.team == Team.blue){
                 event.tile.removeNet();
-                if(Build.validPlace(event.team, event.tile.x, event.tile.y, Blocks.spectre, 0)){ // Use spectre in place of core, as core always returns false
+                if(Build.validPlace(event.team, event.tile.x, event.tile.y, Blocks.spectre, 0) && event.breaking == false){ // Use spectre in place of core, as core always returns false
                     survivors ++;
                     // Check if the core is within 50 blocks of another core
                     final Team[] chosenTeam = {Team.all()[teams+6]};
