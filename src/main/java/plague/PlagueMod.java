@@ -256,7 +256,7 @@ public class PlagueMod extends Plugin{
             }else{
                 infected ++;
                 if(playerUtilMap.get(player.uuid).rank != 0 || playerUtilMap.get(player.uuid).donateLevel != 0){
-                    allowCC(player);
+                    allowCC(player, true);
                 }else{
                     Call.onSetRules(player.con, plagueBanned);
                 }
@@ -314,7 +314,7 @@ public class PlagueMod extends Plugin{
 
             for (Player player : playerGroup.all()) {
                 Team ply_team = player.getTeam();
-                if (ply_team != Team.derelict && ply_team.cores().isEmpty() && counter > infectTime) {
+                if (ply_team != Team.derelict && ply_team != Team.crux && ply_team.cores().isEmpty() && counter > infectTime) {
                     infect(player);
                 }
                 if (needsChanging.contains(player.uuid) && !player.dead) {
@@ -328,7 +328,7 @@ public class PlagueMod extends Plugin{
                 if(draugTime && draugCount.containsKey(ply_team) && !alreadyChecked.contains(ply_team) && state.teams.cores(ply_team).size > 0){
                     alreadyChecked.add(ply_team);
                     CoreBlock.CoreEntity teamCore = state.teams.cores(ply_team).get(0);
-                    for(int i = 0; i < draugCount.get(ply_team).size(); i++){
+                    for(int i = 0; i < draugCount.get(ply_team).size() || i < 40; i++){ // Limited draugs to 40 per team
                         Call.transferItemTo(Items.copper, 40, teamCore.x, teamCore.y, teamCore.tile);
                         Call.transferItemTo(Items.lead, 40, teamCore.x, teamCore.y, teamCore.tile);
                     }
@@ -340,7 +340,7 @@ public class PlagueMod extends Plugin{
             }
             if(counter > infectTime && counter < infectTime*2 && infected == 0 && playerGroup.all().size > 0){
                 Player player = playerGroup.all().random();
-                infect(player);
+                if(playerUtilMap.containsKey(player.uuid)) infect(player);
             }
 
             if (interval.get(timerPlagueInflux, plagueInfluxTime)){
@@ -863,19 +863,23 @@ public class PlagueMod extends Plugin{
         }
         player.kill();
         playerUtilMap.get(player.uuid).infected = true;
-        /*if(playerUtilMap.get(player.uuid).donateLevel != 0 || playerUtilMap.get(player.uuid).rank != 0){
+        if(playerUtilMap.get(player.uuid).donateLevel != 0 || playerUtilMap.get(player.uuid).rank != 0){
             allowCC(player);
         }else {
             Call.onSetRules(player.con, plagueBanned);
-        }*/
+        }
     }
 
-    void allowCC(Player player){
-        if(playerUtilMap.get(player.uuid).infected){
+    void allowCC(Player player, boolean override){
+        if(playerUtilMap.get(player.uuid).infected || override){
             Rules temp = plagueBanned.copy();
             temp.bannedBlocks.remove(Blocks.commandCenter);
             Call.onSetRules(player.con, temp);
         }
+    }
+
+    void allowCC(Player player){
+        this.allowCC(player, false);
     }
 
     void expandCreep(){
