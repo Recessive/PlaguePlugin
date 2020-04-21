@@ -31,6 +31,7 @@ import java.util.prefs.Preferences;
 
 import static java.lang.Math.random;
 import static mindustry.Vars.*;
+import static mindustry.Vars.player;
 
 class HistoryEntry {
     Player player;
@@ -140,7 +141,7 @@ public class PlagueMod extends Plugin{
         rules.reactorExplosions = false;
         rules.respawnTime = 0;
         // rules.bannedBlocks.addAll(Blocks.solarPanel, Blocks.largeSolarPanel);
-        rules.bannedBlocks.addAll(Blocks.arc);
+        rules.bannedBlocks.addAll(Blocks.arc, Blocks.melter);
         rules.bannedBlocks.addAll(Blocks.revenantFactory, Blocks.wraithFactory, Blocks.ghoulFactory);
 
         survivorBanned = rules.copy();
@@ -149,7 +150,7 @@ public class PlagueMod extends Plugin{
 
         plagueBanned = rules.copy();
         plagueBanned.bannedBlocks.add(Blocks.commandCenter); // Can't be trusted
-        plagueBanned.bannedBlocks.addAll(Blocks.duo, Blocks.scatter, Blocks.scorch, Blocks.wave, Blocks.lancer, Blocks.arc, Blocks.swarmer, Blocks.salvo,
+        plagueBanned.bannedBlocks.addAll(Blocks.duo, Blocks.scatter, Blocks.scorch, Blocks.lancer, Blocks.arc, Blocks.swarmer, Blocks.salvo,
                 Blocks.fuse, Blocks.cyclone, Blocks.spectre, Blocks.meltdown, Blocks.hail, Blocks.ripple, Blocks.shockMine);
 
         // Add power blocks to this because apparantly people don't know how to not build power blocks
@@ -254,10 +255,10 @@ public class PlagueMod extends Plugin{
                 return Team.blue;
             }else{
                 infected ++;
-                if(playerUtilMap.get(player.uuid).rank == 0 && playerUtilMap.get(player.uuid).donateLevel == 0){
-                    Call.onSetRules(player.con, plagueBanned);
-                }else{
+                if(playerUtilMap.get(player.uuid).rank != 0 || playerUtilMap.get(player.uuid).donateLevel != 0){
                     allowCC(player);
+                }else{
+                    Call.onSetRules(player.con, plagueBanned);
                 }
                 playerUtilMap.get(player.uuid).infected = true;
                 if(player.isAdmin){
@@ -412,8 +413,9 @@ public class PlagueMod extends Plugin{
                 }
 
                 if(action.player.getTeam() == Team.crux && plagueBanned.bannedBlocks.contains(action.block)
-                        && !(playerUtilMap.get(action.player.uuid).rank != 0 || playerUtilMap.get(action.player.uuid).donateLevel != 0 && action.block != null && action.block == Blocks.commandCenter)){
-                    return false;
+                        && !(playerUtilMap.get(action.player.uuid).rank != 0 && action.block != null && action.block == Blocks.commandCenter)
+                        && !(playerUtilMap.get(action.player.uuid).donateLevel != 0 && action.block != null && action.block == Blocks.commandCenter)){
+                        return false;
                 }
 
                 if(action.player.getTeam() != Team.crux && action.player.getTeam() != Team.blue && survivorBanned.bannedBlocks.contains(action.block)){
@@ -861,11 +863,11 @@ public class PlagueMod extends Plugin{
         }
         player.kill();
         playerUtilMap.get(player.uuid).infected = true;
-        if(playerUtilMap.get(player.uuid).rank == 0 && playerUtilMap.get(player.uuid).donateLevel == 0){
-            Call.onSetRules(player.con, plagueBanned);
-        }else{
+        /*if(playerUtilMap.get(player.uuid).donateLevel != 0 || playerUtilMap.get(player.uuid).rank != 0){
             allowCC(player);
-        }
+        }else {
+            Call.onSetRules(player.con, plagueBanned);
+        }*/
     }
 
     void allowCC(Player player){
