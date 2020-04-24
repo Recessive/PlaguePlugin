@@ -61,10 +61,10 @@ public class PlagueMod extends Plugin{
     private final static int infectTime = 60 * 60 * 2;
     private final static int gracePeriod = 60 * 60 * 10;
     private final static int plagueInfluxTime = 60 * 60 * 1, announcementTime = 60 * 60 * 5, survivorWarnTime = 60 * 60 * 10, draugIncomeTime = 60 * 20
-            , minuteTime = 60 * 60, creepFXTime = 60 * 10, creepSpreadTime = 60 * 10;
+            , minuteTime = 60 * 60, creepFXTime = 60 * 10, creepSpreadTime = 60 * 10, surgeCheckTime = 60 * 1;
 
     private final static int timerPlagueInflux = 0, timerAnnouncement = 1, timerSurvivorWarn = 2, timerDraugIncome = 3, timerMinute = 4
-            , timerCreepFX = 5, timerCreepSpread = 6;
+            , timerCreepFX = 5, timerCreepSpread = 6, timerCheckSurge = 7;
 
     private int lastMin;
 
@@ -104,6 +104,11 @@ public class PlagueMod extends Plugin{
     private boolean creep[][];
     private List<Tile> creepPerimeter = new ArrayList<>();
     List<String> creepStoppers = new ArrayList<>();
+    
+    private int[] survivorSurgeUnlocks = {500, 1000, 2000, 5000};
+    private int[] plagueSurgeUnlocks = {1000, 2000, 5000, 10000};
+
+    private HashMap<Team, Integer> teamSurgePoints = new HashMap<>();
 
 
     @Override
@@ -145,8 +150,7 @@ public class PlagueMod extends Plugin{
         AtomicBoolean infectCountOn = new AtomicBoolean(true);
         AtomicBoolean graceCountOn = new AtomicBoolean(true);
         AtomicBoolean graceOver = new AtomicBoolean(false);
-        List<Team> alreadyChecked = new ArrayList<>();
-
+        List<Team> draugChecked = new ArrayList<>();
 
         netServer.assigner = (player, players) -> {
             playerDB.loadRow(player.uuid);
@@ -250,6 +254,8 @@ public class PlagueMod extends Plugin{
             return true;
         });
 
+
+
         Events.on(EventType.Trigger.update, ()-> {
 
             if (counter+1 < infectTime && ((int) Math.ceil((roundTime - counter) / 60)) % 20 == 0){
@@ -285,6 +291,7 @@ public class PlagueMod extends Plugin{
             boolean alive = false;
 
             boolean draugTime = interval.get(timerDraugIncome, draugIncomeTime);
+            boolean surgeTime = interval.get(timerCheckSurge, surgeCheckTime);
 
             for (Player player : playerGroup.all()) {
                 Team ply_team = player.getTeam();
@@ -299,16 +306,39 @@ public class PlagueMod extends Plugin{
                     alive = true;
                 }
 
-                if(draugTime && draugCount.containsKey(ply_team) && !alreadyChecked.contains(ply_team) && state.teams.cores(ply_team).size > 0){
-                    alreadyChecked.add(ply_team);
+                if(surgeTime && state.teams.cores(ply_team).size > 0){
+                    int amount = state.teams.cores(ply_team).get(0).items.get(Items.surgealloy);
+                    boolean isPlague = ply_team == Team.crux;
+                    if(!teamSurgePoints.containsKey(ply_team)) teamSurgePoints.put(ply_team, 0);
+                    int p = teamSurgePoints.get(ply_team);
+                    if(isPlague){
+                        if(amount >= plagueSurgeUnlocks[p] && p < plagueSurgeUnlocks.length-1){
+                            p ++;
+                            teamSurgePoints.put(ply_team, p);
+                        }
+                    }else{
+                        if(amount >= survivorSurgeUnlocks[p] && p < survivorSurgeUnlocks.length-1){
+                            p ++;
+                            teamSurgePoints.put(ply_team, p);
+                        }
+                    }
+
+                    Call.onInfoPopup(amount + "\uF82C / " + (isPlague ? plagueSurgeUnlocks[p] : survivorSurgeUnlocks[p]) + "\uF82C", 1f, 20, 50, 20, 500, 0);
+
+                }
+
+                if(draugTime && draugCount.containsKey(ply_team) && !draugChecked.contains(ply_team) && state.teams.cores(ply_team).size > 0){
+                    draugChecked.add(ply_team);
                     CoreBlock.CoreEntity teamCore = state.teams.cores(ply_team).get(0);
                     for(int i = 0; i < draugCount.get(ply_team).size() || i < 40; i++){ // Limited draugs to 40 per team
                         Call.transferItemTo(Items.copper, 40, teamCore.x, teamCore.y, teamCore.tile);
                         Call.transferItemTo(Items.lead, 40, teamCore.x, teamCore.y, teamCore.tile);
                     }
                 }
+
+
             }
-            alreadyChecked.clear();
+            draugChecked.clear();
             if((!alive && counter > infectTime) || counter > roundTime){
                 endGame(alive);
             }
