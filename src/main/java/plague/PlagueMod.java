@@ -138,14 +138,15 @@ public class PlagueMod extends Plugin{
         Block titan = Vars.content.blocks().find(block -> block.name.equals("titan-factory"));
         Block fortress = Vars.content.blocks().find(block -> block.name.equals("fortress-factory"));
 
-
-
-
-        Core.settings.putSave("playerlimit", 0);
-
         // Disable lancer pierce:
         Block lancer = Vars.content.blocks().find(block -> block.name.equals("lancer"));
         ((ChargeTurret)(lancer)).shootType = PlagueData.getLLaser();
+
+        AtomicBoolean infectCountOn = new AtomicBoolean(true);
+        AtomicBoolean graceCountOn = new AtomicBoolean(true);
+        AtomicBoolean graceOver = new AtomicBoolean(false);
+        List<Team> alreadyChecked = new ArrayList<>();
+
 
         netServer.assigner = (player, players) -> {
             playerDB.loadRow(player.uuid);
@@ -197,11 +198,57 @@ public class PlagueMod extends Plugin{
             }
         };
 
-        AtomicBoolean infectCountOn = new AtomicBoolean(true);
-        AtomicBoolean graceCountOn = new AtomicBoolean(true);
-        AtomicBoolean graceOver = new AtomicBoolean(false);
-        List<Team> alreadyChecked = new ArrayList<>();
+        netServer.admins.addChatFilter((player, text) -> {
+            for(String swear : CurseFilter.swears){
+                text = text.replaceAll("(?i)" + swear, "");
+            }
+            return text;
+        });
 
+        netServer.admins.addActionFilter((action) -> {
+            // If server is not synced with player, server will throw "Failed to to read remote method 'onTileTapped'!" error
+
+            if(action.player != null){
+                if(creep[action.tile.x][action.tile.y] && action.player.getTeam() != Team.crux && action.type == Administration.ActionType.placeBlock) {
+                    return false;
+                }
+
+
+                if(action.player.getTeam() == Team.crux && !creep[action.tile.x][action.tile.y] && action.type == Administration.ActionType.placeBlock){
+                    return false;
+                }
+
+                if(action.player.getTeam() == Team.crux && plagueBanned.bannedBlocks.contains(action.block)
+                        && !(playerUtilMap.get(action.player.uuid).rank != 0 && action.block != null && action.block == Blocks.commandCenter)
+                        && !(playerUtilMap.get(action.player.uuid).donateLevel != 0 && action.block != null && action.block == Blocks.commandCenter)){
+                    return false;
+                }
+
+                if(action.player.getTeam() != Team.crux && action.player.getTeam() != Team.blue && survivorBanned.bannedBlocks.contains(action.block)){
+                    return false;
+                }
+
+                if(action.type == Administration.ActionType.withdrawItem){
+                    if(action.item.flammability != 0 || action.item.explosiveness != 0){
+                        return false;
+                    }
+                }
+            }
+            if(action.type == Administration.ActionType.configure && action.tile.block() == Blocks.commandCenter && action.player != null
+                    && playerUtilMap.get(action.player.uuid).rank == 0){
+                return false;
+            }
+
+            if((action.type == Administration.ActionType.breakBlock || action.type == Administration.ActionType.placeBlock) && (action.tile.block() == Blocks.powerSource || action.tile.block() == Blocks.itemSource)){
+                return false;
+            }
+            if(action.type == Administration.ActionType.configure && action.tile.block() == Blocks.powerSource && action.player != null){
+                // Call.sendMessage(action.player.name + " is mucking with the power infinite");
+                action.player.sendMessage("[accent]You just desynced yourself. Use [scarlet]/sync[accent] to resync");
+                return false;
+            }
+            return true;
+        });
 
         Events.on(EventType.Trigger.update, ()-> {
 
@@ -317,58 +364,6 @@ public class PlagueMod extends Plugin{
             }
             counter += Time.delta();
             lastMin = (int) Math.ceil((roundTime - counter) / 60 / 60);
-        });
-
-        netServer.admins.addChatFilter((player, text) -> {
-            for(String swear : CurseFilter.swears){
-                text = text.replaceAll("(?i)" + swear, "");
-            }
-            return text;
-        });
-
-        netServer.admins.addActionFilter((action) -> {
-            // If server is not synced with player, server will throw "Failed to to read remote method 'onTileTapped'!" error
-
-            if(action.player != null){
-                if(creep[action.tile.x][action.tile.y] && action.player.getTeam() != Team.crux && action.type == Administration.ActionType.placeBlock) {
-                    return false;
-                }
-
-
-                if(action.player.getTeam() == Team.crux && !creep[action.tile.x][action.tile.y] && action.type == Administration.ActionType.placeBlock){
-                    return false;
-                }
-
-                if(action.player.getTeam() == Team.crux && plagueBanned.bannedBlocks.contains(action.block)
-                        && !(playerUtilMap.get(action.player.uuid).rank != 0 && action.block != null && action.block == Blocks.commandCenter)
-                        && !(playerUtilMap.get(action.player.uuid).donateLevel != 0 && action.block != null && action.block == Blocks.commandCenter)){
-                        return false;
-                }
-
-                if(action.player.getTeam() != Team.crux && action.player.getTeam() != Team.blue && survivorBanned.bannedBlocks.contains(action.block)){
-                    return false;
-                }
-
-                if(action.type == Administration.ActionType.withdrawItem){
-                   if(action.item.flammability != 0 || action.item.explosiveness != 0){
-                       return false;
-                   }
-                }
-            }
-            if(action.type == Administration.ActionType.configure && action.tile.block() == Blocks.commandCenter && action.player != null
-                    && playerUtilMap.get(action.player.uuid).rank == 0){
-                return false;
-            }
-
-            if((action.type == Administration.ActionType.breakBlock || action.type == Administration.ActionType.placeBlock) && (action.tile.block() == Blocks.powerSource || action.tile.block() == Blocks.itemSource)){
-                return false;
-            }
-            if(action.type == Administration.ActionType.configure && action.tile.block() == Blocks.powerSource && action.player != null){
-                // Call.sendMessage(action.player.name + " is mucking with the power infinite");
-                action.player.sendMessage("[accent]You just desynced yourself. Use [scarlet]/sync[accent] to resync");
-                return false;
-            }
-            return true;
         });
 
         Events.on(EventType.PlayerConnect.class, event -> {
