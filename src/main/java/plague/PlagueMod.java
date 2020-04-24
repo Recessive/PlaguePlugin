@@ -8,6 +8,7 @@ import arc.graphics.Color;
 import arc.math.*;
 import arc.struct.*;
 import arc.util.*;
+import arc.util.Timer;
 import mindustry.Vars;
 import mindustry.content.*;
 import mindustry.core.GameState.*;
@@ -33,20 +34,7 @@ import static java.lang.Math.random;
 import static mindustry.Vars.*;
 import static mindustry.Vars.player;
 
-class HistoryEntry {
-    Player player;
-    Block block;
-    boolean breaking;
-
-    public HistoryEntry(Player player, Block block, boolean breaking) {
-        this.player = player;
-        this.block = block;
-        this.breaking = breaking;
-    }
-}
-
 public class PlagueMod extends Plugin{
-    private Deque<HistoryEntry>[][] history;
 
     public int teams = 0;
     public int infected = 0;
@@ -144,74 +132,13 @@ public class PlagueMod extends Plugin{
         rules.bannedBlocks.addAll(Blocks.arc, Blocks.melter);
         rules.bannedBlocks.addAll(Blocks.revenantFactory, Blocks.wraithFactory, Blocks.ghoulFactory);
 
-        survivorBanned = rules.copy();
-        survivorBanned.bannedBlocks.addAll(Blocks.commandCenter, Blocks.wraithFactory, Blocks.ghoulFactory, Blocks.revenantFactory, Blocks.daggerFactory,
-                Blocks.crawlerFactory, Blocks.titanFactory, Blocks.fortressFactory);
-
-        plagueBanned = rules.copy();
-        plagueBanned.bannedBlocks.add(Blocks.commandCenter); // Can't be trusted
-        plagueBanned.bannedBlocks.addAll(Blocks.duo, Blocks.scatter, Blocks.scorch, Blocks.lancer, Blocks.arc, Blocks.swarmer, Blocks.salvo,
-                Blocks.fuse, Blocks.cyclone, Blocks.spectre, Blocks.meltdown, Blocks.hail, Blocks.ripple, Blocks.shockMine);
-
-        // Add power blocks to this because apparantly people don't know how to not build power blocks
-
-        plagueBanned.bannedBlocks.addAll(Blocks.battery, Blocks.batteryLarge, Blocks.combustionGenerator, Blocks.thermalGenerator,
-                Blocks.turbineGenerator, Blocks.differentialGenerator, Blocks.rtgGenerator, Blocks.solarPanel, Blocks.largeSolarPanel,
-                Blocks.thoriumReactor, Blocks.impactReactor);
-
-        plagueBanned.bannedBlocks.addAll(Blocks.surgeWall, Blocks.surgeWallLarge, Blocks.thoriumWall, Blocks.thoriumWallLarge, Blocks.phaseWall,
-            Blocks.phaseWallLarge, Blocks.titaniumWall, Blocks.titaniumWallLarge, Blocks.copperWallLarge, Blocks.copperWall, Blocks.door,
-                Blocks.doorLarge, Blocks.plastaniumWall, Blocks.plastaniumWallLarge);
-
-        plagueBanned.bannedBlocks.addAll(Blocks.mendProjector);
-        plagueBanned.bannedBlocks.addAll(Blocks.glaivePad);
-
-        Blocks.powerSource.health = Integer.MAX_VALUE;
-
-        // Blocks.coreFoundation.unloadable = false;
-
-        Block drauge = Vars.content.blocks().find(block -> block.name.equals("draug-factory"));
-        ((UnitFactory)(drauge)).maxSpawn = 0; // Should always be 0
-
-
+        init_rules();
         Block dagger = Vars.content.blocks().find(block -> block.name.equals("dagger-factory"));
-        ((UnitFactory)(dagger)).unitType = UnitTypes.fortress;
-        ((UnitFactory)(dagger)).maxSpawn = 0; // 1
-
         Block crawler = Vars.content.blocks().find(block -> block.name.equals("crawler-factory"));
-        //((UnitFactory)(crawler)).unitType = UnitTypes.titan;
-        ((UnitFactory)(crawler)).maxSpawn = 0; // 1
-
         Block titan = Vars.content.blocks().find(block -> block.name.equals("titan-factory"));
-        ((UnitFactory)(titan)).unitType = UnitTypes.eruptor;
-        ((UnitFactory)(titan)).maxSpawn = 0; // 4
-
-        UnitTypes.eruptor.health *= 2;
-
         Block fortress = Vars.content.blocks().find(block -> block.name.equals("fortress-factory"));
-        ((UnitFactory)(fortress)).unitType = UnitTypes.chaosArray;
-        ((UnitFactory)(fortress)).produceTime *= 2;
-        ((UnitFactory)(fortress)).maxSpawn = 0; // 1
 
-        // Disable slag flammability to prevent griefing
-        Liquids.slag.flammability = 0;
-        Liquids.slag.explosiveness = 0;
 
-        UnitTypes.chaosArray.weapon = PlagueData.nerfedChaos();
-
-        Blocks.phaseWall.health /= 2;
-        Blocks.phaseWallLarge.health /= 2;
-
-        // Update phase wall to only deflect 50% of the time
-        /*Block phaseSmall = Vars.content.blocks().find(block -> block.name.equals("phase-wall"));
-        Vars.content.blocks().remove(phaseSmall);
-        phaseSmall = PlagueData.newPhaseSmall();
-        Vars.content.blocks().add(phaseSmall);*/
-
-        /*Block phaseLarge = Vars.content.blocks().find(block -> block.name.equals("phase-wall-large"));
-        Vars.content.blocks().remove(phaseLarge);
-        phaseLarge = PlagueData.newPhaseLarge();
-        Vars.content.blocks().add(phaseLarge);*/
 
 
         Core.settings.putSave("playerlimit", 0);
@@ -545,23 +472,6 @@ public class PlagueMod extends Plugin{
             }
         });
 
-        Events.on(EventType.WorldLoadEvent.class, worldLoadEvent -> {
-            history = new ArrayDeque[Vars.world.width()][Vars.world.height()];
-
-            for(int x = 0; x < Vars.world.width(); x++){
-                for(int y = 0; y < Vars.world.height(); y++){
-                    history[x][y] = new ArrayDeque<HistoryEntry>();
-                }
-            }
-        });
-
-        Events.on(EventType.BlockBuildEndEvent.class, blockBuildEndEvent -> {
-            HistoryEntry historyEntry = new HistoryEntry(blockBuildEndEvent.player, blockBuildEndEvent.tile.block(), blockBuildEndEvent.breaking);
-
-            Deque<HistoryEntry> tileHistory = this.history[blockBuildEndEvent.tile.x][blockBuildEndEvent.tile.y];
-            if(tileHistory.size() > 10) tileHistory.removeFirst();
-            tileHistory.add(historyEntry);
-        });
     }
 
     @Override
@@ -576,7 +486,7 @@ public class PlagueMod extends Plugin{
             int currMap = prefs.getInt("mapchoice",0);
             prefs.putInt("mapchoice", 0); // This is just backup so the server reverts to patient zero if a map crashes
             Log.info("Map choice: " + currMap);
-            //currMap = 15;
+            // currMap = 7;
 
             List<Integer> allMaps = new ArrayList<>();
 
@@ -826,19 +736,78 @@ public class PlagueMod extends Plugin{
                 player.sendMessage("[accent]You do not have the required permissions to run this command");
             }
         });
-        
-        handler.<Player>register("history", "", "Display history of this tile", (args, player) -> {
-            Deque<HistoryEntry> tileHistory = this.history[player.tileX()][player.tileY()];
 
-            player.sendMessage("[royal]History of tile (" + player.tileX() + "|" + player.tileY() + "):");
-            for (HistoryEntry historyEntry : tileHistory) {
-                if(historyEntry.breaking) {
-                    player.sendMessage(filterColor(historyEntry.player.name, "[scarlet]") + "[white] broke this block" + " (uuid: [scarlet]" + historyEntry.player.uuid +"[white])");
-                } else {
-                    player.sendMessage(filterColor(historyEntry.player.name, "[scarlet]") + "[white] placed a " + historyEntry.block + " (uuid: [scarlet]" + historyEntry.player.uuid +"[white])");
-                }
-            }
-        });
+    }
+
+    void init_rules(){
+        survivorBanned = rules.copy();
+        survivorBanned.bannedBlocks.addAll(Blocks.commandCenter, Blocks.wraithFactory, Blocks.ghoulFactory, Blocks.revenantFactory, Blocks.daggerFactory,
+                Blocks.crawlerFactory, Blocks.titanFactory, Blocks.fortressFactory);
+
+        plagueBanned = rules.copy();
+        plagueBanned.bannedBlocks.add(Blocks.commandCenter); // Can't be trusted
+        plagueBanned.bannedBlocks.addAll(Blocks.duo, Blocks.scatter, Blocks.scorch, Blocks.lancer, Blocks.arc, Blocks.swarmer, Blocks.salvo,
+                Blocks.fuse, Blocks.cyclone, Blocks.spectre, Blocks.meltdown, Blocks.hail, Blocks.ripple, Blocks.shockMine);
+
+        // Add power blocks to this because apparantly people don't know how to not build power blocks
+
+        plagueBanned.bannedBlocks.addAll(Blocks.battery, Blocks.batteryLarge, Blocks.combustionGenerator, Blocks.thermalGenerator,
+                Blocks.turbineGenerator, Blocks.differentialGenerator, Blocks.rtgGenerator, Blocks.solarPanel, Blocks.largeSolarPanel,
+                Blocks.thoriumReactor, Blocks.impactReactor);
+
+        plagueBanned.bannedBlocks.addAll(Blocks.surgeWall, Blocks.surgeWallLarge, Blocks.thoriumWall, Blocks.thoriumWallLarge, Blocks.phaseWall,
+                Blocks.phaseWallLarge, Blocks.titaniumWall, Blocks.titaniumWallLarge, Blocks.copperWallLarge, Blocks.copperWall, Blocks.door,
+                Blocks.doorLarge, Blocks.plastaniumWall, Blocks.plastaniumWallLarge);
+
+        plagueBanned.bannedBlocks.addAll(Blocks.mendProjector);
+        plagueBanned.bannedBlocks.addAll(Blocks.glaivePad);
+
+        Blocks.powerSource.health = Integer.MAX_VALUE;
+
+        // Blocks.coreFoundation.unloadable = false;
+
+        Block drauge = Vars.content.blocks().find(block -> block.name.equals("draug-factory"));
+        ((UnitFactory)(drauge)).maxSpawn = 0; // Should always be 0
+
+
+        Block dagger = Vars.content.blocks().find(block -> block.name.equals("dagger-factory"));
+        ((UnitFactory)(dagger)).unitType = UnitTypes.fortress;
+        ((UnitFactory)(dagger)).maxSpawn = 0; // 1
+
+        Block crawler = Vars.content.blocks().find(block -> block.name.equals("crawler-factory"));
+        //((UnitFactory)(crawler)).unitType = UnitTypes.titan;
+        ((UnitFactory)(crawler)).maxSpawn = 0; // 1
+
+        Block titan = Vars.content.blocks().find(block -> block.name.equals("titan-factory"));
+        ((UnitFactory)(titan)).unitType = UnitTypes.eruptor;
+        ((UnitFactory)(titan)).maxSpawn = 0; // 4
+
+        UnitTypes.eruptor.health *= 2;
+
+        Block fortress = Vars.content.blocks().find(block -> block.name.equals("fortress-factory"));
+        ((UnitFactory)(fortress)).unitType = UnitTypes.chaosArray;
+        ((UnitFactory)(fortress)).produceTime *= 2;
+        ((UnitFactory)(fortress)).maxSpawn = 0; // 1
+
+        // Disable slag flammability to prevent griefing
+        Liquids.slag.flammability = 0;
+        Liquids.slag.explosiveness = 0;
+
+        UnitTypes.chaosArray.weapon = PlagueData.nerfedChaos();
+
+        Blocks.phaseWall.health /= 2;
+        Blocks.phaseWallLarge.health /= 2;
+
+        // Update phase wall to only deflect 50% of the time
+        /*Block phaseSmall = Vars.content.blocks().find(block -> block.name.equals("phase-wall"));
+        Vars.content.blocks().remove(phaseSmall);
+        phaseSmall = PlagueData.newPhaseSmall();
+        Vars.content.blocks().add(phaseSmall);*/
+
+        /*Block phaseLarge = Vars.content.blocks().find(block -> block.name.equals("phase-wall-large"));
+        Vars.content.blocks().remove(phaseLarge);
+        phaseLarge = PlagueData.newPhaseLarge();
+        Vars.content.blocks().add(phaseLarge);*/
     }
 
     int teamSize(Team t){
