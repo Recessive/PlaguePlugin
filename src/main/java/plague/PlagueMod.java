@@ -58,8 +58,8 @@ public class PlagueMod extends Plugin{
     //in ticks: 60 minutes: 60 * 60 * 60
     private int roundTime = 60 * 60 * 40;
     //in ticks: 30 seconds
+    private int escapeTicksLeft = 60 * 60 * 10;
     private final static int infectTime = 60 * 60 * 2;
-    private final static int gracePeriod = 60 * 60 * 10;
     private final static int plagueInfluxTime = 60 * 60 * 1, announcementTime = 60 * 60 * 5, survivorWarnTime = 60 * 60 * 10, draugIncomeTime = 60 * 20
             , minuteTime = 60 * 60, creepFXTime = 60 * 10, creepSpreadTime = 60 * 10, surgeCheckTime = 60 * 1;
 
@@ -91,6 +91,7 @@ public class PlagueMod extends Plugin{
     private List<String> needsChanging = new ArrayList<>();
 
     private HashMap<Team, List<Tile>> draugCount = new HashMap<Team, List<Tile>>();
+    private List<Tile> eradTiles = new ArrayList<>();
     private static final int voteSize = 5;
     private List<String> mapList = new ArrayList<>();
     private List<Integer> votableMaps = new ArrayList<>();
@@ -106,19 +107,24 @@ public class PlagueMod extends Plugin{
     List<String> creepStoppers = new ArrayList<>();
     
     private int[] survivorSurgeUnlocks = {500, 1000, 2500, 5000};
-    private int[] plagueSurgeUnlocks = {500, 1000, 2500, 10000};
+    private int[] plagueSurgeUnlocks = {500, 1000, 2500, 5000, 10000, 10000, 10000, 10000, 10000};
+
 
     private HashMap<Team, Integer> teamSurgePoints = new HashMap<>();
+    private int plagueEradCap = 0;
+    private int plagueErads = 0;
 
+    private boolean escaping = false;
 
     @Override
     public void init(){
+        plagueSurgeUnlocks = new int[]{10, 10, 10, 10, 10, 10, 10, 10, 10};
         playerDB.connect("data/server_data.db");
         creepStoppers.addAll(Arrays.asList(Blocks.thoriumWall.name, Blocks.thoriumWallLarge.name, Blocks.plastaniumWall.name, Blocks.plastaniumWallLarge.name,
                 Blocks.phaseWall.name, Blocks.phaseWallLarge.name, Blocks.surgeWall.name, Blocks.surgeWallLarge.name, Blocks.titaniumWall.name,
                 Blocks.titaniumWallLarge.name));
 
-    	loadouts.add(ItemStack.list(Items.copper, 25000, Items.lead, 25000, Items.graphite, 8000, Items.silicon, 8000, Items.titanium, 10000, Items.metaglass, 500, Items.surgealloy, 15));
+    	loadouts.add(ItemStack.list(Items.copper, 25000, Items.lead, 25000, Items.graphite, 8000, Items.silicon, 8000, Items.titanium, 10000, Items.metaglass, 500));
     	loadouts.add(ItemStack.list(Items.titanium, 1000, Items.graphite, 400, Items.silicon, 400));
         rules.pvp = !true;
         rules.tags.put("plague", "true");
@@ -139,19 +145,12 @@ public class PlagueMod extends Plugin{
         rules.bannedBlocks.addAll(Blocks.wraithFactory, Blocks.ghoulFactory);
 
         init_rules();
-        Block dagger = Vars.content.blocks().find(block -> block.name.equals("dagger-factory"));
-        Block crawler = Vars.content.blocks().find(block -> block.name.equals("crawler-factory"));
-        Block titan = Vars.content.blocks().find(block -> block.name.equals("titan-factory"));
-        Block fortress = Vars.content.blocks().find(block -> block.name.equals("fortress-factory"));
 
         // Disable lancer pierce:
         Block lancer = Vars.content.blocks().find(block -> block.name.equals("lancer"));
         ((ChargeTurret)(lancer)).shootType = PlagueData.getLLaser();
 
-        AtomicBoolean infectCountOn = new AtomicBoolean(true);
-        AtomicBoolean graceCountOn = new AtomicBoolean(true);
-        AtomicBoolean graceOver = new AtomicBoolean(false);
-        List<Team> draugChecked = new ArrayList<>();
+
 
         netServer.assigner = (player, players) -> {
             playerDB.loadRow(player.uuid);
@@ -242,17 +241,19 @@ public class PlagueMod extends Plugin{
                 CoreBlock.CoreEntity nearestCore = state.teams.closestCore(action.tile.x, action.tile.y, action.player.getTeam());
                 if(action.block != null && action.block == Blocks.unloader &&
                         cartesianDistance(action.tile.x, action.tile.y, nearestCore.tileX(), nearestCore.tileY()) < 8){
-                    action.player.sendMessage("Unloaders can not be placed near cores.");
+                    action.player.sendMessage("[scarlet]Unloaders [accent]can not be placed near cores.");
                     return false;
                 }
 
+                if(action.type == Administration.ActionType.configure && action.block == Blocks.commandCenter
+                        && playerUtilMap.get(action.player.uuid).rank == 0 && playerUtilMap.get(action.player.uuid).donateLevel == 0){
+                    return false;
+                }
             }
-            if(action.type == Administration.ActionType.configure && action.tile.block() == Blocks.commandCenter && action.player != null
-                    && playerUtilMap.get(action.player.uuid).rank == 0 && playerUtilMap.get(action.player.uuid).donateLevel == 0){
+
+            if(action.type == Administration.ActionType.placeBlock && action.block == Blocks.revenantFactory && plagueErads >= plagueEradCap){
                 return false;
             }
-
-
 
 
 
@@ -268,7 +269,9 @@ public class PlagueMod extends Plugin{
         });
 
 
-
+        AtomicBoolean infectCountOn = new AtomicBoolean(true);
+        AtomicBoolean escapeCountOn = new AtomicBoolean(true);
+        List<Team> draugChecked = new ArrayList<>();
         Events.on(EventType.Trigger.update, ()-> {
 
             if (counter+1 < infectTime && ((int) Math.ceil(counter / 60)-1) % 20 == 0){
@@ -280,27 +283,18 @@ public class PlagueMod extends Plugin{
                 infectCountOn.set(true);
             }
 
-            if (counter+1 < gracePeriod && counter+1 > infectTime && ((int) Math.ceil(counter/ 60)-1) % 60 == 0){
-                if(graceCountOn.get()){
-                    Call.sendMessage("[accent]Grace period ends in [scarlet]" + (int) Math.ceil((gracePeriod - counter) / 60 / 60) + " [accent]minutes.");
-                    graceCountOn.set(false);
+            if(escaping) escapeTicksLeft -= 1;
+
+            if(!restarting && escaping && escapeTicksLeft/60 < 11 && escapeTicksLeft % 60 == 0){
+                Call.sendMessage("[scarlet]" + escapeTicksLeft/60);
+            }
+
+            if (!restarting && escaping && escapeTicksLeft % (60*60) == 0 && escapeTicksLeft > 1){
+                    int min = escapeTicksLeft / 60 / 60;
+                    Call.sendMessage("[scarlet]" + min + "[accent]" + (min > 1 ? " minutes" : " minute") + " until the [lime]Survivors [accent] escape!");
                 }
-            }else{
-                graceCountOn.set(true);
-            }
 
-            if(counter+1 > gracePeriod && !graceOver.get()){
-                Call.sendMessage("[accent]Grace period has expired");
-                graceOver.set(true);
-                ((UnitFactory)(dagger)).maxSpawn = 1; // 1
-                ((UnitFactory)(crawler)).maxSpawn = 1; // 1
-                ((UnitFactory)(titan)).maxSpawn = 4; // 4
-                ((UnitFactory)(fortress)).maxSpawn = 1; // 1
-            }
 
-            if (interval.get(timerSurvivorWarn, survivorWarnTime)) {
-                if(lastMin != 0) Call.sendMessage("[olive]Survivors[accent] must survive [scarlet]" + lastMin + "[accent] more minutes to win");
-            }
             boolean alive = false;
 
             boolean draugTime = interval.get(timerDraugIncome, draugIncomeTime);
@@ -325,8 +319,9 @@ public class PlagueMod extends Plugin{
                     if(!teamSurgePoints.containsKey(ply_team)) teamSurgePoints.put(ply_team, 0);
                     int p = teamSurgePoints.get(ply_team);
                     if(isPlague){
-                        if(p < survivorSurgeUnlocks.length && amount >= plagueSurgeUnlocks[p]){
+                        if(p < plagueSurgeUnlocks.length && amount >= plagueSurgeUnlocks[p]){
                             state.teams.cores(ply_team).get(0).items.remove(Items.surgealloy, plagueSurgeUnlocks[p]);
+                            amount -= plagueSurgeUnlocks[p];
                             p ++;
                             teamSurgePoints.put(ply_team, p);
                             plagueUnlock(p);
@@ -334,6 +329,7 @@ public class PlagueMod extends Plugin{
                     }else{
                         if(p < survivorSurgeUnlocks.length && amount >= survivorSurgeUnlocks[p]){
                             state.teams.cores(ply_team).get(0).items.remove(Items.surgealloy, survivorSurgeUnlocks[p]);
+                            amount -= survivorSurgeUnlocks[p];
                             p ++;
                             teamSurgePoints.put(ply_team, p);
                             survivorUnlock(p);
@@ -355,10 +351,9 @@ public class PlagueMod extends Plugin{
                     }
                 }
 
-
             }
             draugChecked.clear();
-            if((!alive && counter > infectTime) || counter > roundTime){
+            if((!alive && counter > infectTime) || escapeTicksLeft < 0){
                 endGame(alive);
             }
             if(counter > infectTime && counter < infectTime*2 && infected == 0 && playerGroup.all().size > 0){
@@ -379,15 +374,6 @@ public class PlagueMod extends Plugin{
                 announcementIndex = (announcementIndex + 1) % announcements.length;
             }
 
-            /*for(int x = 0; x < world.width(); x++){
-                for(int y = 0; y < world.height(); y++){
-                    if(creep[x][y] && random() > 0.9999){// && dist+1 >= world.height()/4){
-                        Call.onEffectReliable(Fx.fire, x*tilesize, y*tilesize, 0, Color.green);
-                    }
-                }
-            }*/
-
-
             if (interval.get(timerCreepSpread, creepSpreadTime)){
                 expandCreep();
                 int n = 0;
@@ -397,8 +383,6 @@ public class PlagueMod extends Plugin{
                     Call.onEffectReliable(Fx.heal, t.x*tilesize, t.y*tilesize, 0, Color.green);
                 }
             }
-
-
 
             if (interval.get(timerMinute, minuteTime)) {
                 for(Player player : playerGroup.all()){
@@ -466,9 +450,14 @@ public class PlagueMod extends Plugin{
                 draugCount.get(event.team).remove(event.tile);
             }
 
+            if(event.breaking && eradTiles.contains(event.tile)){
+                eradTiles.remove(event.tile);
+                plagueErads -= 1;
+            }
+
             if(event.team == Team.blue){
                 event.tile.removeNet();
-                if(Build.validPlace(event.team, event.tile.x, event.tile.y, Blocks.spectre, 0) && event.breaking == false){ // Use spectre in place of core, as core always returns false
+                if(Build.validPlace(event.team, event.tile.x, event.tile.y, Blocks.spectre, 0) && !event.breaking){ // Use spectre in place of core, as core always returns false
                     survivors ++;
                     // Check if the core is within 50 blocks of another core
                     final Team[] chosenTeam = {Team.all()[teams+6]};
@@ -513,6 +502,10 @@ public class PlagueMod extends Plugin{
                 }else{
                     draugCount.put(event.team, new LinkedList<>(Arrays.asList(event.tile)));
                 }
+            }
+            if(event.tile.block() == Blocks.revenantFactory){
+                plagueErads += 1;
+                eradTiles.add(event.tile);
             }
         });
 
@@ -733,7 +726,7 @@ public class PlagueMod extends Plugin{
         });
 
         handler.<Player>register("time", "Display the time left", (args, player) -> {
-            player.sendMessage(String.valueOf("[scarlet]" + lastMin + "[lightgray] mins. remaining"));
+            player.sendMessage("Plague no longer has a time limit");
         });
 
         handler.<Player>register("enemies", "List enemies", (args, player) -> {
@@ -762,10 +755,8 @@ public class PlagueMod extends Plugin{
 
         });
 
-        handler.<Player>register("mechspeed", "List the mech speed to verify that aint the issue", (args, player) -> {
-            for(int i = 0; i < content.units().size; i++){
-                player.sendMessage(content.units().get(i).name + ": " + content.units().get(i).speed);
-            }
+        handler.<Player>register("erads", "Show the current plague erad count and cap", (args, player) -> {
+            player.sendMessage(plagueErads + " / " + plagueEradCap);
 
         });
 
@@ -780,6 +771,7 @@ public class PlagueMod extends Plugin{
     }
 
     void init_rules(){
+
         survivorBanned = rules.copy();
         survivorBanned.bannedBlocks.addAll(Blocks.commandCenter, Blocks.wraithFactory, Blocks.ghoulFactory, Blocks.revenantFactory, Blocks.daggerFactory,
                 Blocks.crawlerFactory, Blocks.titanFactory, Blocks.fortressFactory);
@@ -808,7 +800,7 @@ public class PlagueMod extends Plugin{
 
         // The below are blocks that can be unlocked with surge
 
-        plagueBanned.bannedBlocks.addAll(Blocks.daggerFactory, Blocks.titanFactory, Blocks.fortressFactory, Blocks.revenantFactory);
+        plagueBanned.bannedBlocks.addAll(Blocks.crawlerFactory, Blocks.daggerFactory, Blocks.titanFactory, Blocks.fortressFactory, Blocks.revenantFactory);
 
         Blocks.powerSource.health = Integer.MAX_VALUE;
 
@@ -818,22 +810,27 @@ public class PlagueMod extends Plugin{
 
         Block dagger = Vars.content.blocks().find(block -> block.name.equals("dagger-factory"));
         ((UnitFactory)(dagger)).unitType = UnitTypes.fortress;
-        ((UnitFactory)(dagger)).maxSpawn = 0; // 1
+        ((UnitFactory)(dagger)).maxSpawn = 1; // 1
 
         Block crawler = Vars.content.blocks().find(block -> block.name.equals("crawler-factory"));
-        //((UnitFactory)(crawler)).unitType = UnitTypes.titan;
-        ((UnitFactory)(crawler)).maxSpawn = 0; // 1
+        ((UnitFactory)(crawler)).unitType = UnitTypes.dagger;
+        ((UnitFactory)(crawler)).maxSpawn = 2; // 2
 
         Block titan = Vars.content.blocks().find(block -> block.name.equals("titan-factory"));
         ((UnitFactory)(titan)).unitType = UnitTypes.eruptor;
-        ((UnitFactory)(titan)).maxSpawn = 0; // 4
+        ((UnitFactory)(titan)).maxSpawn = 2; // 2
 
         UnitTypes.eruptor.health *= 2;
 
         Block fortress = Vars.content.blocks().find(block -> block.name.equals("fortress-factory"));
         ((UnitFactory)(fortress)).unitType = UnitTypes.chaosArray;
         ((UnitFactory)(fortress)).produceTime *= 2;
-        ((UnitFactory)(fortress)).maxSpawn = 0; // 1
+        ((UnitFactory)(fortress)).maxSpawn = 1; // 1
+
+        Block rev = Vars.content.blocks().find(block -> block.name.equals("revenant-factory"));
+        ((UnitFactory)(rev)).unitType = UnitTypes.eradicator;
+        ((UnitFactory)(rev)).produceTime = 1;
+        ((UnitFactory)(rev)).maxSpawn = 1; // 1
 
         // Disable slag flammability to prevent griefing
         Liquids.slag.flammability = 0;
@@ -867,23 +864,30 @@ public class PlagueMod extends Plugin{
 
     void plagueUnlock(int level){
         if(level == 1){
-            plagueBanned.bannedBlocks.remove(Blocks.daggerFactory);
+            plagueBanned.bannedBlocks.remove(Blocks.crawlerFactory);
         }
         if(level == 2){
-            plagueBanned.bannedBlocks.remove(Blocks.titanFactory);
+            plagueBanned.bannedBlocks.remove(Blocks.daggerFactory);
         }
         if(level == 3){
-            plagueBanned.bannedBlocks.remove(Blocks.fortressFactory);
+            plagueBanned.bannedBlocks.remove(Blocks.titanFactory);
         }
         if(level == 4){
+            plagueBanned.bannedBlocks.remove(Blocks.fortressFactory);
+        }
+        if(level == 5){
+            Call.sendMessage("[accent]The ground rumbles as the [scarlet]Plague [accent]unearths something unholy[white] \uF84D");
             plagueBanned.bannedBlocks.remove(Blocks.revenantFactory);
+            plagueEradCap = 1;
+        }
+        if(level > 5){
+            plagueEradCap += 1;
         }
 
 
 
         for(Player ply : playerGroup.all()){
             CustomPlayer p = playerUtilMap.get(ply.uuid);
-            Log.info(p);
             if(p == null) continue;
             if(!p.infected) continue;
             if(p.rank == 0 && p.donateLevel == 0){
@@ -895,7 +899,30 @@ public class PlagueMod extends Plugin{
     }
 
     void survivorUnlock(int level){
+        if(level == 1){
+            survivorBanned.bannedBlocks.remove(Blocks.thoriumWall);
+            survivorBanned.bannedBlocks.remove(Blocks.thoriumWallLarge);
+            survivorBanned.bannedBlocks.remove(Blocks.plastaniumWall);
+            survivorBanned.bannedBlocks.remove(Blocks.plastaniumWallLarge);
+        }
+        if(level == 2){
+            survivorBanned.bannedBlocks.remove(Blocks.mendProjector);
+        }
+        if(level == 3){
+            survivorBanned.bannedBlocks.remove(Blocks.spectre);
+            survivorBanned.bannedBlocks.remove(Blocks.meltdown);
+        }
+        if(level == 4){
+            escaping = true;
+            Call.onInfoMessage("[accent]A group of [green]Survivors[accent] have collected enough surge to escape the planet!\n[white]The [green]Survivors [white]must survive just [scarlet]" + (escapeTicksLeft/60/60) + " [white]more minutes while their rocket launches!");
+        }
 
+        for(Player ply : playerGroup.all()){
+            CustomPlayer p = playerUtilMap.get(ply.uuid);
+            if(p == null) continue;
+            if(p.infected) continue;
+            Call.onSetRules(ply.con, survivorBanned);
+        }
     }
 
     int teamSize(Team t){
