@@ -106,7 +106,7 @@ public class PlagueMod extends Plugin{
     List<String> creepStoppers = new ArrayList<>();
     
     private int[] survivorSurgeUnlocks = {500, 1000, 2500, 5000};
-    private int[] plagueSurgeUnlocks = {1000, 2000, 5000, 10000};
+    private int[] plagueSurgeUnlocks = {500, 1000, 2500, 10000};
 
     private HashMap<Team, Integer> teamSurgePoints = new HashMap<>();
 
@@ -271,7 +271,7 @@ public class PlagueMod extends Plugin{
 
         Events.on(EventType.Trigger.update, ()-> {
 
-            if (counter+1 < infectTime && ((int) Math.ceil((roundTime - counter) / 60)) % 20 == 0){
+            if (counter+1 < infectTime && ((int) Math.ceil(counter / 60)-1) % 20 == 0){
                 if(infectCountOn.get()){
                     Call.sendMessage("[accent]You have [scarlet]" + (int) Math.ceil((infectTime - counter) / 60) + " [accent]seconds left to place a core. Place any block to place a core.");
                     infectCountOn.set(false);
@@ -280,7 +280,7 @@ public class PlagueMod extends Plugin{
                 infectCountOn.set(true);
             }
 
-            if (counter+1 < gracePeriod && counter+1 > infectTime && ((int) Math.ceil((roundTime - counter) / 60)) % 60 == 0){
+            if (counter+1 < gracePeriod && counter+1 > infectTime && ((int) Math.ceil(counter/ 60)-1) % 60 == 0){
                 if(graceCountOn.get()){
                     Call.sendMessage("[accent]Grace period ends in [scarlet]" + (int) Math.ceil((gracePeriod - counter) / 60 / 60) + " [accent]minutes.");
                     graceCountOn.set(false);
@@ -325,23 +325,25 @@ public class PlagueMod extends Plugin{
                     if(!teamSurgePoints.containsKey(ply_team)) teamSurgePoints.put(ply_team, 0);
                     int p = teamSurgePoints.get(ply_team);
                     if(isPlague){
-                        if(amount >= plagueSurgeUnlocks[p] && p < plagueSurgeUnlocks.length-1){
+                        if(p < survivorSurgeUnlocks.length && amount >= plagueSurgeUnlocks[p]){
                             state.teams.cores(ply_team).get(0).items.remove(Items.surgealloy, plagueSurgeUnlocks[p]);
                             p ++;
                             teamSurgePoints.put(ply_team, p);
                             plagueUnlock(p);
                         }
                     }else{
-                        if(amount >= survivorSurgeUnlocks[p] && p < survivorSurgeUnlocks.length-1){
+                        if(p < survivorSurgeUnlocks.length && amount >= survivorSurgeUnlocks[p]){
                             state.teams.cores(ply_team).get(0).items.remove(Items.surgealloy, survivorSurgeUnlocks[p]);
                             p ++;
                             teamSurgePoints.put(ply_team, p);
                             survivorUnlock(p);
                         }
                     }
-
-                    Call.onInfoPopup(player.con,amount + "\uF82C / " + (isPlague ? plagueSurgeUnlocks[p] : survivorSurgeUnlocks[p]) + "\uF82C", 1f, 20, 50, 20, 450, 0);
-
+                    if((isPlague && p < plagueSurgeUnlocks.length) || (!isPlague && p < survivorSurgeUnlocks.length)){
+                        Call.onInfoPopup(player.con,amount + "\uF82C / " + (isPlague ? plagueSurgeUnlocks[p] : survivorSurgeUnlocks[p]) + "\uF82C", 1f, 20, 50, 20, 450, 0);
+                    }else{
+                        Call.onInfoPopup(player.con,amount + "\uF82C / MAX\uF82C", 1f, 20, 50, 20, 450, 0);
+                    }
                 }
 
                 if(draugTime && draugCount.containsKey(ply_team) && !draugChecked.contains(ply_team) && state.teams.cores(ply_team).size > 0){
@@ -597,10 +599,6 @@ public class PlagueMod extends Plugin{
             for(ItemStack stack : state.rules.loadout){
                 Call.transferItemTo(stack.item, stack.amount, tile.drawx(), tile.drawy(), tile);
             }
-        });
-
-        handler.register("countdown", "Get the hexed restart countdown.", args -> {
-            Log.info("Time until round ends: &lc{0} minutes", (int)(roundTime - counter) / 60 / 60);
         });
 
         handler.register("setplaytime", "<uuid> <playtime>", "Set the play time of a player", args -> {
@@ -868,6 +866,32 @@ public class PlagueMod extends Plugin{
     }
 
     void plagueUnlock(int level){
+        if(level == 1){
+            plagueBanned.bannedBlocks.remove(Blocks.daggerFactory);
+        }
+        if(level == 2){
+            plagueBanned.bannedBlocks.remove(Blocks.titanFactory);
+        }
+        if(level == 3){
+            plagueBanned.bannedBlocks.remove(Blocks.fortressFactory);
+        }
+        if(level == 4){
+            plagueBanned.bannedBlocks.remove(Blocks.revenantFactory);
+        }
+
+
+
+        for(Player ply : playerGroup.all()){
+            CustomPlayer p = playerUtilMap.get(ply.uuid);
+            Log.info(p);
+            if(p == null) continue;
+            if(!p.infected) continue;
+            if(p.rank == 0 && p.donateLevel == 0){
+                Call.onSetRules(ply.con, plagueBanned);
+            }else{
+                allowCC(ply);
+            }
+        }
     }
 
     void survivorUnlock(int level){
