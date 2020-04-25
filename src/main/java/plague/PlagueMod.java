@@ -105,7 +105,7 @@ public class PlagueMod extends Plugin{
     private List<Tile> creepPerimeter = new ArrayList<>();
     List<String> creepStoppers = new ArrayList<>();
     
-    private int[] survivorSurgeUnlocks = {500, 1000, 2000, 5000};
+    private int[] survivorSurgeUnlocks = {500, 1000, 2500, 5000};
     private int[] plagueSurgeUnlocks = {1000, 2000, 5000, 10000};
 
     private HashMap<Team, Integer> teamSurgePoints = new HashMap<>();
@@ -115,9 +115,10 @@ public class PlagueMod extends Plugin{
     public void init(){
         playerDB.connect("data/server_data.db");
         creepStoppers.addAll(Arrays.asList(Blocks.thoriumWall.name, Blocks.thoriumWallLarge.name, Blocks.plastaniumWall.name, Blocks.plastaniumWallLarge.name,
-                Blocks.phaseWall.name, Blocks.phaseWallLarge.name, Blocks.surgeWall.name, Blocks.surgeWallLarge.name));
+                Blocks.phaseWall.name, Blocks.phaseWallLarge.name, Blocks.surgeWall.name, Blocks.surgeWallLarge.name, Blocks.titaniumWall.name,
+                Blocks.titaniumWallLarge.name));
 
-    	loadouts.add(ItemStack.list(Items.copper, 25000, Items.lead, 25000, Items.graphite, 8000, Items.silicon, 8000, Items.titanium, 10000, Items.metaglass, 500));
+    	loadouts.add(ItemStack.list(Items.copper, 25000, Items.lead, 25000, Items.graphite, 8000, Items.silicon, 8000, Items.titanium, 10000, Items.metaglass, 500, Items.surgealloy, 15));
     	loadouts.add(ItemStack.list(Items.titanium, 1000, Items.graphite, 400, Items.silicon, 400));
         rules.pvp = !true;
         rules.tags.put("plague", "true");
@@ -134,8 +135,8 @@ public class PlagueMod extends Plugin{
         rules.reactorExplosions = false;
         rules.respawnTime = 0;
         // rules.bannedBlocks.addAll(Blocks.solarPanel, Blocks.largeSolarPanel);
-        rules.bannedBlocks.addAll(Blocks.arc, Blocks.melter);
-        rules.bannedBlocks.addAll(Blocks.revenantFactory, Blocks.wraithFactory, Blocks.ghoulFactory);
+        rules.bannedBlocks.addAll(Blocks.arc, Blocks.melter, Blocks.surgeWall, Blocks.surgeWallLarge, Blocks.phaseWall, Blocks.phaseWallLarge);
+        rules.bannedBlocks.addAll(Blocks.wraithFactory, Blocks.ghoulFactory);
 
         init_rules();
         Block dagger = Vars.content.blocks().find(block -> block.name.equals("dagger-factory"));
@@ -233,15 +234,27 @@ public class PlagueMod extends Plugin{
                 }
 
                 if(action.type == Administration.ActionType.withdrawItem){
-                    if(action.item.flammability != 0 || action.item.explosiveness != 0){
+                    if(action.item.flammability != 0 || action.item.explosiveness != 0 || action.item == Items.surgealloy){
                         return false;
                     }
                 }
+
+                CoreBlock.CoreEntity nearestCore = state.teams.closestCore(action.tile.x, action.tile.y, action.player.getTeam());
+                if(action.block != null && action.block == Blocks.unloader &&
+                        cartesianDistance(action.tile.x, action.tile.y, nearestCore.tileX(), nearestCore.tileY()) < 8){
+                    action.player.sendMessage("Unloaders can not be placed near cores.");
+                    return false;
+                }
+
             }
             if(action.type == Administration.ActionType.configure && action.tile.block() == Blocks.commandCenter && action.player != null
-                    && playerUtilMap.get(action.player.uuid).rank == 0){
+                    && playerUtilMap.get(action.player.uuid).rank == 0 && playerUtilMap.get(action.player.uuid).donateLevel == 0){
                 return false;
             }
+
+
+
+
 
             if((action.type == Administration.ActionType.breakBlock || action.type == Administration.ActionType.placeBlock) && (action.tile.block() == Blocks.powerSource || action.tile.block() == Blocks.itemSource)){
                 return false;
@@ -313,17 +326,21 @@ public class PlagueMod extends Plugin{
                     int p = teamSurgePoints.get(ply_team);
                     if(isPlague){
                         if(amount >= plagueSurgeUnlocks[p] && p < plagueSurgeUnlocks.length-1){
+                            state.teams.cores(ply_team).get(0).items.remove(Items.surgealloy, plagueSurgeUnlocks[p]);
                             p ++;
                             teamSurgePoints.put(ply_team, p);
+                            plagueUnlock(p);
                         }
                     }else{
                         if(amount >= survivorSurgeUnlocks[p] && p < survivorSurgeUnlocks.length-1){
+                            state.teams.cores(ply_team).get(0).items.remove(Items.surgealloy, survivorSurgeUnlocks[p]);
                             p ++;
                             teamSurgePoints.put(ply_team, p);
+                            survivorUnlock(p);
                         }
                     }
 
-                    Call.onInfoPopup(amount + "\uF82C / " + (isPlague ? plagueSurgeUnlocks[p] : survivorSurgeUnlocks[p]) + "\uF82C", 1f, 20, 50, 20, 500, 0);
+                    Call.onInfoPopup(player.con,amount + "\uF82C / " + (isPlague ? plagueSurgeUnlocks[p] : survivorSurgeUnlocks[p]) + "\uF82C", 1f, 20, 50, 20, 450, 0);
 
                 }
 
@@ -769,6 +786,11 @@ public class PlagueMod extends Plugin{
         survivorBanned.bannedBlocks.addAll(Blocks.commandCenter, Blocks.wraithFactory, Blocks.ghoulFactory, Blocks.revenantFactory, Blocks.daggerFactory,
                 Blocks.crawlerFactory, Blocks.titanFactory, Blocks.fortressFactory);
 
+        // The below are blocks that can be unlocked with surge
+
+        survivorBanned.bannedBlocks.addAll(Blocks.thoriumWall, Blocks.thoriumWallLarge, Blocks.plastaniumWall, Blocks.plastaniumWallLarge,
+                Blocks.spectre, Blocks.meltdown, Blocks.mendProjector);
+
         plagueBanned = rules.copy();
         plagueBanned.bannedBlocks.add(Blocks.commandCenter); // Can't be trusted
         plagueBanned.bannedBlocks.addAll(Blocks.duo, Blocks.scatter, Blocks.scorch, Blocks.lancer, Blocks.arc, Blocks.swarmer, Blocks.salvo,
@@ -784,12 +806,13 @@ public class PlagueMod extends Plugin{
                 Blocks.phaseWallLarge, Blocks.titaniumWall, Blocks.titaniumWallLarge, Blocks.copperWallLarge, Blocks.copperWall, Blocks.door,
                 Blocks.doorLarge, Blocks.plastaniumWall, Blocks.plastaniumWallLarge);
 
-        plagueBanned.bannedBlocks.addAll(Blocks.mendProjector);
-        plagueBanned.bannedBlocks.addAll(Blocks.glaivePad);
+        plagueBanned.bannedBlocks.addAll(Blocks.mendProjector, Blocks.glaivePad);
+
+        // The below are blocks that can be unlocked with surge
+
+        plagueBanned.bannedBlocks.addAll(Blocks.daggerFactory, Blocks.titanFactory, Blocks.fortressFactory, Blocks.revenantFactory);
 
         Blocks.powerSource.health = Integer.MAX_VALUE;
-
-        // Blocks.coreFoundation.unloadable = false;
 
         Block drauge = Vars.content.blocks().find(block -> block.name.equals("draug-factory"));
         ((UnitFactory)(drauge)).maxSpawn = 0; // Should always be 0
@@ -833,6 +856,22 @@ public class PlagueMod extends Plugin{
         Vars.content.blocks().remove(phaseLarge);
         phaseLarge = PlagueData.newPhaseLarge();
         Vars.content.blocks().add(phaseLarge);*/
+
+
+        for(Block block : content.blocks()){
+            for(ItemStack is : block.requirements){
+                if(is.item == Items.surgealloy){
+                    is.amount = 0;
+                }
+            }
+        }
+    }
+
+    void plagueUnlock(int level){
+    }
+
+    void survivorUnlock(int level){
+
     }
 
     int teamSize(Team t){
@@ -936,7 +975,7 @@ public class PlagueMod extends Plugin{
         prefs.putInt("mapchoice", votableMaps.get(votedMap));
         Call.sendMessage("[accent]Loading map [scarlet]" + mapList.get(votedMap) + "[accent] with the most votes");
 
-        Time.runTask(60f * 10f, () -> {
+        Time.runTask(60f * 1000f, () -> {
             for(Player player : playerGroup.all()) {
                 Call.onConnect(player.con, "aamindustry.play.ai", 6567);
                 playerDB.entries.get(player.uuid).put("playTime", playerUtilMap.get(player.uuid).playTime);

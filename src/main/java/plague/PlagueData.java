@@ -66,6 +66,7 @@ public class PlagueData {
         }};
     }
 
+
 }
 
 class customDeflector extends DeflectorWall {
