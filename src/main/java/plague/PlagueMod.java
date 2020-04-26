@@ -896,20 +896,20 @@ public class PlagueMod extends Plugin{
 
     void plagueUnlock(int level){
         if(level == 1){
-            Call.sendMessage("Plague reached level 1. At level 3 they will unlock fortress factories that make chaos arrays");
+            Call.sendMessage("[accent]Plague reached level 1. At level 3 they will unlock fortress factories that make chaos arrays");
             //plagueBanned.bannedBlocks.remove(Blocks.crawlerFactory);
         }
         if(level == 2){
-            Call.sendMessage("Plague reached level 2. At level 3 they will unlock fortress factories that make chaos arrays");
+            Call.sendMessage("[accent]Plague reached level 2. At level 3 they will unlock fortress factories that make chaos arrays");
             //plagueBanned.bannedBlocks.remove(Blocks.daggerFactory);
         }
         if(level == 3){
-            Call.sendMessage("Plague reached level 3 and unlocked fortress factories that make chaos arrays");
+            Call.sendMessage("[accent]Plague reached level 3 and unlocked fortress factories that make chaos arrays");
             plagueBanned.bannedBlocks.remove(Blocks.fortressFactory);
             //plagueBanned.bannedBlocks.remove(Blocks.titanFactory);
         }
         if(level == 4){
-            Call.sendMessage("Plague reached level 4. In one more level they can make revenant factories that make eradicators");
+            Call.sendMessage("[accent]Plague reached level 4. In one more level they can make revenant factories that make eradicators");
             //plagueBanned.bannedBlocks.remove(Blocks.fortressFactory);
         }
         if(level == 5){
@@ -918,6 +918,7 @@ public class PlagueMod extends Plugin{
             plagueEradCap = 1;
         }
         if(level > 5){
+            Call.sendMessage("[accent]The plague unlocked an additional eradicator");
             plagueEradCap += 1;
         }
 
@@ -952,6 +953,8 @@ public class PlagueMod extends Plugin{
         if(level == 4){
             escaping = true;
             Call.onInfoMessage("[accent]A group of [green]Survivors[accent] have collected enough surge to escape the planet!\n[white]The [green]Survivors [white]must survive just [scarlet]" + (escapeTicksLeft/60/60) + " [white]more minutes while their rocket launches!");
+            Call.sendMessage("[accent]The vibrations of the rocket have allowed the [scarlet]Plague [accent] to make 5 additional eradicators!");
+            plagueEradCap += 5;
         }
 
         for(Player ply : playerGroup.all()){
