@@ -107,7 +107,7 @@ public class PlagueMod extends Plugin{
     List<String> creepStoppers = new ArrayList<>();
     
     private int[] survivorSurgeUnlocks = {500, 1000, 2500, 5000};
-    private int[] plagueSurgeUnlocks = {500, 1000, 2500, 5000, 5000, 5000, 5000, 5000, 5000};
+    private int[] plagueSurgeUnlocks = {500, 500, 500, 2000, 2000, 2000, 2000, 2000, 2000};
 
 
     private HashMap<Team, Integer> teamSurgePoints = new HashMap<>();
@@ -123,7 +123,7 @@ public class PlagueMod extends Plugin{
                 Blocks.phaseWall.name, Blocks.phaseWallLarge.name, Blocks.surgeWall.name, Blocks.surgeWallLarge.name, Blocks.titaniumWall.name,
                 Blocks.titaniumWallLarge.name));
 
-    	loadouts.add(ItemStack.list(Items.copper, 25000, Items.lead, 25000, Items.graphite, 8000, Items.silicon, 8000, Items.titanium, 10000, Items.metaglass, 500, Items.surgealloy, 15000));
+    	loadouts.add(ItemStack.list(Items.copper, 25000, Items.lead, 25000, Items.graphite, 8000, Items.silicon, 8000, Items.titanium, 10000, Items.metaglass, 500, Items.surgealloy, 15));
     	loadouts.add(ItemStack.list(Items.titanium, 1000, Items.graphite, 400, Items.silicon, 400));
         rules.pvp = !true;
         rules.tags.put("plague", "true");
@@ -504,6 +504,13 @@ public class PlagueMod extends Plugin{
             if(event.tile.block() == Blocks.revenantFactory){
                 plagueErads += 1;
                 eradTiles.add(event.tile);
+            }
+        });
+
+        Events.on(EventType.BlockDestroyEvent.class, event ->{
+            if(eradTiles.contains(event.tile)){
+                eradTiles.remove(event.tile);
+                plagueErads -= 1;
             }
         });
 
