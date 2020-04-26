@@ -107,7 +107,7 @@ public class PlagueMod extends Plugin{
     List<String> creepStoppers = new ArrayList<>();
     
     private int[] survivorSurgeUnlocks = {500, 1000, 2500, 5000};
-    private int[] plagueSurgeUnlocks = {500, 1000, 2500, 5000, 10000, 10000, 10000, 10000, 10000};
+    private int[] plagueSurgeUnlocks = {500, 1000, 2500, 5000, 5000, 5000, 5000, 5000, 5000};
 
 
     private HashMap<Team, Integer> teamSurgePoints = new HashMap<>();
@@ -118,13 +118,12 @@ public class PlagueMod extends Plugin{
 
     @Override
     public void init(){
-        plagueSurgeUnlocks = new int[]{10, 10, 10, 10, 10, 10, 10, 10, 10};
         playerDB.connect("data/server_data.db");
         creepStoppers.addAll(Arrays.asList(Blocks.thoriumWall.name, Blocks.thoriumWallLarge.name, Blocks.plastaniumWall.name, Blocks.plastaniumWallLarge.name,
                 Blocks.phaseWall.name, Blocks.phaseWallLarge.name, Blocks.surgeWall.name, Blocks.surgeWallLarge.name, Blocks.titaniumWall.name,
                 Blocks.titaniumWallLarge.name));
 
-    	loadouts.add(ItemStack.list(Items.copper, 25000, Items.lead, 25000, Items.graphite, 8000, Items.silicon, 8000, Items.titanium, 10000, Items.metaglass, 500));
+    	loadouts.add(ItemStack.list(Items.copper, 25000, Items.lead, 25000, Items.graphite, 8000, Items.silicon, 8000, Items.titanium, 10000, Items.metaglass, 500, Items.surgealloy, 15000));
     	loadouts.add(ItemStack.list(Items.titanium, 1000, Items.graphite, 400, Items.silicon, 400));
         rules.pvp = !true;
         rules.tags.put("plague", "true");
@@ -239,8 +238,10 @@ public class PlagueMod extends Plugin{
                 }
 
                 CoreBlock.CoreEntity nearestCore = state.teams.closestCore(action.tile.x, action.tile.y, action.player.getTeam());
+                CoreBlock.CoreEntity nearestECore = state.teams.closestEnemyCore(action.tile.x, action.tile.y, action.player.getTeam());
                 if(action.block != null && action.block == Blocks.unloader &&
-                        cartesianDistance(action.tile.x, action.tile.y, nearestCore.tileX(), nearestCore.tileY()) < 8){
+                        cartesianDistance(action.tile.x, action.tile.y, nearestCore.tileX(), nearestCore.tileY()) < 10 &&
+                        cartesianDistance(action.tile.x, action.tile.y, nearestECore.tileX(), nearestECore.tileY()) < 10){
                     action.player.sendMessage("[scarlet]Unloaders [accent]can not be placed near cores.");
                     return false;
                 }
@@ -270,7 +271,7 @@ public class PlagueMod extends Plugin{
 
 
         AtomicBoolean infectCountOn = new AtomicBoolean(true);
-        AtomicBoolean escapeCountOn = new AtomicBoolean(true);
+        int[] lastMod = {100};
         List<Team> draugChecked = new ArrayList<>();
         Events.on(EventType.Trigger.update, ()-> {
 
@@ -283,17 +284,15 @@ public class PlagueMod extends Plugin{
                 infectCountOn.set(true);
             }
 
-            if(escaping) escapeTicksLeft -= 1;
+            if(escaping) escapeTicksLeft -= Time.delta();
 
-            if(!restarting && escaping && escapeTicksLeft/60 < 11 && escapeTicksLeft % 60 == 0){
-                Call.sendMessage("[scarlet]" + escapeTicksLeft/60);
-            }
 
-            if (!restarting && escaping && escapeTicksLeft % (60*60) == 0 && escapeTicksLeft > 1){
+            if (!restarting && escaping && escapeTicksLeft % (60*60) > lastMod[0] && escapeTicksLeft > 1){
                     int min = escapeTicksLeft / 60 / 60;
+                    min++;
                     Call.sendMessage("[scarlet]" + min + "[accent]" + (min > 1 ? " minutes" : " minute") + " until the [lime]Survivors [accent] escape!");
                 }
-
+            lastMod[0] = escapeTicksLeft % (60*60);
 
             boolean alive = false;
 
@@ -683,6 +682,28 @@ public class PlagueMod extends Plugin{
             player.sendMessage("[purple]https://discord.gg/GEnYcSv");
         });
 
+        handler.<Player>register("info", "SShow info", (args, player) -> {
+            player.sendMessage("1. Creep can be stopped with titanium or above walls\n" +
+                    "2. There is no time limit\n" +
+                    "3. Surge is now used by both plague and survivors to upgrade themselves.\n" +
+                    "4. Surge can not be removed from the core\n" +
+                    "5. Unloaders can not be placed near to core (currently bugged for survivors)\n" +
+                    "6. Here are the upgrade lists for both teams:\n" +
+                    "\n" +
+                    "SURVIVORS:\n" +
+                    "  Level 1 (500 Surge): Thorium and Plastanium walls\n" +
+                    "  Level 2 (1000 Surge): Mend projector\n" +
+                    "  Level 3 (2500 Surge): Spectre and meltdown (both of which DO NOT cost surge to build)\n" +
+                    "  Level 4 (5000 Surge): Initiate 10 minute countdown until survivors win\n" +
+                    "PLAGUE:\n" +
+                    "  Level 1 (500 Surge): Crawler factories that spawn 2 daggers each (disabled)\n" +
+                    "  Level 2 (1000 Surge): Titan factories that spawn 2 eruptors each (disabled)\n" +
+                    "  Level 3 (2500 Surge): Dagger factories that spawn 1 fortress each (disabled)\n" +
+                    "  Level 4 (5000 Surge): Fortress factories that spawn 1 Chaos array each\n" +
+                    "  Level 5 (10000 Surge): E R A D I C A T O R (unlocks a revenant factory)\n" +
+                    "  Level 6->9 (10000 Surge each): 1 additional revenant factory is allowed to be built");
+        });
+
         handler.<Player>register("maps", "Show votable maps", (args, player) -> {
             player.sendMessage(announcements[2]);
         });
@@ -864,19 +885,24 @@ public class PlagueMod extends Plugin{
 
     void plagueUnlock(int level){
         if(level == 1){
-            plagueBanned.bannedBlocks.remove(Blocks.crawlerFactory);
+            Call.sendMessage("Plague reached level 1. At level 3 they will unlock fortress factories that make chaos arrays");
+            //plagueBanned.bannedBlocks.remove(Blocks.crawlerFactory);
         }
         if(level == 2){
-            plagueBanned.bannedBlocks.remove(Blocks.daggerFactory);
+            Call.sendMessage("Plague reached level 2. At level 3 they will unlock fortress factories that make chaos arrays");
+            //plagueBanned.bannedBlocks.remove(Blocks.daggerFactory);
         }
         if(level == 3){
-            plagueBanned.bannedBlocks.remove(Blocks.titanFactory);
+            Call.sendMessage("Plague reached level 3 and unlocked fortress factories that make chaos arrays");
+            plagueBanned.bannedBlocks.remove(Blocks.fortressFactory);
+            //plagueBanned.bannedBlocks.remove(Blocks.titanFactory);
         }
         if(level == 4){
-            plagueBanned.bannedBlocks.remove(Blocks.fortressFactory);
+            Call.sendMessage("Plague reached level 4. In one more level they can make revenant factories that make eradicators");
+            //plagueBanned.bannedBlocks.remove(Blocks.fortressFactory);
         }
         if(level == 5){
-            Call.sendMessage("[accent]The ground rumbles as the [scarlet]Plague [accent]unearths something unholy[white] \uF84D");
+            Call.sendMessage("[accent]The ground rumbles as the [scarlet]Plague [accent]unearths something terrifying[white] \uF84D");
             plagueBanned.bannedBlocks.remove(Blocks.revenantFactory);
             plagueEradCap = 1;
         }
@@ -1026,7 +1052,7 @@ public class PlagueMod extends Plugin{
         prefs.putInt("mapchoice", votableMaps.get(votedMap));
         Call.sendMessage("[accent]Loading map [scarlet]" + mapList.get(votedMap) + "[accent] with the most votes");
 
-        Time.runTask(60f * 1000f, () -> {
+        Time.runTask(60f * 10f, () -> {
             for(Player player : playerGroup.all()) {
                 Call.onConnect(player.con, "aamindustry.play.ai", 6567);
                 playerDB.entries.get(player.uuid).put("playTime", playerUtilMap.get(player.uuid).playTime);
