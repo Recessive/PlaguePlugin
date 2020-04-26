@@ -288,9 +288,8 @@ public class PlagueMod extends Plugin{
 
 
             if (!restarting && escaping && escapeTicksLeft % (60*60) > lastMod[0] && escapeTicksLeft > 1){
-                    int min = escapeTicksLeft / 60 / 60;
-                    min++;
-                    Call.sendMessage("[scarlet]" + min + "[accent]" + (min > 1 ? " minutes" : " minute") + " until the [lime]Survivors [accent] escape!");
+                    int min = escapeTicksLeft / 60 / 60 + 1;
+                    Call.sendMessage("[scarlet]" + min + "[accent]" + (min > 1 ? " minutes" : " minute") + " until the [green]Survivors [accent] escape!");
                 }
             lastMod[0] = escapeTicksLeft % (60*60);
 
@@ -747,7 +746,12 @@ public class PlagueMod extends Plugin{
         });
 
         handler.<Player>register("time", "Display the time left", (args, player) -> {
-            player.sendMessage("Plague no longer has a time limit");
+            if(escaping){
+                int min = escapeTicksLeft / 60 / 60 + 1;
+                player.sendMessage("[accent]The [green]Survivors[accent] will escape in [scarlet]" + min + "[accent]" + (min > 1 ? " minutes" : " minute") + "!");
+            }else{
+                player.sendMessage("The survivors have not gotten enough surge to escape yet");
+            }
         });
 
         handler.<Player>register("enemies", "List enemies", (args, player) -> {
