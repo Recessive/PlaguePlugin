@@ -107,7 +107,7 @@ public class PlagueMod extends Plugin{
     List<String> creepStoppers = new ArrayList<>();
     
     private int[] survivorSurgeUnlocks = {500, 1000, 2500, 5000};
-    private int[] plagueSurgeUnlocks = {500, 500, 500, 2000, 2000, 2000, 2000, 2000, 2000};
+    private int[] plagueSurgeUnlocks = {1000, 1000, 1000, 1000, 2000, 2000, 2000, 2000, 2000};
 
 
     private HashMap<Team, Integer> teamSurgePoints = new HashMap<>();
@@ -240,7 +240,7 @@ public class PlagueMod extends Plugin{
                 CoreBlock.CoreEntity nearestCore = state.teams.closestCore(action.tile.x, action.tile.y, action.player.getTeam());
                 CoreBlock.CoreEntity nearestECore = state.teams.closestEnemyCore(action.tile.x, action.tile.y, action.player.getTeam());
                 if(action.block != null && action.block == Blocks.unloader &&
-                        cartesianDistance(action.tile.x, action.tile.y, nearestCore.tileX(), nearestCore.tileY()) < 10 &&
+                        cartesianDistance(action.tile.x, action.tile.y, nearestCore.tileX(), nearestCore.tileY()) < 10 ||
                         cartesianDistance(action.tile.x, action.tile.y, nearestECore.tileX(), nearestECore.tileY()) < 10){
                     action.player.sendMessage("[scarlet]Unloaders [accent]can not be placed near cores.");
                     return false;
@@ -950,11 +950,11 @@ public class PlagueMod extends Plugin{
             survivorBanned.bannedBlocks.remove(Blocks.spectre);
             survivorBanned.bannedBlocks.remove(Blocks.meltdown);
         }
-        if(level == 4){
+        if(level == 4 && !restarting){
             escaping = true;
             Call.onInfoMessage("[accent]A group of [green]Survivors[accent] have collected enough surge to escape the planet!\n[white]The [green]Survivors [white]must survive just [scarlet]" + (escapeTicksLeft/60/60) + " [white]more minutes while their rocket launches!");
-            Call.sendMessage("[accent]The vibrations of the rocket have allowed the [scarlet]Plague [accent] to make 5 additional eradicators!");
-            plagueEradCap += 5;
+            Call.sendMessage("[accent]The vibrations of the rocket have allowed the [scarlet]Plague [accent] to make 2 additional eradicators!");
+            plagueEradCap += 2;
         }
 
         for(Player ply : playerGroup.all()){
