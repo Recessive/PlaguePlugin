@@ -289,7 +289,7 @@ public class PlagueMod extends Plugin{
 
             if (!restarting && escaping && escapeTicksLeft % (60*60) > lastMod[0] && escapeTicksLeft > 1){
                     int min = escapeTicksLeft / 60 / 60 + 1;
-                    Call.sendMessage("[scarlet]" + min + "[accent]" + (min > 1 ? " minutes" : " minute") + " until the [green]Survivors [accent] escape!");
+                    Call.sendMessage("[scarlet]" + min + "[accent]" + (min > 1 ? " minutes" : " minute") + " until the [green]Survivors [accent]escape!");
                 }
             lastMod[0] = escapeTicksLeft % (60*60);
 
@@ -702,12 +702,12 @@ public class PlagueMod extends Plugin{
                     "  Level 3 (2500 Surge): Spectre and meltdown (both of which DO NOT cost surge to build)\n" +
                     "  Level 4 (5000 Surge): Initiate 10 minute countdown until survivors win\n" +
                     "PLAGUE:\n" +
-                    "  Level 1 (500 Surge): Crawler factories that spawn 2 daggers each (disabled)\n" +
-                    "  Level 2 (1000 Surge): Titan factories that spawn 2 eruptors each (disabled)\n" +
-                    "  Level 3 (2500 Surge): Dagger factories that spawn 1 fortress each (disabled)\n" +
-                    "  Level 4 (5000 Surge): Fortress factories that spawn 1 Chaos array each\n" +
-                    "  Level 5 (10000 Surge): E R A D I C A T O R (unlocks a revenant factory)\n" +
-                    "  Level 6->9 (10000 Surge each): 1 additional revenant factory is allowed to be built");
+                    "  Level 1 (1000 Surge): None\n" +
+                    "  Level 2 (1000 Surge): None\n" +
+                    "  Level 3 (1000 Surge): None\n" +
+                    "  Level 4 (1000 Surge): Fortress factories that spawn 1 Chaos array each\n" +
+                    "  Level 5 (20000 Surge): E R A D I C A T O R (unlocks a revenant factory)\n" +
+                    "  Level 6->9 (2000 Surge each): 1 additional revenant factory is allowed to be built");
         });
 
         handler.<Player>register("maps", "Show votable maps", (args, player) -> {
@@ -873,6 +873,9 @@ public class PlagueMod extends Plugin{
         Blocks.phaseWall.health /= 2;
         Blocks.phaseWallLarge.health /= 2;
 
+        Mechs.tau.itemCapacity = 0;
+        Mechs.trident.drillPower = 1;
+        Mechs.omega.drillPower = 1;
         // Update phase wall to only deflect 50% of the time
         /*Block phaseSmall = Vars.content.blocks().find(block -> block.name.equals("phase-wall"));
         Vars.content.blocks().remove(phaseSmall);
@@ -950,7 +953,7 @@ public class PlagueMod extends Plugin{
             survivorBanned.bannedBlocks.remove(Blocks.spectre);
             survivorBanned.bannedBlocks.remove(Blocks.meltdown);
         }
-        if(level == 4 && !restarting){
+        if(level == 4 && !escaping){
             escaping = true;
             Call.onInfoMessage("[accent]A group of [green]Survivors[accent] have collected enough surge to escape the planet!\n[white]The [green]Survivors [white]must survive just [scarlet]" + (escapeTicksLeft/60/60) + " [white]more minutes while their rocket launches!");
             Call.sendMessage("[accent]The vibrations of the rocket have allowed the [scarlet]Plague [accent] to make 2 additional eradicators!");
