@@ -107,7 +107,7 @@ public class PlagueMod extends Plugin{
     List<String> creepStoppers = new ArrayList<>();
     
     private int[] survivorSurgeUnlocks = {500, 1000, 2500, 5000};
-    private int[] plagueSurgeUnlocks = {1000, 1000, 1000, 1000, 2000, 2000, 2000, 2000, 2000};
+    private int[] plagueSurgeUnlocks = new int[200]; // New limit is 200 erads.
 
 
     private HashMap<Team, Integer> teamSurgePoints = new HashMap<>();
@@ -122,6 +122,13 @@ public class PlagueMod extends Plugin{
         creepStoppers.addAll(Arrays.asList(Blocks.thoriumWall.name, Blocks.thoriumWallLarge.name, Blocks.plastaniumWall.name, Blocks.plastaniumWallLarge.name,
                 Blocks.phaseWall.name, Blocks.phaseWallLarge.name, Blocks.surgeWall.name, Blocks.surgeWallLarge.name, Blocks.titaniumWall.name,
                 Blocks.titaniumWallLarge.name));
+        plagueSurgeUnlocks[0] = 1000;
+        plagueSurgeUnlocks[1] = 1000;
+        plagueSurgeUnlocks[2] = 1000;
+        plagueSurgeUnlocks[3] = 1000;
+        for(int i = 4; i < 200; i++){
+            plagueSurgeUnlocks[i] = 2500;
+        }
 
     	loadouts.add(ItemStack.list(Items.copper, 25000, Items.lead, 25000, Items.graphite, 8000, Items.silicon, 8000, Items.titanium, 10000, Items.metaglass, 500, Items.surgealloy, 15));
     	loadouts.add(ItemStack.list(Items.titanium, 1000, Items.graphite, 400, Items.silicon, 400));
@@ -141,7 +148,7 @@ public class PlagueMod extends Plugin{
         rules.respawnTime = 0;
         // rules.bannedBlocks.addAll(Blocks.solarPanel, Blocks.largeSolarPanel);
         rules.bannedBlocks.addAll(Blocks.arc, Blocks.melter, Blocks.surgeWall, Blocks.surgeWallLarge, Blocks.phaseWall, Blocks.phaseWallLarge);
-        rules.bannedBlocks.addAll(Blocks.wraithFactory, Blocks.ghoulFactory);
+        rules.bannedBlocks.addAll(Blocks.wraithFactory, Blocks.ghoulFactory, Blocks.glaivePad);
 
         init_rules();
 
@@ -828,7 +835,7 @@ public class PlagueMod extends Plugin{
                 Blocks.phaseWallLarge, Blocks.titaniumWall, Blocks.titaniumWallLarge, Blocks.copperWallLarge, Blocks.copperWall, Blocks.door,
                 Blocks.doorLarge, Blocks.plastaniumWall, Blocks.plastaniumWallLarge);
 
-        plagueBanned.bannedBlocks.addAll(Blocks.mendProjector, Blocks.glaivePad);
+        plagueBanned.bannedBlocks.addAll(Blocks.mendProjector);
 
         // The below are blocks that can be unlocked with surge
 
